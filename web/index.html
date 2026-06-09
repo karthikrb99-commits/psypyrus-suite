@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PsyPyrus AI - Mental Health Operating System</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- --- A. BIOMETRIC SECURITY LOCK SCREEN --- -->
+    <div id="biometric-lock-screen">
+        <div class="lock-container">
+            <i class="fa-solid fa-shield-halved lock-icon-shield"></i>
+            <h1 class="lock-title">PsyPyrus AI OS</h1>
+            <p class="lock-subtitle">HIPAA and GDPR Cryptographic Workspace</p>
+            
+            <div class="biometric-scanner-node" id="lock-scanner-trigger">
+                <i class="fa-solid fa-fingerprint biometric-icon"></i>
+                <div class="scanner-laser-bar"></div>
+            </div>
+            
+            <p class="scanner-tip-text">Tap standard scanner node to verify session credentials.</p>
+            
+            <div class="compliance-status-tag">
+                <i class="fa-solid fa-key compliance-tag-icon"></i>
+                <div class="compliance-tag-text">
+                    AES-GCM-256 local health vault initialized.<br>
+                    Hardware biometric bindings active.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- B. MAIN APPLICATION CONTAINER --- -->
+    <div class="app-container" id="main-app-container" style="display: none;">
+        
+        <!-- --- 1. SIDEBAR NAVIGATION RAIL --- -->
+        <aside class="sidebar-nav-rail">
+            <div class="rail-header">
+                <i class="fa-solid fa-face-smile-beam rail-logo-icon"></i>
+                <div>
+                    <h2 class="rail-brand-name">PsyPyrus</h2>
+                    <span class="rail-brand-sub">AI OS v2.0</span>
+                </div>
+            </div>
+
+            <!-- Professional Menu (Clinician View) -->
+            <div class="nav-menu-wrapper" id="clinician-nav-menu">
+                <div class="nav-group-title">Clinical Workspace</div>
+                <ul class="nav-items-list">
+                    <li><div class="nav-item-link active" data-screen="Dashboard"><i class="fa-solid fa-chart-pie"></i>Dashboard</div></li>
+                    <li><div class="nav-item-link" data-screen="AI Copilot"><i class="fa-solid fa-wand-magic-sparkles"></i>AI Copilot</div></li>
+                    <li><div class="nav-item-link" data-screen="Digital MSE"><i class="fa-solid fa-clipboard-list"></i>Digital MSE</div></li>
+                    <li><div class="nav-item-link" data-screen="Diagnostics"><i class="fa-solid fa-stethoscope"></i>Diagnostics</div></li>
+                    <li><div class="nav-item-link" data-screen="Teletherapy"><i class="fa-solid fa-video"></i>Teletherapy</div></li>
+                    <li><div class="nav-item-link" data-screen="Planner"><i class="fa-solid fa-calendar-check"></i>CBT Planner</div></li>
+                    <li><div class="nav-item-link" data-screen="Assessments"><i class="fa-solid fa-square-poll-horizontal"></i>Assessments</div></li>
+                    <li><div class="nav-item-link" data-screen="Analytics"><i class="fa-solid fa-chart-line"></i>Analytics</div></li>
+                    <li><div class="nav-item-link" data-screen="HIPAA Shield"><i class="fa-solid fa-user-shield"></i>HIPAA Shield</div></li>
+                </ul>
+            </div>
+
+            <!-- Patient Menu (Wellness Hub) -->
+            <div class="nav-menu-wrapper" id="patient-nav-menu" style="display: none;">
+                <div class="nav-group-title">Wellness Hub</div>
+                <ul class="nav-items-list">
+                    <li><div class="nav-item-link active" data-screen="Dashboard"><i class="fa-solid fa-house-medical"></i>Dashboard</div></li>
+                    <li><div class="nav-item-link" data-screen="Wellness"><i class="fa-solid fa-spa"></i>Wellness Lounge</div></li>
+                    <li><div class="nav-item-link" data-screen="Assessments"><i class="fa-solid fa-file-invoice"></i>Assessments</div></li>
+                    <li><div class="nav-item-link" data-screen="Teletherapy"><i class="fa-solid fa-video"></i>Telehealth</div></li>
+                    <li><div class="nav-item-link" data-screen="HIPAA Shield"><i class="fa-solid fa-shield-halved"></i>Security logs</div></li>
+                </ul>
+            </div>
+
+            <!-- Sidebar Footer Controls -->
+            <div class="rail-footer-controls">
+                <div class="active-patient-badge">
+                    <span>Active EHR Target:</span>
+                    <strong id="active-patient-display">Liam Carter</strong>
+                </div>
+                <div class="rail-bottom-buttons">
+                    <button class="rail-btn rail-btn-role" id="role-toggle-sidebar" title="Switch User Role Persona">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </button>
+                    <button class="rail-btn" id="lock-session-sidebar" title="Secure Session (Lock Workspace)">
+                        <i class="fa-solid fa-lock"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- --- 2. WORKSPACE WRAPPER --- -->
+        <main class="workspace-wrapper">
+            
+            <!-- Toolbar Header -->
+            <header class="header-toolbar">
+                <div class="toolbar-brand-title">
+                    <i class="fa-solid fa-hand-holding-medical" style="color: var(--color-primary);"></i>
+                    <span>PsyPyrus AI</span>
+                    <span class="toolbar-brand-badge">OS</span>
+                </div>
+
+                <div class="toolbar-actions-group">
+                    <!-- Dynamic Switcher Pill -->
+                    <div class="persona-switcher-pill">
+                        <button class="persona-pill-btn active" data-role="Professional">
+                            <i class="fa-solid fa-user-doctor"></i> Professional
+                        </button>
+                        <button class="persona-pill-btn" data-role="Patient">
+                            <i class="fa-solid fa-user"></i> Patient
+                        </button>
+                    </div>
+
+                    <!-- Dark Mode toggle -->
+                    <button class="toolbar-icon-btn" id="theme-toggle-btn" title="Toggle Light/Dark Theme">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <!-- Settings gear -->
+                    <button class="toolbar-icon-btn" id="settings-toggle-btn" title="API Settings Configuration">
+                        <i class="fa-solid fa-gears"></i>
+                    </button>
+
+                    <!-- Lock button -->
+                    <button class="toolbar-icon-btn" id="lock-toggle-btn" title="Cryptographically Lock Session">
+                        <i class="fa-solid fa-lock-open" style="color: var(--color-primary);"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Workspace Scroll Canvas -->
+            <div class="content-canvas">
+
+                <!-- ============================================== -->
+                <!-- SCREEN: CLINICIAN DASHBOARD -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-clinician-dashboard">
+                    <div class="dashboard-hero-banner">
+                        <div class="hero-subtitle">Clinical Suite Dashboard</div>
+                        <h2 class="hero-title" id="clinician-welcome-name">Dr. Katherine Brewster</h2>
+                        <p class="hero-description">Secure mental health operating environment. Under HIPAA regulations and envelope encrypted storage blocks.</p>
+                    </div>
+
+                    <!-- Risk alert warning (conditional) -->
+                    <div class="hipaa-alert-box danger" id="risk-alerts-container">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div class="alert-message-content">
+                            <div class="alert-message-title">URGENT RISK ALERTS (<span id="risk-alert-count">0</span>)</div>
+                            <div id="risk-alert-patients-list">
+                                <!-- Severe patients injected here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue / Cases Snapshots -->
+                    <div class="metrics-row-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Active File Cases</div>
+                            <div class="metric-value" id="metrics-active-cases">0</div>
+                            <div class="metric-caption">Compliant records in SQLite</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Snapshot Revenue</div>
+                            <div class="metric-value" id="metrics-snapshot-revenue">$0</div>
+                            <div class="metric-caption">Billed & Pending contracts</div>
+                        </div>
+                    </div>
+
+                    <!-- Appointments list header -->
+                    <div class="card-title-bar">
+                        <h3>Today's Practice Appointments</h3>
+                        <button class="card-title-bar-action" id="open-add-appt-modal" title="Schedule appointment"><i class="fa-solid fa-circle-plus"></i></button>
+                    </div>
+
+                    <div class="appointment-list-stack" id="scheduled-appointments-list">
+                        <!-- Appointments injected here -->
+                    </div>
+
+                    <div class="workspace-card" style="margin-top: 24px;">
+                        <div class="suggestion-banner-container">
+                            <div class="suggestion-banner-title">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> AI CLINICAL PRACTICE SUGGESTIONS
+                            </div>
+                            <div class="suggestion-banner-items">
+                                <div>• GAD-7 Anxiety scores for Sarah Jenkins improved by 40% over the last fortnight. Consider dropping cognitive restructuring pacing schedule in next session.</div>
+                                <div>• Liam Carter (Severe MDD risk) completed his sleep diary. Initial sleep latency latency remains high at 90 minutes. AI Suggests adding sleep hygiene instruction protocols.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: PATIENT DASHBOARD -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-patient-dashboard">
+                    <div class="dashboard-hero-banner">
+                        <div class="hero-subtitle">Wellness Hub Dashboard</div>
+                        <h2 class="hero-title">Patient Access Node</h2>
+                        <p class="hero-description">Track details, practice mindfulness breathing and schedule sessions securely.</p>
+                    </div>
+
+                    <div class="workspace-card">
+                        <div class="card-title-bar">
+                            <h3>Your Secure Care Coordination</h3>
+                        </div>
+                        <div id="patient-care-coordination-container">
+                            <!-- Patient schedule info and telehealth launcher -->
+                        </div>
+                    </div>
+
+                    <div class="workspace-card">
+                        <div class="card-title-bar">
+                            <h3>Daily Clinical Homework Assignments</h3>
+                        </div>
+                        <div class="homework-list-container" id="patient-homework-list">
+                            <!-- Checklist items injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: AI COPILOT -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-ai-copilot">
+                    <div class="section-header-block">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <h2>AI Clinical SOAP Copilot</h2>
+                    </div>
+
+                    <div class="workspace-card">
+                        <div class="form-field-group">
+                            <label class="form-label">Active Chart Subject Target:</label>
+                            <div class="chips-horizontal-scroll" id="copilot-patient-chips">
+                                <!-- Target chips injected -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="workspace-card">
+                        <div class="form-field-group">
+                            <label class="form-label">Clinical Speech Dictation / Session Transcript Draft:</label>
+                            <textarea class="input-text-field" id="copilot-transcript-input" placeholder="Paste raw transcription text from therapy, or type clinical draft. Ask AI to formulate medical SOAP documents..."></textarea>
+                        </div>
+
+                        <div class="chips-horizontal-scroll" style="margin-top: -8px; margin-bottom: 16px;">
+                            <button class="patient-filter-chip" id="template-anxiety">Sample Anxiety Case</button>
+                            <button class="patient-filter-chip" id="template-depression">Sample Depression Case</button>
+                        </div>
+
+                        <button class="action-button-btn" id="compile-soap-btn" style="width: 100%;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Compile Compliant SOAP Note
+                        </button>
+                    </div>
+
+                    <div class="hipaa-alert-box warning">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div class="alert-message-content">
+                            AI provides decision support only. Final clinical judgment remains with the licensed practitioner.
+                        </div>
+                    </div>
+
+                    <div id="copilot-result-card" class="workspace-card" style="display: none;">
+                        <div class="card-title-bar">
+                            <h3>PsyPyrus AI Compiled Report Document:</h3>
+                        </div>
+                        <div class="ai-formatted-report-block">
+                            <pre class="report-markdown-output" id="copilot-result-text"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: DIGITAL MSE -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-digital-mse">
+                    <div class="section-header-block">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <h2>Digital Mental Status Examination</h2>
+                    </div>
+
+                    <div class="workspace-card">
+                        <label class="form-label">Patient Records Selector:</label>
+                        <div class="chips-horizontal-scroll" id="mse-patient-chips">
+                            <!-- Chips -->
+                        </div>
+                    </div>
+
+                    <!-- MSE Form inputs -->
+                    <div id="mse-form-container">
+                        <!-- 1. Appearance -->
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">1. Appearance & Hygiene</div>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-appearance" class="radio-control" value="Well-groomed, appropriate attire" checked>
+                                <span class="radio-label">Well-groomed, appropriate attire</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-appearance" class="radio-control" value="Disheveled, poor hygiene">
+                                <span class="radio-label">Disheveled, poor hygiene</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-appearance" class="radio-control" value="Posture tense, hyper-vigilant">
+                                <span class="radio-label">Posture tense, hyper-vigilant</span>
+                            </label>
+                        </div>
+
+                        <!-- 2. Motor -->
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">2. Motor Activity & Behavior</div>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-behavior" class="radio-control" value="Cooperative, normal motor activity" checked>
+                                <span class="radio-label">Cooperative, normal motor activity</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-behavior" class="radio-control" value="Psychomotor agitation (restless / tapping)">
+                                <span class="radio-label">Psychomotor agitation (restless / tapping)</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-behavior" class="radio-control" value="Guarded, uncooperative">
+                                <span class="radio-label">Guarded, uncooperative</span>
+                            </label>
+                        </div>
+
+                        <!-- 3. Speech -->
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">3. Speech Characteristics</div>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-speech" class="radio-control" value="Normative rate, volume and responsive tone" checked>
+                                <span class="radio-label">Normative rate, volume and responsive tone</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-speech" class="radio-control" value="Pressured, rapid rate, loud volume">
+                                <span class="radio-label">Pressured, rapid rate, loud volume</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-speech" class="radio-control" value="Incoherent, slow, hesitant">
+                                <span class="radio-label">Incoherent, slow, hesitant</span>
+                            </label>
+                        </div>
+
+                        <!-- 4. Mood -->
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">4. Mood & Affect Quality</div>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-mood" class="radio-control" value="Anxious, restricted affect range" checked>
+                                <span class="radio-label">Anxious, restricted affect range</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-mood" class="radio-control" value="Depressed mood, flat affect">
+                                <span class="radio-label">Depressed mood, flat affect</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-mood" class="radio-control" value="Euthymic, congruent affect">
+                                <span class="radio-label">Euthymic, congruent affect</span>
+                            </label>
+                        </div>
+
+                        <!-- 5. Thought Stream -->
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">5. Thought Content & Stream</div>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-attention" class="radio-control" value="Stable attention, focused" checked>
+                                <span class="radio-label">Stable attention, focused</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-attention" class="radio-control" value="Flight of ideas, delusional traits">
+                                <span class="radio-label">Flight of ideas, delusional traits</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-attention" class="radio-control" value="Distractible attention, tangential">
+                                <span class="radio-label">Distractible attention, tangential</span>
+                            </label>
+                        </div>
+
+                        <!-- 6. Insight Grade slider -->
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">6. Patient Insight (Grade 1 - 6)</div>
+                            <div class="slider-label-block">
+                                <span id="mse-insight-grade-display" style="color: var(--color-primary); font-weight: 700;">Grade 4</span>
+                                <span id="mse-insight-grade-desc" style="font-size: 11px;">Intellectual awareness (knows he is ill but no changes).</span>
+                            </div>
+                            <input type="range" class="slider-control-field" id="mse-insight-slider" min="1" max="6" step="1" value="4">
+                        </div>
+
+                        <!-- 7. Judgment -->
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">7. Judgment Appraisal</div>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-judgment" class="radio-control" value="Socially sound, personal choices appropriate" checked>
+                                <span class="radio-label">Socially sound, personal choices appropriate</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-judgment" class="radio-control" value="Impaired social, poor risk evaluation">
+                                <span class="radio-label">Impaired social, poor risk evaluation</span>
+                            </label>
+                            <label class="radio-option-line">
+                                <input type="radio" name="mse-judgment" class="radio-control" value="Intact test judgment capacity">
+                                <span class="radio-label">Intact test judgment capacity</span>
+                            </label>
+                        </div>
+
+                        <!-- Comments -->
+                        <div class="workspace-card">
+                            <div class="form-field-group">
+                                <label class="form-label">Descriptive comments / perceived anomalies:</label>
+                                <input type="text" class="input-text-field" id="mse-comments-input" value="Anxiety somatic traits visible in foot tap.">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="action-button-btn" id="compile-mse-btn" style="width: 100%; margin-bottom: 20px;">
+                        <i class="fa-solid fa-arrows-spin"></i> AI-Assist: Synthesize Prose Narrative
+                    </button>
+
+                    <div id="mse-result-card" class="workspace-card" style="display: none;">
+                        <div class="card-title-bar">
+                            <h3>Synthesized Examination Block:</h3>
+                        </div>
+                        <div class="ai-formatted-report-block">
+                            <p class="formatted-prose-output" id="mse-result-text"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: DIAGNOSTICS -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-diagnostics">
+                    <div class="section-header-block">
+                        <i class="fa-solid fa-calculator"></i>
+                        <h2>DSM-5-TR & ICD-10 Differential Diagnostician</h2>
+                    </div>
+
+                    <!-- Mode Switcher -->
+                    <div class="workspace-card">
+                        <label class="form-label">Select Diagnostic Engine Mode:</label>
+                        <div class="split-button-panel-row">
+                            <button class="action-button-btn" id="diag-mode-dsm-btn">DSM-5-TR / ICD-10</button>
+                            <button class="action-button-btn secondary" id="diag-mode-mock-btn">Conceptual / Mock</button>
+                        </div>
+                    </div>
+
+                    <!-- DSM-5 Checklist Grid -->
+                    <div id="diagnostics-dsm-inputs">
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">1. Major Depressive Disorder (MDD) Checklist:</div>
+                            <div id="dsm-mdd-checklist-box">
+                                <!-- Checkbox rows -->
+                            </div>
+                        </div>
+
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">2. Generalized Anxiety Disorder (GAD) Checklist:</div>
+                            <div id="dsm-gad-checklist-box">
+                                <!-- Checkbox rows -->
+                            </div>
+                        </div>
+
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">3. Duration & Exclusion Protocols:</div>
+                            <div class="interactive-slider-row">
+                                <div class="slider-label-block">
+                                    <span style="font-weight: 600;">Symptom Duration:</span>
+                                    <span id="dsm-duration-weeks-display" style="color: var(--color-primary); font-weight: 700;">12 weeks</span>
+                                </div>
+                                <input type="range" class="slider-control-field" id="dsm-duration-slider" min="0" max="52" value="12">
+                            </div>
+                            <div id="dsm-exclusions-box" style="margin-top: 12px;">
+                                <!-- Exclusions -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mock Checklist Grid -->
+                    <div id="diagnostics-mock-inputs" style="display: none;">
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">Mock Basic Criteria Checklist:</div>
+                            <div id="mock-basic-checklist-box">
+                                <!-- Basic criteria -->
+                            </div>
+                        </div>
+
+                        <div class="radio-options-card-group">
+                            <div class="radio-group-title">Mock Specific Symptoms Checklist:</div>
+                            <div id="mock-symptoms-checklist-box" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+                                <!-- Symptoms grid -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Real-Time Local Engine Outcomes -->
+                    <div class="workspace-card" id="local-diagnosis-results-card">
+                        <div class="card-title-bar">
+                            <h3>Live Rule-Based Engine Outcomes</h3>
+                        </div>
+                        <div id="local-diag-results-content">
+                            <!-- Results lists -->
+                        </div>
+                    </div>
+
+                    <!-- ClinicalTrials.gov API finder -->
+                    <div class="workspace-card" style="border: 1px solid rgba(var(--color-primary-rgb), 0.3);">
+                        <div class="card-title-bar">
+                            <h3 style="color: var(--color-secondary);"><i class="fa-solid fa-search"></i> Live ClinicalTrials.gov Finder</h3>
+                        </div>
+                        <p style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 14px;">
+                            Query active, recruiting human trials from ClinicalTrials.gov matching the active subject's diagnostic profile: <strong id="trials-patient-specialty">None</strong>.
+                        </p>
+                        <button class="action-button-btn tertiary" id="query-trials-btn" style="width: 100%;">
+                            Query Active Recruiting Trials
+                        </button>
+
+                        <div id="trials-results-stack" style="margin-top: 16px; display: none;">
+                            <!-- Injected trials -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: TELETHERAPY -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-teletherapy">
+                    <div class="section-header-block">
+                        <i class="fa-solid fa-video"></i>
+                        <h2>Telehealth Secure Video & Voice Suite</h2>
+                    </div>
+
+                    <!-- Pre-Call Room Entry -->
+                    <div class="workspace-card" id="teletherapy-entry-panel">
+                        <div class="telehealth-room-layout" style="align-items: center; text-align: center; padding: 20px 0;">
+                            <i class="fa-solid fa-video-slash" style="font-size: 72px; color: var(--color-secondary);"></i>
+                            <h3 style="font-family: var(--font-heading); font-size: 18px; margin-top: 12px;">Active Telehealth Room: PSY-PYR-401</h3>
+                            <p style="font-size: 12px; color: var(--color-text-muted);">E2E encrypted room. Fully HIPAA/GDPR compliant session line.</p>
+                            <button class="action-button-btn" id="start-video-call-btn" style="width: 100%; max-width: 300px; margin-top: 16px;">
+                                Secure Connect Video Line
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Call Active interface -->
+                    <div id="teletherapy-call-panel" style="display: none;">
+                        <div class="video-grid-blackbox">
+                            <div class="video-avatars-row">
+                                <!-- Professional viewport -->
+                                <div class="video-user-viewport clinician">
+                                    <div class="avatar-circle-display">KB</div>
+                                    <span class="video-user-label">Dr. Brewster (You)</span>
+                                </div>
+                                <!-- Patient viewport -->
+                                <div class="video-user-viewport patient">
+                                    <div class="avatar-circle-display">LC</div>
+                                    <span class="video-user-label" id="video-patient-label">Liam Carter</span>
+                                    <div class="waveform-wave-container" id="voice-waves">
+                                        <div class="waveform-wave-bar active"></div>
+                                        <div class="waveform-wave-bar active"></div>
+                                        <div class="waveform-wave-bar active"></div>
+                                        <div class="waveform-wave-bar active"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="video-controls-console">
+                                <button class="video-console-btn mute" id="call-toggle-mic" title="Mute Mic"><i class="fa-solid fa-microphone"></i></button>
+                                <button class="video-console-btn hangup" id="call-hangup-btn" title="End Call"><i class="fa-solid fa-phone-slash"></i></button>
+                                <button class="video-console-btn record active" id="call-toggle-rec" title="Toggle Recording"><i class="fa-solid fa-record-vinyl"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Chat Companion console -->
+                        <div class="secure-companion-chat-box" style="margin-top: 20px;">
+                            <h4 class="chat-console-title">Secure Companion Chat Console</h4>
+                            <div class="chat-logs-area" id="call-chat-logs">
+                                <!-- Bubbles injected -->
+                            </div>
+                            <div class="chat-composer-row">
+                                <input type="text" class="input-text-field" id="call-chat-input" placeholder="Secure text...">
+                                <button class="action-button-btn" id="call-send-chat-btn" style="height: 38px;"><i class="fa-solid fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+
+                        <button class="action-button-btn" id="teletherapy-compile-soap-btn" style="width: 100%; margin-top: 20px;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Compile AI Meeting SOAP Note
+                        </button>
+                        
+                        <div id="teletherapy-soap-result-card" class="workspace-card" style="display: none; margin-top: 20px;">
+                            <div class="card-title-bar">
+                                <h3>Automatic SOAP Summary Output:</h3>
+                            </div>
+                            <div class="ai-formatted-report-block">
+                                <pre class="report-markdown-output" id="teletherapy-soap-result-text"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: CBT PLANNER -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-planner">
+                    <div class="section-header-block">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <h2>CBT Treatment Planner Core</h2>
+                    </div>
+
+                    <div class="workspace-card">
+                        <div class="card-title-bar">
+                            <h3>Design SMART Therapy Goals:</h3>
+                        </div>
+                        <div class="form-field-group">
+                            <label class="form-label">Base Goals target:</label>
+                            <input type="text" class="input-text-field" id="planner-goal-title" value="Improve sleep pacing routines / CBT-I">
+                        </div>
+                        <div class="form-field-group">
+                            <label class="form-label">Context & therapeutic notes:</label>
+                            <input type="text" class="input-text-field" id="planner-goal-desc" value="Complete daily abdominal breathing guides and sleep notebook.">
+                        </div>
+                        <button class="action-button-btn" id="planner-formulate-btn" style="width: 100%;">
+                            <i class="fa-solid fa-brain"></i> Auto-Formulate SMART Details
+                        </button>
+                    </div>
+
+                    <div id="planner-result-card" class="workspace-card" style="display: none;">
+                        <div class="card-title-bar">
+                            <h3>AI Formulated Therapy Roadmap:</h3>
+                        </div>
+                        <div class="ai-formatted-report-block">
+                            <p class="formatted-prose-output" id="planner-result-text"></p>
+                        </div>
+                    </div>
+
+                    <!-- Clinician Homework management -->
+                    <div class="workspace-card">
+                        <div class="card-title-bar">
+                            <h3 style="color: var(--color-primary);">Assign Homework Task for Active Subject:</h3>
+                        </div>
+                        <div class="form-field-group">
+                            <label class="form-label">Homework description:</label>
+                            <input type="text" class="input-text-field" id="planner-hw-input" placeholder="e.g. Complete sleep tracking, log anxiety triggers...">
+                        </div>
+                        <button class="action-button-btn" id="planner-assign-hw-btn" style="float: right;">
+                            <i class="fa-solid fa-plus"></i> Assign Homework
+                        </button>
+                        <div style="clear: both;"></div>
+                    </div>
+
+                    <div class="card-title-bar" style="margin-top: 24px;">
+                        <h3>Active Assigned Homework Checklist</h3>
+                    </div>
+                    <div id="planner-homework-checklist-container">
+                        <!-- Injected checklist -->
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: ASSESSMENTS -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-assessments">
+                    <div class="section-header-block">
+                        <i class="fa-solid fa-square-poll-horizontal"></i>
+                        <h2>Interactive Assessments Library</h2>
+                    </div>
+
+                    <div class="workspace-card">
+                        <label class="form-label">Select Assessment Standard:</label>
+                        <div class="chips-horizontal-scroll" id="assessments-standards-chips">
+                            <!-- Standards -->
+                        </div>
+                    </div>
+
+                    <p style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px;">
+                        Complete questionnaire below to generate immediate auto-scoring parameters:
+                    </p>
+
+                    <div class="workspace-card" id="assessments-form-container">
+                        <!-- Cloned sliders injected by JS -->
+                    </div>
+
+                    <!-- Auto-Scoring report -->
+                    <div class="workspace-card" id="assessments-score-card">
+                        <div style="text-align: center; padding: 10px 0;">
+                            <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--color-text-secondary);">Auto-Scoring Evaluator</h4>
+                            <div class="timer-large-readout" id="assessment-numeric-score" style="font-size: 64px; line-height: 1.1; margin: 10px 0;">0</div>
+                            <p id="assessment-severity-text" style="font-weight: 700; font-size: 16px; margin-bottom: 20px;">Minimal clinical traits</p>
+                            <button class="action-button-btn" id="assessment-save-db-btn">Log Score to database</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: ANALYTICS -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-analytics">
+                    <div class="section-header-block">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <h2>Clinical Case & Wellness Analytics</h2>
+                    </div>
+
+                    <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 14px;">Interactive Multi-Day Behavioral Performance Analytics:</h3>
+
+                    <!-- SVG custom graph wrapper -->
+                    <div class="canvas-graph-container">
+                        <div class="graph-title">Daily Emotional Wellness Progress Grid (10-days scale)</div>
+                        <svg class="mood-line-svg" id="analytics-mood-chart-svg" viewBox="0 0 800 180">
+                            <!-- SVG lines, path, and dots injected by js -->
+                        </svg>
+                    </div>
+
+                    <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 14px;">Registered Device HIPAA Logs Database:</h3>
+                    
+                    <div class="audit-logs-scroll-stack" id="analytics-mini-audit-logs">
+                        <!-- Injected logs -->
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: HIPAA SHIELD -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-hipaa-shield">
+                    <div class="section-header-block">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <h2>HIPAA Shield & Security Cryptography</h2>
+                    </div>
+
+                    <div class="workspace-card" style="background-color: var(--color-bg); border-color: var(--color-accent);">
+                        <div class="suggestion-banner-title" style="color: var(--color-accent);">
+                            <i class="fa-solid fa-circle-check"></i> VAULT COMPLIANCE STATUS: VERIFIED
+                        </div>
+                        <div class="suggestion-banner-items" style="color: #FFFFFF; font-size: 12px; margin-top: 10px;">
+                            <div>• Local Database: Fully isolated inside browser localStorage. Zero network leakages.</div>
+                            <div>• Gemini Security standards: Data processed through Enterprise private secure models.</div>
+                            <div>• Hardware cryptographic key bindings: Active (AES-GCM-256 local envelopes).</div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 14px;">Real-Time HIPAA Compliance Database Access Logs:</h3>
+                    
+                    <div class="audit-logs-scroll-stack" id="hipaa-full-audit-logs">
+                        <!-- Full logs lists -->
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN: PATIENT WELLNESS LOUNGE -->
+                <!-- ============================================== -->
+                <div class="screen-container" id="screen-patient-wellness">
+                    <div class="section-header-block">
+                        <i class="fa-solid fa-spa"></i>
+                        <h2>Transpersonal Wellness Lounge</h2>
+                    </div>
+
+                    <!-- Somatic Breathing Mandala Card -->
+                    <div class="workspace-card">
+                        <div class="wellness-mandala-wrapper">
+                            <h3 style="font-family: var(--font-heading); font-size: 16px; margin-bottom: 24px;">Bio-Feedback Breath Restructuring (CBT)</h3>
+                            
+                            <div class="mandala-pacer-outer" id="mandala-breathing-circle">
+                                <div class="mandala-inner-node">
+                                    <span class="mandala-instruction" id="mandala-breathing-text">INHALE</span>
+                                </div>
+                            </div>
+                            
+                            <p class="breathing-caption-details">
+                                Synchronize with the scaling mandala.<br>
+                                Box Breathing standard pacing configuration (4s - 4s - 4s).
+                            </p>
+                            
+                            <button class="action-button-btn" id="breathing-toggle-btn">Start Somatic Restructuring</button>
+                        </div>
+                    </div>
+
+                    <!-- Timed Meditation Timer -->
+                    <div class="workspace-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="font-family: var(--font-heading); font-size: 15px;">Traditional Mindfulness Timer</h3>
+                                <div class="timer-large-readout" id="meditation-clock-display">05:00</div>
+                            </div>
+                            <button class="action-button-btn" id="meditation-toggle-btn">Meditate</button>
+                        </div>
+                    </div>
+
+                    <!-- Mood journal log -->
+                    <div class="workspace-card">
+                        <div class="card-title-bar">
+                            <h3>Daily Wellness Register:</h3>
+                        </div>
+                        
+                        <div class="interactive-slider-row">
+                            <div class="slider-label-block">
+                                <span>Evaluate Current Mood Score (1 - 10):</span>
+                                <strong id="mood-score-slider-display" style="color: var(--color-primary);">7</strong>
+                            </div>
+                            <input type="range" class="slider-control-field" id="mood-score-slider" min="1" max="10" value="7">
+                        </div>
+
+                        <div class="form-field-group">
+                            <label class="form-label">What are you grateful for today?</label>
+                            <input type="text" class="input-text-field" id="mood-gratitude-input" value="Woke up early and finished my coffee peacefully.">
+                        </div>
+
+                        <button class="action-button-btn" id="mood-log-submit-btn" style="width: 100%;">Log Day Metrics</button>
+                        <p id="mood-log-toast-prompt" style="color: var(--color-secondary); font-size: 11px; margin-top: 8px; text-align: center;"></p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- OVERLAY MODAL: SCHEDULE EHR APPOINTMENT -->
+    <!-- ============================================== -->
+    <div class="modal-overlay-block" id="add-appt-modal-overlay">
+        <div class="modal-content-box">
+            <h3 class="modal-header-row">Schedule EHR Appointment</h3>
+            
+            <div class="form-field-group">
+                <label class="form-label">Select Patient Target:</label>
+                <div class="chips-horizontal-scroll" id="add-appt-patient-scroll">
+                    <!-- Chips injected -->
+                </div>
+            </div>
+
+            <div class="form-field-group">
+                <label class="form-label">Appointment Date & Time</label>
+                <input type="text" class="input-text-field" id="add-appt-time-input" value="Today, 04:00 PM">
+            </div>
+
+            <div class="form-field-group">
+                <label class="form-label">Therapy Notes Agenda</label>
+                <input type="text" class="input-text-field" id="add-appt-notes-input" value="Periodic diagnostic restructurings.">
+            </div>
+
+            <div class="checkbox-option-row">
+                <input type="checkbox" class="checkbox-control" id="add-appt-video-checkbox" checked>
+                <label class="checkbox-label" for="add-appt-video-checkbox">Connect as Secure Video Call</label>
+            </div>
+
+            <div class="modal-actions-panel">
+                <button class="action-button-btn secondary" id="close-add-appt-modal-btn">Dismiss</button>
+                <button class="action-button-btn" id="submit-add-appt-btn">Insert Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- SETTINGS SLIDE DRAWER -->
+    <!-- ============================================== -->
+    <aside class="settings-drawer-panel" id="settings-slide-drawer">
+        <div class="settings-drawer-header">
+            <h3>API Configurations</h3>
+            <button class="rail-btn" id="close-settings-drawer-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="settings-drawer-body">
+            <div class="form-field-group">
+                <label class="form-label">Google Gemini API Key:</label>
+                <input type="password" class="input-text-field" id="settings-gemini-key-input" placeholder="AIzaSy...">
+                <div class="api-key-status-text fallback" id="api-key-status-indicator">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Key not set. Running in local mock mode.
+                </div>
+            </div>
+            
+            <div style="font-size: 11.5px; color: var(--color-text-secondary); line-height: 1.5; margin-top: 16px;">
+                <p><strong>Note:</strong> When the API key is not configured, the AI Copilot features will return high-fidelity simulated clinician outputs corresponding to the clinical guidelines.</p>
+                <br>
+                <p>The key is saved locally in your browser storage (localStorage) and is only sent directly to Google Gemini REST endpoints. It never transits through third-party servers.</p>
+            </div>
+        </div>
+
+        <button class="action-button-btn" id="save-settings-drawer-btn" style="width: 100%;">
+            Save Settings
+        </button>
+    </aside>
+
+    <!-- Main Module Application Hook -->
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>
