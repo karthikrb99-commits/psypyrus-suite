@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Database } from '../../services/db';
+import { GamificationService } from '../../services/gamification';
 
 export function ClinicianDashboard({
     patients,
@@ -10,6 +11,19 @@ export function ClinicianDashboard({
 }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredPatients, setFilteredPatients] = useState(patients);
+
+    // Gamification state
+    const [gamificationProfile, setGamificationProfile] = useState(() => GamificationService.getProfile('Professional'));
+
+    useEffect(() => {
+        const handleGamificationChange = (e) => {
+            if (e.detail && e.detail.role === 'Professional') {
+                setGamificationProfile(e.detail.profile);
+            }
+        };
+        window.addEventListener('psypyrus_gamification_change', handleGamificationChange);
+        return () => window.removeEventListener('psypyrus_gamification_change', handleGamificationChange);
+    }, []);
     
     // Quick add patient state
     const [showAddForm, setShowAddForm] = useState(false);
@@ -103,8 +117,6 @@ export function ClinicianDashboard({
         { month: 'May', revenue: 3100 },
         { month: 'Jun', revenue: Math.round(totalRev) || 2400 }
     ];
-
-    const maxRev = Math.max(...revenueData.map(d => d.revenue));
 
     // Calendar Grid Mapping (9:00 AM - 5:00 PM for the week)
     const timeSlots = ["09:00 AM", "11:00 AM", "01:00 PM", "03:00 PM", "04:30 PM"];
@@ -423,7 +435,7 @@ export function ClinicianDashboard({
 
                                 {/* Slots Grid */}
                                 {timeSlots.map(slot => (
-                                    <React.Fragment key={slot}>
+                                    <Fragment key={slot}>
                                         <div className="calendar-time-cell">{slot}</div>
                                         {weekDays.map(day => {
                                             const appt = getApptForSlot(day, slot);
@@ -438,7 +450,7 @@ export function ClinicianDashboard({
                                                 </div>
                                             );
                                         })}
-                                    </React.Fragment>
+                                    </Fragment>
                                 ))}
                             </div>
                         )}
@@ -492,6 +504,99 @@ export function ClinicianDashboard({
 
                 {/* Right Side: Roster, Search & Insights */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    
+                    {/* Clinician Quests & Mastery Widget */}
+                    <div className="workspace-card" style={{ marginBottom: '4px', background: 'linear-gradient(135deg, rgba(79, 172, 254, 0.05) 0%, rgba(0, 242, 254, 0.05) 100%)', border: '1px solid rgba(0, 242, 254, 0.1)' }}>
+                        <div className="card-title-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                                <i className="fa-solid fa-trophy" style={{ color: 'var(--color-warning)' }}></i>
+                                Clinician Quests & Mastery
+                            </h3>
+                            <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '10px', color: 'var(--text-light)', fontWeight: 'bold' }}>
+                                Level {gamificationProfile?.level || 1}
+                            </span>
+                        </div>
+                        
+                        {/* XP Bar */}
+                        <div style={{ marginTop: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                                <span>XP: {gamificationProfile?.xp || 0}/{gamificationProfile?.nextLevelXp || 100}</span>
+                                <span>{Math.round(((gamificationProfile?.xp || 0) / (gamificationProfile?.nextLevelXp || 100)) * 100)}%</span>
+                            </div>
+                            <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{
+                                    width: `${Math.min(100, Math.round(((gamificationProfile?.xp || 0) / (gamificationProfile?.nextLevelXp || 100)) * 100))}%`,
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, var(--color-primary), var(--color-accent))',
+                                    borderRadius: '3px',
+                                    transition: 'width 0.3s ease'
+                                }}></div>
+                            </div>
+                        </div>
+
+                        {/* Quests List */}
+                        <div style={{ marginTop: '16px' }}>
+                            <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Daily Quests</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {gamificationProfile?.quests?.map(quest => {
+                                    const screenMapping = {
+                                        'WRITE_NOTE': 'AI Copilot',
+                                        'RUN_DIAGNOSTIC': 'Diagnostics',
+                                        'COMPLETE_ASSESSMENT': 'Assessments',
+                                        'ASSIGN_HOMEWORK': 'Planner'
+                                    };
+                                    const targetScreen = screenMapping[quest.type];
+                                    return (
+                                        <div key={quest.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '8px', padding: '8px 12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexGrow: 1 }}>
+                                                <i className={`fa-solid ${quest.completed ? 'fa-circle-check' : 'fa-circle'}`} style={{ color: quest.completed ? 'var(--color-success)' : 'var(--text-muted)', flexShrink: 0 }}></i>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: quest.completed ? 'var(--text-muted)' : 'var(--text-light)', textDecoration: quest.completed ? 'line-through' : 'none', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{quest.title}</span>
+                                                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{quest.desc}</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                                                <span style={{ fontSize: '10px', color: 'var(--color-primary)', fontWeight: 'bold' }}>{quest.current}/{quest.target}</span>
+                                                {!quest.completed && targetScreen && (
+                                                    <button 
+                                                        className="action-button-btn secondary mini-action-btn" 
+                                                        style={{ padding: '2px 6px', fontSize: '9px', margin: 0 }}
+                                                        onClick={() => onNavigateToScreen(targetScreen)}
+                                                    >
+                                                        Go
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Badges List */}
+                        {gamificationProfile?.badges?.length > 0 && (
+                            <div style={{ marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px' }}>
+                                <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Unlocked Achievements</span>
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    {gamificationProfile.badges.map(badgeId => {
+                                        const badgeDetails = {
+                                            'note_novice': { name: 'Note Novice', icon: 'fa-pen-clip', color: '#4facfe' },
+                                            'note_master': { name: 'Scribe Master', icon: 'fa-feather-pointed', color: '#00f2fe' },
+                                            'diagnostic_wizard': { name: 'Diagnostic Wizard', icon: 'fa-wand-magic-sparkles', color: '#a18cd1' },
+                                            'assessment_guru': { name: 'Assessment Guru', icon: 'fa-clipboard-question', color: '#ff9a9e' },
+                                            'level_5_pro': { name: 'EHR Champion', icon: 'fa-trophy', color: '#f5a623' }
+                                        }[badgeId] || { name: 'Achievement', icon: 'fa-award', color: 'var(--color-primary)' };
+
+                                        return (
+                                            <div key={badgeId} title={badgeDetails.name} style={{ display: 'flex', alignItems: 'center', justifySelf: 'center', width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: `1px solid ${badgeDetails.color}`, justifyContent: 'center', color: badgeDetails.color }}>
+                                                <i className={`fa-solid ${badgeDetails.icon}`} style={{ fontSize: '11px' }}></i>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                     
                     {/* Patient search & roster list */}
                     <div className="workspace-card">

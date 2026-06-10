@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export function CommandPalette({
     isOpen,
@@ -66,6 +66,16 @@ export function CommandPalette({
         }
     }, [isOpen]);
 
+    const handleSelect = useCallback((item) => {
+        if (item.category === 'Navigation') {
+            onNavigate(item.screen);
+        } else if (item.category === 'Patients') {
+            onSelectPatient(item.patientId);
+            onNavigate('Dashboard'); // Go back to dashboard to view patient details
+        }
+        onClose();
+    }, [onClose, onNavigate, onSelectPatient]);
+
     // Handle arrow keys and Enter
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -89,7 +99,7 @@ export function CommandPalette({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, filteredItems, selectedIndex]);
+    }, [filteredItems, handleSelect, isOpen, onClose, selectedIndex]);
 
     // Scroll selected item into view
     useEffect(() => {
@@ -98,16 +108,6 @@ export function CommandPalette({
             activeEl.scrollIntoView({ block: 'nearest' });
         }
     }, [selectedIndex]);
-
-    const handleSelect = (item) => {
-        if (item.category === 'Navigation') {
-            onNavigate(item.screen);
-        } else if (item.category === 'Patients') {
-            onSelectPatient(item.patientId);
-            onNavigate('Dashboard'); // Go back to dashboard to view patient details
-        }
-        onClose();
-    };
 
     if (!isOpen) return null;
 

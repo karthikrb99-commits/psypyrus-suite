@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { GamificationService } from '../services/gamification';
 
 export function Sidebar({
     activeRole,
@@ -13,10 +14,28 @@ export function Sidebar({
     const [focusedIndex, setFocusedIndex] = useState(-1);
     const sidebarRef = useRef(null);
 
+    // Gamification state
+    const [profile, setProfile] = useState(() => GamificationService.getProfile(activeRole));
+
+    useEffect(() => {
+        setProfile(GamificationService.getProfile(activeRole));
+    }, [activeRole]);
+
+    useEffect(() => {
+        const handleGamificationChange = (e) => {
+            if (e.detail && e.detail.role === activeRole) {
+                setProfile(e.detail.profile);
+            }
+        };
+        window.addEventListener('psypyrus_gamification_change', handleGamificationChange);
+        return () => window.removeEventListener('psypyrus_gamification_change', handleGamificationChange);
+    }, [activeRole]);
+
     // Nav configurations
-    const clinicianNavItems = [
+    const clinicianNavItems = useMemo(() => [
         { name: 'Dashboard', icon: 'fa-chart-pie' },
         { name: 'AI Copilot', icon: 'fa-wand-magic-sparkles', badge: 'New' },
+        { name: 'CH+MSE Workstation', icon: 'fa-book-medical', badge: 'Core' },
         { name: 'Digital MSE', icon: 'fa-clipboard-list' },
         { name: 'Diagnostics', icon: 'fa-stethoscope', badge: 'Alert' },
         { name: 'Teletherapy', icon: 'fa-video' },
@@ -25,18 +44,21 @@ export function Sidebar({
         { name: 'Analytics', icon: 'fa-chart-line' },
         { name: 'Marketplace', icon: 'fa-shop' },
         { name: 'HIPAA Shield', icon: 'fa-user-shield' }
-    ];
+    ], []);
 
-    const patientNavItems = [
+    const patientNavItems = useMemo(() => [
         { name: 'Dashboard', icon: 'fa-house-medical' },
         { name: 'Wellness', icon: 'fa-spa', label: 'Wellness Lounge', badge: 'New' },
         { name: 'Assessments', icon: 'fa-file-invoice' },
         { name: 'Teletherapy', icon: 'fa-video', label: 'Telehealth' },
         { name: 'Marketplace', icon: 'fa-shop', label: 'Wellness Store' },
         { name: 'HIPAA Shield', icon: 'fa-shield-halved', label: 'Security logs' }
-    ];
+    ], []);
 
-    const navItems = activeRole === 'Professional' ? clinicianNavItems : patientNavItems;
+    const navItems = useMemo(
+        () => activeRole === 'Professional' ? clinicianNavItems : patientNavItems,
+        [activeRole, clinicianNavItems, patientNavItems]
+    );
 
     // Handle keyboard navigation (Arrow keys, Space/Enter)
     useEffect(() => {
@@ -61,7 +83,7 @@ export function Sidebar({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [navItems, focusedIndex]);
+    }, [focusedIndex, navItems, onScreenChange]);
 
     // Keep focus index in sync with activeScreen
     useEffect(() => {
@@ -96,18 +118,59 @@ export function Sidebar({
             </div>
 
             {/* Clinician / User Profile Info */}
-            <div className="user-profile-widget">
-                <div className="profile-avatar-circle" title={activeRole === 'Professional' ? 'Dr. Liam Carter' : 'Patient Liam Carter'}>
+            <div className="user-profile-widget" style={{ padding: isCollapsed ? '10px 0' : '12px 16px', display: 'flex', flexDirection: isCollapsed ? 'column' : 'row', alignItems: 'center', gap: '12px' }}>
+                <div className="profile-avatar-circle" title={activeRole === 'Professional' ? 'Dr. Liam Carter' : 'Patient Liam Carter'} style={{ position: 'relative', flexShrink: 0 }}>
                     {activeRole === 'Professional' ? 'LC' : 'PC'}
+                    {/* Level Badge Overlay */}
+                    <span className="profile-level-badge" style={{
+                        position: 'absolute',
+                        bottom: '-4px',
+                        right: '-4px',
+                        background: 'var(--color-primary)',
+                        color: '#fff',
+                        borderRadius: '50%',
+                        width: '18px',
+                        height: '18px',
+                        fontSize: '9px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid var(--color-bg-dark)',
+                        boxShadow: '0 0 5px rgba(0,0,0,0.5)'
+                    }}>
+                        {profile?.level || 1}
+                    </span>
                 </div>
                 {!isCollapsed && (
-                    <div className="profile-details-text">
-                        <span className="profile-username">
+                    <div className="profile-details-text" style={{ flexGrow: 1, minWidth: 0 }}>
+                        <span className="profile-username" style={{ fontSize: '13px', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                             {activeRole === 'Professional' ? 'Dr. Liam Carter' : 'Liam Carter'}
                         </span>
-                        <span className="profile-role-sub">
-                            {activeRole === 'Professional' ? 'Lead Psychiatrist' : 'Patient Dashboard'}
+                        <span className="profile-role-sub" style={{ display: 'block', fontSize: '11px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            {activeRole === 'Professional' ? 'Lead Psychiatrist' : 'Patient Persona'}
                         </span>
+                        
+                        {/* XP Progress Bar */}
+                        <div className="sidebar-xp-container" style={{ marginTop: '6px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text-muted)', marginBottom: '2px' }}>
+                                <span>XP: {profile?.xp || 0}/{profile?.nextLevelXp || 100}</span>
+                                {activeRole === 'Patient' && (
+                                    <span style={{ color: 'var(--color-warning)', fontWeight: 'bold' }}>
+                                        🪙 {profile?.coins || 0}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="sidebar-xp-bar-bg" style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                                <div className="sidebar-xp-bar-fill" style={{
+                                    width: `${Math.min(100, Math.round(((profile?.xp || 0) / (profile?.nextLevelXp || 100)) * 100))}%`,
+                                    height: '100%',
+                                    background: 'var(--color-primary)',
+                                    borderRadius: '2px',
+                                    transition: 'width 0.3s ease'
+                                }}></div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
@@ -189,4 +252,3 @@ export function Sidebar({
         </aside>
     );
 }
-

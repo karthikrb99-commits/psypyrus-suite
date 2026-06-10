@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export function LandingPage({ onEnterPortal }) {
     const [activeAppleTab, setActiveAppleTab] = useState(null); // 'ios' or 'macos' or null

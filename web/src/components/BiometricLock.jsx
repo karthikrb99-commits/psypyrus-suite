@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Database } from '../services/db';
 
 export function BiometricLock({ onUnlock }) {

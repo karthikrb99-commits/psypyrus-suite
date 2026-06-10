@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Database } from './services/db';
 import { ToastProvider, useToast } from './components/ToastProvider';
 import { CommandPalette } from './components/CommandPalette';
@@ -15,6 +15,7 @@ import { ClinicianDashboard } from './components/screens/ClinicianDashboard';
 import { PatientDashboard } from './components/screens/PatientDashboard';
 import { SOAPNotesCopilot } from './components/screens/SOAPNotesCopilot';
 import { MentalStatusExam } from './components/screens/MentalStatusExam';
+import { CaseHistoryMSE } from './components/screens/CaseHistoryMSE';
 import { DiagnosticsSuite } from './components/screens/DiagnosticsSuite';
 import { TelehealthSession } from './components/screens/TelehealthSession';
 import { CBTGoalPlanner } from './components/screens/CBTGoalPlanner';
@@ -42,14 +43,31 @@ function MainAppContent() {
     const [patients, setPatients] = useState([]);
     const [appointments, setAppointments] = useState([]);
 
-    const refreshData = () => {
+    const refreshData = useCallback(() => {
         setPatients(Database.getPatients());
         setAppointments(Database.getAppointments());
-    };
+    }, []);
+
+    const handleLock = useCallback(() => {
+        setIsLocked(true);
+        Database.logAudit("Biometric Session Locked", "EHR cryptographic session locked by user.");
+        showToast("Cryptographic session locked. Tap scanner to re-authenticate.", "warning");
+    }, [showToast]);
 
     useEffect(() => {
         refreshData();
         window.addEventListener('psypyrus_db_change', refreshData);
+
+        // Listen to gamification toasts
+        const handleToast = (e) => {
+            if (e.detail && e.detail.message) {
+                showToast(e.detail.message, e.detail.type || 'info');
+            }
+        };
+        window.addEventListener('psypyrus_toast', handleToast);
+
+        // Sync active role to localStorage
+        localStorage.setItem('psypyrus_active_role', activeRole);
         
         // Listen to Electron lock-session event
         let unsubscribeLock;
@@ -61,9 +79,10 @@ function MainAppContent() {
 
         return () => {
             window.removeEventListener('psypyrus_db_change', refreshData);
+            window.removeEventListener('psypyrus_toast', handleToast);
             if (unsubscribeLock) unsubscribeLock();
         };
-    }, []);
+    }, [handleLock, refreshData, activeRole, showToast]);
 
     // Theme manager
     useEffect(() => {
@@ -88,21 +107,16 @@ function MainAppContent() {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [handleLock]);
 
     const handleUnlock = () => {
         setIsLocked(false);
         showToast("Session decrypted. Access granted to EHR data vault.", "success");
     };
 
-    const handleLock = () => {
-        setIsLocked(true);
-        Database.logAudit("Biometric Session Locked", "EHR cryptographic session locked by user.");
-        showToast("Cryptographic session locked. Tap scanner to re-authenticate.", "warning");
-    };
-
     const handleRoleChange = (role) => {
         setActiveRole(role);
+        localStorage.setItem('psypyrus_active_role', role);
         setActiveScreen('Dashboard');
         if (role === 'Patient') {
             setActivePatientId(1); // Default patient target in patient mode
@@ -157,6 +171,14 @@ function MainAppContent() {
                 case 'AI Copilot':
                     return (
                         <SOAPNotesCopilot 
+                            patients={patients}
+                            activePatientId={activePatientId}
+                            onSetActivePatientId={handleSelectPatient}
+                        />
+                    );
+                case 'CH+MSE Workstation':
+                    return (
+                        <CaseHistoryMSE
                             patients={patients}
                             activePatientId={activePatientId}
                             onSetActivePatientId={handleSelectPatient}
@@ -334,4 +356,3 @@ export default function App() {
         </ToastProvider>
     );
 }
-

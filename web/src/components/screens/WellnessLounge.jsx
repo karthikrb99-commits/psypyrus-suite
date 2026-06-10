@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Database } from '../../services/db';
+import { GamificationService } from '../../services/gamification';
 
 export function WellnessLounge({ activePatientId = 1 }) {
     // Meditation state
@@ -49,7 +50,6 @@ export function WellnessLounge({ activePatientId = 1 }) {
         // Calculate consecutive days for streak
         if (logs.length > 0) {
             let streak = 0;
-            let lastDate = null;
             const uniqueDays = Array.from(new Set(logs.map(l => new Date(l.date).toDateString()))).map(d => new Date(d));
             uniqueDays.sort((a,b) => b - a); // newest first
 
@@ -91,6 +91,11 @@ export function WellnessLounge({ activePatientId = 1 }) {
                             breathingSeconds: 300
                         });
 
+                        // Gamification Hook
+                        GamificationService.trackAction('Patient', 'MEDITATE');
+                        GamificationService.awardXp('Patient', 50, 'Completed Meditation Session');
+                        GamificationService.awardCoins('Patient', 15, 'Meditation Session Completion');
+
                         setToastMessage("Meditation completed! Daily streak updated.");
                         setTimeout(() => setToastMessage(''), 3000);
                         return 300; // Reset
@@ -106,7 +111,7 @@ export function WellnessLounge({ activePatientId = 1 }) {
     }, [meditationRunning, ambientSound]);
 
     // Paced Breathing cycles config
-    const breathingCycles = {
+    const breathingCycles = useMemo(() => ({
         box: [
             { phase: 'INHALE', duration: 4, msg: 'Breathe in slowly...' },
             { phase: 'HOLD', duration: 4, msg: 'Hold your breath...' },
@@ -122,7 +127,7 @@ export function WellnessLounge({ activePatientId = 1 }) {
             { phase: 'INHALE', duration: 5, msg: 'Breathe in...' },
             { phase: 'EXHALE', duration: 5, msg: 'Breathe out...' }
         ]
-    };
+    }), []);
 
     // Paced Breathing hook
     useEffect(() => {
@@ -165,7 +170,7 @@ export function WellnessLounge({ activePatientId = 1 }) {
                 clearInterval(breathingTimerRef.current);
             }
         };
-    }, [breathingActive, breathingPattern]);
+    }, [breathingActive, breathingCycles, breathingPattern]);
 
     const formatTime = (secs) => {
         const mins = Math.floor(secs / 60);

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Database } from '../../services/db';
+import { GamificationService } from '../../services/gamification';
 
 export function PatientDashboard({
     appointments,
@@ -8,10 +9,26 @@ export function PatientDashboard({
 }) {
     const [streak, setStreak] = useState(0);
     const [countdown, setCountdown] = useState('');
-    const [therapistMsg, setTherapistMsg] = useState('Please practice your deep breathing exercises before our session today.');
+    const [therapistMsg] = useState('Please practice your deep breathing exercises before our session today.');
+
+    // Gamification state
+    const [gamificationProfile, setGamificationProfile] = useState(() => GamificationService.getProfile('Patient'));
+
+    useEffect(() => {
+        const handleGamificationChange = (e) => {
+            if (e.detail && e.detail.role === 'Patient') {
+                setGamificationProfile(e.detail.profile);
+            }
+        };
+        window.addEventListener('psypyrus_gamification_change', handleGamificationChange);
+        return () => window.removeEventListener('psypyrus_gamification_change', handleGamificationChange);
+    }, []);
 
     // Filter scheduled appointments for the logged-in patient
-    const patientAppts = appointments.filter(a => a.patientId === Number(activePatientId) && a.status === "Scheduled");
+    const patientAppts = useMemo(
+        () => appointments.filter(a => a.patientId === Number(activePatientId) && a.status === "Scheduled"),
+        [activePatientId, appointments]
+    );
     
     // Filter homework tasks for the logged-in patient
     const tasks = Database.getHomework(activePatientId);
@@ -124,7 +141,7 @@ export function PatientDashboard({
         updateTimer();
         const timer = setInterval(updateTimer, 60000); // update every minute
         return () => clearInterval(timer);
-    }, [appointments, activePatientId]);
+    }, [activePatientId, patientAppts]);
 
     const handleToggleHomework = (id) => {
         Database.toggleHomework(id);
@@ -313,13 +330,115 @@ export function PatientDashboard({
                 </div>
 
                 {/* Right Side: Homework Circular Progress */}
-                <div className="workspace-card" style={{ height: 'fit-content' }}>
-                    <div className="card-title-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3>Clinical Assignments</h3>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                            {completedTasksCount} / {totalTasksCount} completed
-                        </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    {/* Patient Wellness Milestones Widget */}
+                    <div className="workspace-card" style={{ background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.05) 0%, rgba(245, 166, 35, 0.03) 100%)', border: '1px solid rgba(0, 242, 254, 0.1)', margin: 0 }}>
+                        <div className="card-title-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                                <i className="fa-solid fa-crown" style={{ color: 'var(--color-warning)' }}></i>
+                                Wellness Milestones
+                            </h3>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--color-warning)', fontWeight: 'bold' }}>
+                                    🪙 {gamificationProfile?.coins || 0} Coins
+                                </span>
+                                <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '10px', color: '#fff', fontWeight: 'bold' }}>
+                                    Lvl {gamificationProfile?.level || 1}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* XP Progress Bar */}
+                        <div style={{ marginTop: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                                <span>XP: {gamificationProfile?.xp || 0}/{gamificationProfile?.nextLevelXp || 100}</span>
+                                <span>{Math.round(((gamificationProfile?.xp || 0) / (gamificationProfile?.nextLevelXp || 100)) * 100)}%</span>
+                            </div>
+                            <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{
+                                    width: `${Math.min(100, Math.round(((gamificationProfile?.xp || 0) / (gamificationProfile?.nextLevelXp || 100)) * 100))}%`,
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, var(--color-primary), var(--color-accent))',
+                                    borderRadius: '3px',
+                                    transition: 'width 0.3s ease'
+                                }}></div>
+                            </div>
+                        </div>
+
+                        {/* Daily Quests */}
+                        <div style={{ marginTop: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 'bold' }}>Daily Wellness Quests</span>
+                                <span style={{ fontSize: '10px', color: 'var(--color-warning)' }}><i className="fa-solid fa-fire"></i> {streak} Day Streak</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {gamificationProfile?.quests?.map(quest => {
+                                    const screenMapping = {
+                                        'LOG_MOOD': 'Wellness',
+                                        'COMPLETE_BREATHING': 'Wellness',
+                                        'COMPLETE_HOMEWORK': 'Dashboard',
+                                        'MEDITATE': 'Wellness'
+                                    };
+                                    const targetScreen = screenMapping[quest.type];
+                                    return (
+                                        <div key={quest.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '8px', padding: '8px 12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexGrow: 1 }}>
+                                                <i className={`fa-solid ${quest.completed ? 'fa-circle-check' : 'fa-circle'}`} style={{ color: quest.completed ? 'var(--color-success)' : 'var(--text-muted)', flexShrink: 0 }}></i>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: quest.completed ? 'var(--text-muted)' : 'var(--text-light)', textDecoration: quest.completed ? 'line-through' : 'none', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{quest.title}</span>
+                                                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{quest.desc}</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                                                <span style={{ fontSize: '10px', color: 'var(--color-primary)', fontWeight: 'bold' }}>{quest.current}/{quest.target}</span>
+                                                {!quest.completed && targetScreen && (
+                                                    <button 
+                                                        className="action-button-btn secondary mini-action-btn" 
+                                                        style={{ padding: '2px 6px', fontSize: '9px', margin: 0 }}
+                                                        onClick={() => onNavigateToScreen(targetScreen)}
+                                                    >
+                                                        Go
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Unlocked Badges */}
+                        {gamificationProfile?.badges?.length > 0 && (
+                            <div style={{ marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px' }}>
+                                <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Unlocked Badges</span>
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    {gamificationProfile.badges.map(badgeId => {
+                                        const badgeDetails = {
+                                            'mindful_start': { name: 'First Breath', icon: 'fa-wind', color: '#4facfe' },
+                                            'gratitude_journal': { name: 'Self-Awareness', icon: 'fa-book-open', color: '#00f2fe' },
+                                            'homework_hero': { name: 'Homework Hero', icon: 'fa-circle-check', color: '#16b981' },
+                                            'meditation_monk': { name: 'Meditation Monk', icon: 'fa-spa', color: '#a18cd1' },
+                                            'level_5_pat': { name: 'Zen Master', icon: 'fa-crown', color: '#f5a623' }
+                                        }[badgeId] || { name: 'Achievement', icon: 'fa-award', color: 'var(--color-primary)' };
+
+                                        return (
+                                            <div key={badgeId} title={badgeDetails.name} style={{ display: 'flex', alignItems: 'center', justifySelf: 'center', width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: `1px solid ${badgeDetails.color}`, justifyContent: 'center', color: badgeDetails.color }}>
+                                                <i className={`fa-solid ${badgeDetails.icon}`} style={{ fontSize: '11px' }}></i>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    <div className="workspace-card" style={{ height: 'fit-content', margin: 0 }}>
+                        <div className="card-title-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3>Clinical Assignments</h3>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                {completedTasksCount} / {totalTasksCount} completed
+                            </span>
+                        </div>
 
                     {/* Progress Circle Visualizer */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(0,0,0,0.15)', borderRadius: '10px', padding: '12px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
@@ -381,6 +500,7 @@ export function PatientDashboard({
                         )}
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     );

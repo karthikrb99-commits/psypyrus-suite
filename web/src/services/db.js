@@ -3,6 +3,8 @@
  * Mimics Room Database entities and provides reactive-like reads/writes.
  */
 
+import { GamificationService } from './gamification';
+
 const STORAGE_KEYS = {
     PATIENTS: 'psypyrus_patients',
     APPOINTMENTS: 'psypyrus_appointments',
@@ -217,6 +219,11 @@ export class Database {
         notes.unshift(newNote); // Newest note at top
         this.set(STORAGE_KEYS.CLINICAL_NOTES, notes);
         this.logAudit("Added Clinical Note", `Saved a new ${newNote.noteType} note for Patient ID ${newNote.patientId}. Risk status flagged: ${newNote.isRiskAlert}`);
+        
+        // Gamification Hook
+        GamificationService.trackAction('Professional', 'WRITE_NOTE');
+        GamificationService.awardXp('Professional', 20, 'Documented Clinical Note');
+
         window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.CLINICAL_NOTES } }));
         return newNote.id;
     }
@@ -240,6 +247,18 @@ export class Database {
         scores.push(newScore);
         this.set(STORAGE_KEYS.ASSESSMENTS, scores);
         this.logAudit("Logged Assessment", `Added auto-scored ${newScore.type} with value ${newScore.score} (${newScore.details}) to Patient ID ${newScore.patientId}`);
+        
+        // Gamification Hook
+        const activeRole = localStorage.getItem('psypyrus_active_role') || 'Professional';
+        if (activeRole === 'Professional') {
+            GamificationService.trackAction('Professional', 'COMPLETE_ASSESSMENT');
+            GamificationService.awardXp('Professional', 15, 'Conducted Patient Assessment');
+        } else {
+            GamificationService.trackAction('Patient', 'COMPLETE_ASSESSMENT');
+            GamificationService.awardXp('Patient', 25, 'Completed Self-Assessment');
+            GamificationService.awardCoins('Patient', 10, 'Self-Assessment Bonus');
+        }
+
         window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.ASSESSMENTS } }));
         return newScore.id;
     }
@@ -260,6 +279,17 @@ export class Database {
         logs.push(newLog);
         this.set(STORAGE_KEYS.MOOD_LOGS, logs);
         this.logAudit("Mood Log Entry", `Logged mood index ${newLog.moodScore}/10 and daily journal entry.`);
+        
+        // Gamification Hook
+        GamificationService.trackAction('Patient', 'LOG_MOOD');
+        GamificationService.awardXp('Patient', 10, 'Logged Daily Mood');
+        
+        if (newLog.breathingSeconds > 0) {
+            GamificationService.trackAction('Patient', 'COMPLETE_BREATHING');
+            GamificationService.awardXp('Patient', 15, 'Completed Somatic Breathing');
+            GamificationService.awardCoins('Patient', 5, 'Somatic Breathing Pacing');
+        }
+
         window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.MOOD_LOGS } }));
         return newLog.id;
     }
@@ -284,6 +314,11 @@ export class Database {
         tasks.push(newTask);
         this.set(STORAGE_KEYS.HOMEWORK, tasks);
         this.logAudit("Homework Assigned", `Assigned task '${newTask.description}' to Patient ID ${newTask.patientId}`);
+        
+        // Gamification Hook
+        GamificationService.trackAction('Professional', 'ASSIGN_HOMEWORK');
+        GamificationService.awardXp('Professional', 10, 'Assigned Patient Homework');
+
         window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.HOMEWORK } }));
         return newTask.id;
     }
@@ -295,6 +330,14 @@ export class Database {
             tasks[idx].isCompleted = !tasks[idx].isCompleted;
             this.set(STORAGE_KEYS.HOMEWORK, tasks);
             this.logAudit("Homework Status Toggled", `Toggled task ID ${taskId} to isCompleted: ${tasks[idx].isCompleted}`);
+            
+            // Gamification Hook
+            if (tasks[idx].isCompleted) {
+                GamificationService.trackAction('Patient', 'COMPLETE_HOMEWORK');
+                GamificationService.awardXp('Patient', 30, 'Completed Homework Task');
+                GamificationService.awardCoins('Patient', 10, 'CBT Task Reward');
+            }
+
             window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.HOMEWORK } }));
         }
     }
@@ -456,3 +499,4 @@ export class Database {
 }
 // Initialize database on import
 Database.init();
+window.PsyPyrusDatabase = Database;

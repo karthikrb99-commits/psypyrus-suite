@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { Database } from '../../services/db';
 import { GeminiService } from '../../services/ai';
 
@@ -25,6 +25,21 @@ export function MentalStatusExam({
     const [previousMse, setPreviousMse] = useState(null);
     const [showCopySuccess, setShowCopySuccess] = useState(false);
 
+    const resetForm = useCallback(() => {
+        setAppearance(null);
+        setBehavior(null);
+        setSpeech(null);
+        setMood(null);
+        setThoughtProcess(null);
+        setThoughtContent(null);
+        setPerception(null);
+        setCognition(null);
+        setInsight(null);
+        setJudgment(null);
+        setComments('');
+        setResult('');
+    }, []);
+
     // Load patient's previous MSE records for comparison
     useEffect(() => {
         if (activePatientId) {
@@ -38,22 +53,7 @@ export function MentalStatusExam({
             // Clear current form on patient change
             resetForm();
         }
-    }, [activePatientId]);
-
-    const resetForm = () => {
-        setAppearance(null);
-        setBehavior(null);
-        setSpeech(null);
-        setMood(null);
-        setThoughtProcess(null);
-        setThoughtContent(null);
-        setPerception(null);
-        setCognition(null);
-        setInsight(null);
-        setJudgment(null);
-        setComments('');
-        setResult('');
-    };
+    }, [activePatientId, resetForm]);
 
     const getInsightGradeDescription = (grade) => {
         switch (Number(grade)) {
@@ -88,7 +88,7 @@ export function MentalStatusExam({
             } else {
                 alert("The previous MSE is stored in a legacy text format and cannot be auto-populated.");
             }
-        } catch (e) {
+        } catch {
             // Fallback for unstructured legacy notes
             alert("Could not parse previous note structured details. Showing text comparison on the right.");
         }
@@ -167,7 +167,7 @@ export function MentalStatusExam({
         try {
             const data = JSON.parse(previousMse.bodyJson);
             return data.narrative || previousMse.bodyJson;
-        } catch (e) {
+        } catch {
             return previousMse.bodyJson;
         }
     };

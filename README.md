@@ -2,7 +2,7 @@
 
 [![Build Status - Android](https://img.shields.io/badge/Android-Target--SDK--36-green?logo=android)](file:///android)
 [![Build Status - iOS & macOS](https://img.shields.io/badge/Apple-iOS--17%20%7C%20macOS--14-blue?logo=apple)](file:///ios)
-[![Build Status - Web](https://img.shields.io/badge/Web-Vite%20%2B%20React-purple?logo=react)](file:///web)
+[![Build Status - Web](https://img.shields.io/badge/Web-Vite%20%2B%20React%20%2B%20ES6-purple?logo=react)](file:///web)
 [![Build Status - Desktop](https://img.shields.io/badge/Desktop-Electron--Windows-cyan?logo=electron)](file:///desktop)
 [![Compliance](https://img.shields.io/badge/Compliance-HIPAA%20%2F%20GDPR-teal?logo=shield)](file:///android/src/main/java/com/example/data/Entities.kt)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Gemini--3.5--Flash-orange?logo=googlegemini)](https://ai.google.dev/)
@@ -54,13 +54,19 @@ psypyrus/ (Repository Root)
 | Feature Module | Android (Kotlin) | Web (React) | Desktop (Electron) | iOS / macOS (SwiftUI) |
 | :--- | :---: | :---: | :---: | :---: |
 | **Dual-Persona Workspace** (Clinician/Patient) | Yes | Yes | Yes | Yes |
-| **Local Diagnostic Engine** (MDD, GAD, Mock) | Yes | Yes | Yes | Yes |
+| **Expanded DSM-5-TR Database** (13 Disorders) | Yes | Yes | Yes | Yes |
+| **WHO ICD-11 Registry client** (OAuth2 Credentials) | — | Yes | Yes | — |
+| **Local Diagnostic Engine** (Checklist & Multi-Scores)| Yes | Yes | Yes | Yes |
+| **Interactive SVG Ontology Graph** | — | Yes | Yes | — |
+| **EHR Case History & Genogram Canvas** | — | Yes | Yes | — |
+| **Gamification & MindShop Rewards** | — | Yes | Yes | — |
+| **Global Quick-Search Command Palette** | — | Yes | Yes | — |
 | **AI SOAP Note Compiler** (Gemini 3.5 Flash) | Yes | Yes | Yes | Yes |
 | **AI MSE Narrative Compiler** (Checklist to Prose)| Yes | Yes | Yes | Yes |
 | **AI SMART Treatment Planner** | Yes | Yes | Yes | Yes |
 | **AI Suicide/Crisis Risk Screening** | Yes | Yes | Yes | Yes |
 | **ClinicalTrials.gov Integration** | Yes | Yes | Yes | Yes |
-| **Patient Wellness Lounge** (Mindful breathing, Mood logs)| Yes | Yes | Yes | Yes |
+| **Patient Wellness Lounge** (Breathing, Mood logs) | Yes | Yes | Yes | Yes |
 | **Local Secure Storage** | Room DB | LocalStorage | LocalStorage | Local State & Cache |
 | **HIPAA Security Audit Logs** | SQLite DB | LocalStorage | `AppData` Files | Local memory cache |
 | **Native Integrations** (System tray, Toast alerts) | — | — | Yes (Windows) | — |
@@ -68,28 +74,41 @@ psypyrus/ (Repository Root)
 
 ---
 
-## 🌟 Core Modules Description
+## 🌟 Latest Feature & Clinical Updates
 
-### 1. Dual-Persona Secure Workspace
-*   **Professional Mode (Clinician Suite):** Enables EHR case management, digital Mental Status Examinations (MSE) checklists, automated clinical narrative synthesis, appointment scheduling, video telehealth, billing snapshots, and HIPAA cryptography audit trails.
-*   **Patient Mode (Wellness Hub):** Provides patients with a secure gateway to log daily mood scores, keep gratitude lists, practice paced breathing exercises, check off assigned homework tasks, and launch video therapy sessions.
+### 1. Expanded DSM-5-TR Catalog & Database (`dsmDatabase.js`)
+The local database contains structured criteria summaries, keyword arrays, exclusion rules, comorbidity weights, and interventions for **13 primary psychiatric conditions**:
+*   *Depressive:* Major Depressive Disorder (MDD), Single Episode
+*   *Anxiety:* Generalized Anxiety Disorder (GAD), Panic Disorder, Social Anxiety Disorder (SAD), Specific Phobia
+*   *Trauma-Related & Stress-Response:* Post-Traumatic Stress Disorder (PTSD), Adjustment Disorder, Acute Stress Disorder
+*   *Neurodevelopmental:* Attention-Deficit/Hyperactivity Disorder (ADHD), Combined Presentation
+*   *Bipolar:* Bipolar I Disorder, Current Episode Manic
+*   *Personality:* Borderline Personality Disorder (BPD)
+*   *OCD-Related:* Obsessive-Compulsive Disorder (OCD)
+*   *Eating:* Anorexia Nervosa
 
-### 2. Cryptographic Security & HIPAA Shield
-*   **Biometric lock screens** protect sensitive health records (PHI) upon workspace initialization on all platforms.
-*   **Cryptographic Audit Trails** automatically record all database actions (EHR reads, logs, AI syntheses) with security metadata (actor, action, encryption indicators) using local database schemas or filesystem log vaults.
+### 2. Official WHO ICD-11 OAuth2 Search Registry
+*   Integrates the official **World Health Organization (WHO) ICDAPI** to query the international classification registry.
+*   Handles token retrieval, token caching, API headers, and strips search results HTML markup.
+*   Includes a **23-class psychiatric local fallback search** to guarantee functionality in offline environments or if credentials are omitted.
 
-### 3. AI Copilot (Powered by Google Gemini 3.5 Flash)
-*   **SOAP Note Generator:** Compiles raw transcript dictations into standard clinical SOAP notes (Subjective, Objective, Assessment, Plan).
-*   **MSE Prose Synthesizer:** Transcribes objective mental status checklist entries into standard medical record paragraphs.
-*   **SMART Goal Treatment Planner:** Formulates unstructured therapy objectives into structured SMART goals, clinical interventions, and assigned patient homework.
-*   **Simulated Fallback Mode:** If no Gemini API key is configured, all platforms seamlessly fallback to internal, high-fidelity clinical responders, making the app fully functional and testable out-of-the-box.
+### 3. Gamification & Patient Adherence Engine (`gamification.js`)
+A behavioral design layer to combat documentation burnout and patient dropouts:
+*   **Clinician Progression:** Clinicians earn XP for logging encounters, running diagnostics, and completing SOAP notes.
+*   **Patient Progression & MindCoins:** Patients earn XP and **MindCoins** for logging moods, executing breathing exercises, and finishing homework.
+*   **The MindShop:** Allows patients to spend coins to unlock ambient soundscapes (Rainforest, Fireplace), visual styles (Glassmorphism layout, Retro CRT skin), and personalized AI companions (Lisa).
+*   **Badges & Daily Quests:** Auto-tracks milestones (e.g. *Scribe Master*, *Zen Master*, *Homework Hero*).
 
-### 4. Local Rule-Based Diagnostics Engine
-*   **DSM-5-TR Major Depressive Disorder (MDD):** Verifies presence of $\ge 5$ symptoms over $\ge 2$ weeks, requiring core symptoms (depressed mood or anhedonia) and checking exclusions.
-*   **DSM-5-TR Generalized Anxiety Disorder (GAD):** Evaluates somatic and cognitive criteria occurring more days than not for $\ge 6$ months.
+### 4. Interactive SVG Ontology Graph Visualizer
+*   Renders a real-time reactive network diagram inside the Diagnostics suite.
+*   Visualizes the patient node connected to calculated candidate diagnoses, adding comorbidity links with dash-arrays and statistical correlation weights (e.g. 62% MDD-GAD comorbidity line).
 
-### 5. ClinicalTrials.gov API Integration
-*   Directly queries the official **ClinicalTrials.gov REST API v2** matching the patient's diagnosed specialty condition to return active, recruiting clinical studies.
+### 5. EHR Case History & Genogram Drawing Canvas
+*   **Comprehensive Intake:** Captures verbatim chief complaints, developmental history, pre-morbid personality indices, negative somatic histories, and a 6-grade psychiatric insight scale.
+*   **HTML5 Genogram Canvas:** Features a built-in drawing board with drawing tools (pen, eraser, color settings, line sizes) enabling practitioners to draw family genograms directly on screen and save them to local databases.
+
+### 6. Keyboard Shortcut Command Palette (`CommandPalette.jsx`)
+*   Provides a quick-search launcher (triggered via global shortcut bindings) allowing clinicians to search screens, select patient directories, and launch actions rapidly.
 
 ---
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Database } from '../../services/db';
 import { GeminiService } from '../../services/ai';
 
@@ -279,7 +279,7 @@ Pending Homework Tasks: ${pendingHomework || "None outstanding"}
             summary: 'SUMMARY'
         };
 
-        const noteId = Database.insertClinicalNote({
+        Database.insertClinicalNote({
             patientId: activePatientId,
             title: `AI Copilot Output (${modes[activeTab].label})`,
             noteType: noteTypes[activeTab],

@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Database } from '../../services/db';
 
 export function PerformanceAnalytics() {
-    const [moodLogs, setMoodLogs] = useState([]);
     const [auditLogs, setAuditLogs] = useState([]);
     const [patients, setPatients] = useState([]);
     const [appointments, setAppointments] = useState([]);
     const [assessments, setAssessments] = useState([]);
 
     const refreshData = () => {
-        setMoodLogs(Database.getMoodLogs());
         setAuditLogs(Database.get('psypyrus_audit_logs'));
         setPatients(Database.getPatients());
         setAppointments(Database.getAppointments());

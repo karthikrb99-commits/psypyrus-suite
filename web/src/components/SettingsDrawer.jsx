@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Database } from '../services/db';
 
 export function SettingsDrawer({ isOpen, onClose, onSave }) {

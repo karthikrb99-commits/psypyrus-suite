@@ -125,7 +125,7 @@ export class GeminiService {
             return responseCache.get(cacheKey);
         }
 
-        let resultText = "";
+        let resultText;
 
         if (provider === '1') {
             resultText = await this.callCustomLlm(prompt, systemInstruction, history);

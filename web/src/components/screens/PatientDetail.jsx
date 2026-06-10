@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Database } from '../../services/db';
 
 export function PatientDetail({
@@ -350,7 +350,7 @@ export function PatientDetail({
                                     const parsed = JSON.parse(event.desc);
                                     parsedDesc = parsed.narrative || event.desc;
                                 }
-                            } catch (e) {
+                            } catch {
                                 // Keep raw desc
                             }
 

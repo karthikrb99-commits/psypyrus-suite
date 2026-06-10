@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Database } from '../../services/db';
 import { DiagnosticEngine } from '../../services/diagnostics';
 import { ClinicalTrialsService } from '../../services/trials';
@@ -6,6 +6,7 @@ import { DsmDatabase } from '../../services/dsmDatabase';
 import { GeminiService } from '../../services/ai';
 import { IcdService } from '../../services/icdService';
 import { useToast } from '../ToastProvider';
+import { GamificationService } from '../../services/gamification';
 
 const ALL_SYMPTOMS_GROUPED = {
     "Mood Indicators": [
@@ -180,8 +181,12 @@ export function DiagnosticsSuite({ patients, activePatientId }) {
             const results = await ClinicalTrialsService.fetchActiveTrials(condition);
             setTrials(results);
             Database.logAudit("Query Clinical Trials", `Searched ClinicalTrials.gov for condition: ${condition}`);
+            
+            // Gamification Hook
+            GamificationService.awardXp('Professional', 15, 'Queried Clinical Trials Database');
+
             showToast(`ClinicalTrials.gov queried successfully.`, "success");
-        } catch (e) {
+        } catch {
             showToast(`Trials API timeout: fallback activated.`, "warning");
         } finally {
             setLoadingTrials(false);
@@ -219,6 +224,10 @@ export function DiagnosticsSuite({ patients, activePatientId }) {
         setSymptomsInput(symptomsString);
         setMseFindingsText("Client demonstrates somatic indicators matching clinical criteria. Sad affect, restricted range.");
         setActiveTab(2);
+        
+        // Gamification Hook
+        GamificationService.awardXp('Professional', 10, 'Compiled Criteria to AI Workspace');
+
         showToast("Criteria compiled to AI Workspace.", "success");
     };
 
@@ -244,6 +253,11 @@ Provide a structured differential diagnostics analysis conforming to DSM-5-TR gu
             const result = await GeminiService.callGemini(prompt, "You are an expert clinical psychologist and psychiatrist specializing in DSM-5-TR differential diagnosis.");
             setAiResultText(result);
             Database.logAudit("AI Differential Diagnosis Complete", "Formulation compiled successfully.");
+            
+            // Gamification Hook
+            GamificationService.trackAction('Professional', 'RUN_DIAGNOSTIC');
+            GamificationService.awardXp('Professional', 25, 'Formulated AI Differential Diagnosis');
+
             showToast("AI Differential report successfully compiled.", "success");
         } catch (e) {
             setAiResultText(`Error generating differential: ${e.message}`);

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Database } from '../../services/db';
 import { useToast } from '../ToastProvider';
+import { GamificationService } from '../../services/gamification';
 
 const CLINICIAN_APPS = [
     {
@@ -134,6 +135,11 @@ export function Marketplace({ activeRole }) {
     const [activeCategory, setActiveCategory] = useState('All');
     const [loadingStates, setLoadingStates] = useState({}); // appId -> 'installing' or 'uninstalling'
 
+    // Gamification Shop states
+    const [shopTab, setShopTab] = useState('plugins'); // 'plugins' or 'shop'
+    const [shopItems, setShopItems] = useState([]);
+    const [patientCoins, setPatientCoins] = useState(0);
+
     const { showToast } = useToast();
 
     const isProfessional = activeRole === 'Professional';
@@ -146,11 +152,34 @@ export function Marketplace({ activeRole }) {
         setInstalledIds(Database.getInstalledApps());
     };
 
+    const refreshShop = () => {
+        setShopItems(GamificationService.getShopItems());
+        const profile = GamificationService.getProfile('Patient');
+        if (profile) setPatientCoins(profile.coins);
+    };
+
     useEffect(() => {
         refreshInstalled();
+        refreshShop();
         window.addEventListener('psypyrus_db_change', refreshInstalled);
-        return () => window.removeEventListener('psypyrus_db_change', refreshInstalled);
+        window.addEventListener('psypyrus_db_change', refreshShop);
+        window.addEventListener('psypyrus_gamification_change', refreshShop);
+        return () => {
+            window.removeEventListener('psypyrus_db_change', refreshInstalled);
+            window.removeEventListener('psypyrus_db_change', refreshShop);
+            window.removeEventListener('psypyrus_gamification_change', refreshShop);
+        };
     }, []);
+
+    const handleBuyItem = (itemId) => {
+        const res = GamificationService.purchaseItem(itemId);
+        if (res.success) {
+            showToast(res.message, "success");
+            refreshShop();
+        } else {
+            showToast(res.message, "error");
+        }
+    };
 
     const handleInstall = (app) => {
         setLoadingStates(prev => ({ ...prev, [app.id]: 'installing' }));
@@ -229,8 +258,30 @@ export function Marketplace({ activeRole }) {
                 </div>
             </div>
 
+            {/* Role-Specific Shop/Apps Tab Selector */}
+            {!isProfessional && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                    <button 
+                        className={`patient-filter-chip ${shopTab === 'plugins' ? 'active' : ''}`}
+                        onClick={() => { setShopTab('plugins'); setActiveCategory('All'); }}
+                        style={{ margin: 0, padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold' }}
+                    >
+                        <i className="fa-solid fa-mobile-screen-button" style={{ marginRight: '6px' }}></i>
+                        Wellness Apps & Wearables
+                    </button>
+                    <button 
+                        className={`patient-filter-chip ${shopTab === 'shop' ? 'active' : ''}`}
+                        onClick={() => setShopTab('shop')}
+                        style={{ margin: 0, padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold' }}
+                    >
+                        <i className="fa-solid fa-gift" style={{ marginRight: '6px' }}></i>
+                        MindShop Rewards Bazaar (🪙 {patientCoins} Coins)
+                    </button>
+                </div>
+            )}
+
             {/* Search and Category Filters */}
-            <div className="workspace-card" style={{ padding: '16px 20px', marginBottom: '20px' }}>
+            <div className="workspace-card" style={{ padding: '16px 20px', marginBottom: '20px', display: shopTab === 'shop' ? 'none' : 'block' }}>
                 <div className="marketplace-search-row">
                     <div className="marketplace-search-input-wrapper" style={{ width: '100%' }}>
                         <i className="fa-solid fa-magnifying-glass"></i>
@@ -267,7 +318,52 @@ export function Marketplace({ activeRole }) {
             </div>
 
             {/* Grid Catalog */}
-            {filteredApps.length === 0 ? (
+            {shopTab === 'shop' ? (
+                <div className="marketplace-grid">
+                    {shopItems.map((item) => (
+                        <div key={item.id} className={`marketplace-card ${item.purchased ? 'installed' : ''}`} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '190px' }}>
+                            <div className="marketplace-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="marketplace-card-icon-wrapper" style={{ background: item.purchased ? 'rgba(22, 185, 129, 0.1)' : 'rgba(245, 166, 35, 0.1)', color: item.purchased ? 'var(--color-success)' : 'var(--color-warning)' }}>
+                                    <i className={`fa-solid ${item.icon}`}></i>
+                                </div>
+                                <span className="marketplace-tag" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', fontSize: '9px', padding: '2px 8px', borderRadius: '10px' }}>{item.category}</span>
+                            </div>
+
+                            <div style={{ flexGrow: 1 }}>
+                                <h3 className="marketplace-card-title" style={{ color: 'var(--text-light)', fontSize: '13px', margin: '12px 0 6px 0' }}>{item.name}</h3>
+                                <p className="marketplace-card-desc" style={{ fontSize: '11px', color: 'var(--text-normal)', lineHeight: 1.4, margin: '0 0 16px 0' }}>{item.desc}</p>
+                            </div>
+
+                            <div className="marketplace-card-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-warning)' }}>🪙 {item.price} Coins</span>
+                                </div>
+
+                                <div className="marketplace-card-actions">
+                                    {item.purchased ? (
+                                        <button 
+                                            className="action-button-btn secondary mini-action-btn"
+                                            style={{ borderColor: 'var(--color-success)', color: 'var(--color-success)', cursor: 'default', opacity: 0.8 }}
+                                            disabled
+                                        >
+                                            <i className="fa-solid fa-circle-check" style={{ marginRight: '4px' }}></i> Unlocked
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            className="action-button-btn mini-action-btn"
+                                            style={{ background: 'var(--color-warning)', color: '#000', fontWeight: 'bold' }}
+                                            onClick={() => handleBuyItem(item.id)}
+                                            disabled={patientCoins < item.price}
+                                        >
+                                            {patientCoins >= item.price ? 'Buy Reward' : 'Locked'}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : filteredApps.length === 0 ? (
                 <div className="workspace-card" style={{ textAlign: 'center', padding: '48px', color: 'var(--color-text-secondary)' }}>
                     <i className="fa-solid fa-store-slash" style={{ fontSize: '32px', marginBottom: '16px', color: 'var(--color-text-muted)' }}></i>
                     <h4>No items found matching your filters.</h4>

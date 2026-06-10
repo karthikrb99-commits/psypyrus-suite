@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { Database } from '../../services/db';
 import { GeminiService } from '../../services/ai';
 
@@ -12,15 +12,15 @@ export function CBTGoalPlanner({
     const [planResult, setPlanResult] = useState('');
     const [tasks, setTasks] = useState([]);
 
-    const refreshTasks = () => {
+    const refreshTasks = useCallback(() => {
         setTasks(Database.getHomework(activePatientId));
-    };
+    }, [activePatientId]);
 
     useEffect(() => {
         refreshTasks();
         window.addEventListener('psypyrus_db_change', refreshTasks);
         return () => window.removeEventListener('psypyrus_db_change', refreshTasks);
-    }, [activePatientId]);
+    }, [refreshTasks]);
 
     const handleFormulateSMART = async () => {
         const title = goalTitle.trim();

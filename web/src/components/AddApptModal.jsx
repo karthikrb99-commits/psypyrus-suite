@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Database } from '../services/db';
 
 export function AddApptModal({ isOpen, onClose, onSubmit }) {
@@ -71,7 +71,7 @@ export function AddApptModal({ isOpen, onClose, onSubmit }) {
         const now = new Date();
         const apptDate = new Date(`${dateVal}T${timeVal}`);
         
-        let dateString = "";
+        let dateString;
         const diffTime = apptDate - now;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 

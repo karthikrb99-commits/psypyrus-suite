@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { GamificationService } from '../services/gamification';
 
 export function Header({
     activeRole,
@@ -22,6 +23,23 @@ export function Header({
         setNotifications([]);
     };
 
+    // Gamification header state
+    const [profile, setProfile] = useState(() => GamificationService.getProfile(activeRole));
+
+    useEffect(() => {
+        setProfile(GamificationService.getProfile(activeRole));
+    }, [activeRole]);
+
+    useEffect(() => {
+        const handleGamificationChange = (e) => {
+            if (e.detail && e.detail.role === activeRole) {
+                setProfile(e.detail.profile);
+            }
+        };
+        window.addEventListener('psypyrus_gamification_change', handleGamificationChange);
+        return () => window.removeEventListener('psypyrus_gamification_change', handleGamificationChange);
+    }, [activeRole]);
+
     return (
         <header className="header-toolbar">
             {/* Breadcrumb Trail */}
@@ -44,6 +62,33 @@ export function Header({
                 <div className="network-status-node" title="System Status: Connected (AES-GCM encrypted)">
                     <span className="status-indicator-dot"></span>
                     <span className="status-indicator-text">Secure</span>
+                </div>
+
+                {/* Gamification Micro-widget */}
+                <div className="header-gamification-pill" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: '20px',
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    color: 'var(--text-light)',
+                    fontWeight: 'bold',
+                    cursor: 'default'
+                }}>
+                    {activeRole === 'Patient' ? (
+                        <>
+                            <span style={{ color: 'var(--color-warning)' }}>🪙</span>
+                            <span>{profile?.coins || 0}</span>
+                        </>
+                    ) : (
+                        <>
+                            <i className="fa-solid fa-trophy" style={{ color: 'var(--color-warning)', fontSize: '10px' }}></i>
+                            <span>Lvl {profile?.level || 1}</span>
+                        </>
+                    )}
                 </div>
 
                 {/* Dynamic Switcher Pill */}
@@ -141,4 +186,3 @@ export function Header({
         </header>
     );
 }
-
