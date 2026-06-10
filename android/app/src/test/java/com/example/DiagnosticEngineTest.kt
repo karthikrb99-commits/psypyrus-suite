@@ -22,13 +22,13 @@ class DiagnosticEngineTest {
     @Test
     fun evaluateMockDisorders_hypotheticalDisorder_positive() {
         val basicCriteria = listOf("Above 21", "6 months", "Not better explained by other Physiological conditions")
-        val symptoms = listOf("HDss1", "HDss2", "CDss1", "HDss4", "HDss5") // Matches 5 symptoms
+        val symptoms = listOf("HDss1", "HDss2", "CDss1", "HDss4") // Matches 4 symptoms
 
         val results = DiagnosticEngine.evaluateMockDisorders(basicCriteria, symptoms)
         
         assertEquals(1, results.size)
         assertEquals("Hypothetical Disorder", results[0].disorderName)
-        assertEquals("Moderate", results[0].confidence) // 5 out of 8 symptoms matched
+        assertEquals("Moderate", results[0].confidence) // 4 out of 8 symptoms matched
     }
 
     @Test

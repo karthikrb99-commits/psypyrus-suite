@@ -15,3 +15,13 @@ db.db
 .env
 .env.local
 local.properties
+
+# Dependencies and build outputs
+node_modules/
+dist/
+out/
+build/
+bin/
+obj/
+*.log
+

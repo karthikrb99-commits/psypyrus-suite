@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PsyPyrus AI - System Blueprint & Sandboxes</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Blueprint Styling -->
+    <link rel="stylesheet" href="blueprint.css">
+</head>
+<body>
+
+    <!-- --- NAV BAR --- -->
+    <header class="navbar">
+        <div class="container nav-flex">
+            <a href="index.html" class="nav-brand">
+                <i class="fa-solid fa-brain"></i>
+                <span>PsyPyrus AI</span>
+                <span class="nav-brand-badge">Blueprint & Sandbox</span>
+            </a>
+            <a href="index.html" class="btn-nav">
+                <i class="fa-solid fa-rocket"></i> Launch Workspace OS
+            </a>
+        </div>
+    </header>
+
+    <!-- --- HERO SECTION --- -->
+    <section class="container hero">
+        <div class="hero-tag">
+            <i class="fa-solid fa-shield-halved"></i> Patent Pending ™️ | HIPAA Compliant
+        </div>
+        <h1>Mental Health Care Operating System</h1>
+        <p>A comprehensive system blueprint combining Practice Management, EHR, Digital MSE, a rule-based Diagnostic Engine, and advanced business strategies.</p>
+    </section>
+
+    <!-- --- TABS SELECTION BAR --- -->
+    <nav class="container">
+        <div class="tabs-nav-bar">
+            <button class="tab-trigger active" data-tab="blueprint">
+                <i class="fa-solid fa-sitemap"></i> Corporate & Strategy Blueprint
+            </button>
+            <button class="tab-trigger" data-tab="casehistory">
+                <i class="fa-solid fa-clipboard-user"></i> Case History & MSE Sandbox
+            </button>
+            <button class="tab-trigger" data-tab="diagnostics">
+                <i class="fa-solid fa-stethoscope"></i> Diagnostic Sandbox
+            </button>
+            <button class="tab-trigger" data-tab="wellness">
+                <i class="fa-solid fa-spa"></i> Somatic Breathing Pacer
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========================================================= -->
+    <!-- TAB PANE: COMPREHENSIVE BLUEPRINT & STRATEGY -->
+    <!-- ========================================================= -->
+    <main class="container tab-pane active" id="tab-blueprint">
+        
+        <!-- Corporate Structures -->
+        <section class="glass-card">
+            <h2><i class="fa-solid fa-users-gear"></i> Corporate Structure & Chief Officers</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 0.95rem;">
+                PsyPyrus AI is structured with a specialized board of executives coordinating legal compliance, technology growth, and clinical safety boundaries.
+            </p>
+            
+            <div class="team-grid">
+                <div class="team-card">
+                    <span class="role-badge">Leadership</span>
+                    <h3>Katherine Brewster</h3>
+                    <div class="title">Chief Executive Officer (CEO)</div>
+                    <div class="desc">Responsible for overall strategic planning, decision-making, and setting the company's vision and mission in the mental health care industry.</div>
+                    <div class="qualifications"><strong>Reqs:</strong> MBA or Business Admin Degree. Proven track record in scaling healthcare tech.</div>
+                </div>
+
+                <div class="team-card">
+                    <span class="role-badge">Technology</span>
+                    <h3>Arthur Pendelton</h3>
+                    <div class="title">Chief Technological Officer (CTO)</div>
+                    <div class="desc">Oversees technology infrastructure. Ensures the EHR, MSE engine, and local vaults are highly scalable, secure, and user-friendly.</div>
+                    <div class="qualifications"><strong>Reqs:</strong> MS/BS in Computer Science. Expertise in cloud architectures and local encryption.</div>
+                </div>
+
+                <div class="team-card">
+                    <span class="role-badge">Finance</span>
+                    <h3>Eleanor Vance</h3>
+                    <div class="title">Chief Financial Officer (CFO)</div>
+                    <div class="desc">Manages financial budgeting, forecasting, and insurance gateway integration models to optimize SaaS subscription monetization channels.</div>
+                    <div class="qualifications"><strong>Reqs:</strong> CPA / CFA or finance degree. Experience with SaaS billing and healthcare claims.</div>
+                </div>
+
+                <div class="team-card">
+                    <span class="role-badge">Security</span>
+                    <h3>Marcus Thorne</h3>
+                    <div class="title">Chief Security Officer (CsecO)</div>
+                    <div class="desc">Guarantees data confidentiality and compliance with HIPAA and GDPR regulations. Audits hardware biometric key binds and SQLite vault parameters.</div>
+                    <div class="qualifications"><strong>Reqs:</strong> CISSP / CEH certifications. Background in cybersecurity and PHI compliance.</div>
+                </div>
+
+                <div class="team-card">
+                    <span class="role-badge">Data Science</span>
+                    <h3>Dr. Sarah Jenkins</h3>
+                    <div class="title">Chief Intelligence Officer (CIO)</div>
+                    <div class="desc">Leverages data analytics and ML models to gain insights into user behavior, clinical outcomes, and treatment efficacy.</div>
+                    <div class="qualifications"><strong>Reqs:</strong> PhD/MS in Data Science or Statistics. Experience in mental health research.</div>
+                </div>
+
+                <div class="team-card">
+                    <span class="role-badge">Operations</span>
+                    <h3>Daniel Vance</h3>
+                    <div class="title">Chief Operations Officer (COO)</div>
+                    <div class="desc">Drives day-to-day operations and coordinates clinic workflows to ensure friction-free practitioner onboarding and practice support.</div>
+                    <div class="qualifications"><strong>Reqs:</strong> Lean management background, Project management certifications.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Business Strategy Panel (SWOT, PESTEL, Porter, CATWOE) -->
+        <section class="glass-card">
+            <h2><i class="fa-solid fa-chart-line"></i> Strategic Business Formulations</h2>
+            
+            <div class="sub-tabs-container">
+                <button class="sub-tab-btn active" data-subtab="swot">SWOT Analysis</button>
+                <button class="sub-tab-btn" data-subtab="pestel">PESTEL Analysis</button>
+                <button class="sub-tab-btn" data-subtab="porter">Porter's Five Forces</button>
+                <button class="sub-tab-btn" data-subtab="catwoe">CATWOE Model</button>
+            </div>
+
+            <!-- SWOT SUB-TAB -->
+            <div class="sub-tab-pane active" id="subtab-swot">
+                <div class="swot-grid">
+                    <div class="swot-box strengths">
+                        <h4><i class="fa-solid fa-circle-check"></i> Strengths</h4>
+                        <ul>
+                            <li>Comprehensive ecosystem mapping EHR, diagnostics, and telehealth.</li>
+                            <li>Advanced client-side AI assistant (Gemini integration with offline fallback).</li>
+                            <li>Highly secure, biometric and cryptographically sealed client-side vault.</li>
+                            <li>Adaptive diagnostic algorithms matching clinical standards (DSM-5-TR / ICD-10).</li>
+                        </ul>
+                    </div>
+                    <div class="swot-box weaknesses">
+                        <h4><i class="fa-solid fa-circle-xmark"></i> Weaknesses</h4>
+                        <ul>
+                            <li>High reliance on building trust for storing sensitive mental health PHI data.</li>
+                            <li>Complex onboarding workflow due to extensive clinical options.</li>
+                            <li>Competing with traditional, simple paper-based clinician routines.</li>
+                        </ul>
+                    </div>
+                    <div class="swot-box opportunities">
+                        <h4><i class="fa-solid fa-arrow-trend-up"></i> Opportunities</h4>
+                        <ul>
+                            <li>Surging global demand for telehealth and digital wellness lounge services.</li>
+                            <li>Partnerships with private health insurance providers to automate claim invoicing.</li>
+                            <li>Academic collaborations to introduce the clinical suite in university clinics.</li>
+                        </ul>
+                    </div>
+                    <div class="swot-box threats">
+                        <h4><i class="fa-solid fa-triangle-exclamation"></i> Threats</h4>
+                        <ul>
+                            <li>Rapidly changing legal regulations regarding telehealth and cloud data.</li>
+                            <li>High market saturation of simple practice management systems.</li>
+                            <li>Cyber security breaches or client credential leaks.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PESTEL SUB-TAB -->
+            <div class="sub-tab-pane" id="subtab-pestel">
+                <div class="accordion-list">
+                    <div class="accordion-item open">
+                        <div class="accordion-header">
+                            <div class="title-wrapper">
+                                <i class="fa-solid fa-landmark"></i>
+                                <span>Political Factors</span>
+                            </div>
+                            <span class="indicator">National Regulation</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Government initiatives globally are prioritizing mental health funding. Licensing policies restrict telemedicine across state borders, requiring adaptive multi-region capabilities.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper">
+                                <i class="fa-solid fa-coins"></i>
+                                <span>Economic Factors</span>
+                            </div>
+                            <span class="indicator">SaaS & Insurance</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Premium tier SaaS model relies on clinical billing snapshots. Automated insurance claims management decreases practitioner overhead and increases transaction-based commission revenue.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper">
+                                <i class="fa-solid fa-people-group"></i>
+                                <span>Social Factors</span>
+                            </div>
+                            <span class="indicator">Destigmatization</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Destigmatization of mental health increases direct patient wellness lounge adoption. Users demand convenient, private, home-based care options and structured clinical homework.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper">
+                                <i class="fa-solid fa-microchip"></i>
+                                <span>Technological Factors</span>
+                            </div>
+                            <span class="indicator">AI & Encryption</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Advancements in Large Language Models (Gemini 3.5 Flash) and local browser encryption (AES-GCM) enable low-cost, fully secure intelligence tools that explain findings to clinicians.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper">
+                                <i class="fa-solid fa-gavel"></i>
+                                <span>Legal Factors</span>
+                            </div>
+                            <span class="indicator">HIPAA / GDPR</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Mandatory compliance with HIPAA (Health Insurance Portability and Accountability Act) and GDPR. Requires local vaults, strict audit logs, and clear clinician overrides.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PORTER SUB-TAB -->
+            <div class="sub-tab-pane" id="subtab-porter">
+                <div class="accordion-list">
+                    <div class="accordion-item open">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><span>Threat of New Entrants</span></div>
+                            <span class="indicator">Moderate</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Low technological barriers for simple forms, but high regulatory barriers (HIPAA compliance, encryption, clinical validation) protect established software systems.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><span>Bargaining Power of Buyers</span></div>
+                            <span class="indicator">Moderate</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Practitioners can select from multiple EHR suites. Retaining users requires a superior, AI-assisted UX, integrated diagnostic pipelines, and seamless billing mechanisms.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><span>Threat of Substitutes</span></div>
+                            <span class="indicator">Low</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Traditional therapy and paper note keeping are inefficient and prone to audit failures. No digital substitutes match the combined clinician-patient dual-workspace model.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><span>Competitive Rivalry</span></div>
+                            <span class="indicator">High</span>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Several standard EHR systems exist. PsyPyrus offsets rivalry by integrating advanced client-side diagnostic sandboxes, somatic tools, and a real-time ClinicalTrials.gov query system.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATWOE SUB-TAB -->
+            <div class="sub-tab-pane" id="subtab-catwoe">
+                <div class="accordion-list">
+                    <div class="accordion-item open">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><strong>C</strong><span>ustomers</span></div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Mental Health Practitioners (MHPs) looking to save documentation time, and patients looking for secure, structured clinical progress tracking.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><strong>A</strong><span>ctors</span></div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Licensed clinical practitioners, psychologists, psychiatrists, system administrators, developers, and the integrated AI Copilot engine.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><strong>T</strong><span>ransformation Process</span></div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Transitioning unstructured, messy session dialogues and checklist inputs into structured, HIPAA-audit-ready clinical records, reports, and evidence-based diagnostic suggestions.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><strong>W</strong><span>orldview (Weltanschauung)</span></div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>AI should assist and explain clinical decisions, but never replace licensed clinical practitioners. Combining administrative software and automated diagnostics delivers higher patient outcomes.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><strong>O</strong><span>wners</span></div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>PsyPyrus AI Corporation founders, seed investors, and stakeholders.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <div class="title-wrapper"><strong>E</strong><span>nvironmental Constraints</span></div>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>Strict health data privacy laws (HIPAA/GDPR), lack of internet in certain rural settings (requires offline-first design), and reluctance of traditional practices to adopt computer interfaces.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workforce Development -->
+        <section class="glass-card">
+            <h2><i class="fa-solid fa-laptop-code"></i> Workforce Development Plan</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 0.95rem;">
+                A well-rounded engineering team is designated to maintain the dual-persona web and mobile client code blocks, security protocols, and analytical pipelines.
+            </p>
+            
+            <div class="accordion-list">
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="title-wrapper"><span>1. Web & Mobile Frontend Developers</span></div>
+                        <span class="indicator">React / Compose / JS</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Responsible for building the user interfaces. Web developers maintain the vanilla HTML5/CSS3/ES6 codebase inside <code>web/</code>. Mobile developers build the native Kotlin Jetpack Compose client matching the exact visual styles.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="title-wrapper"><span>2. Backend & Database Engineers</span></div>
+                        <span class="indicator">FastAPI / SQLite / PostgreSQL</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Maintain server-side FastAPI infrastructure, design schemas for user accounts, and structure local SQL storage blocks (Room DB for Android, LocalStorage for Web Companion).</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="title-wrapper"><span>3. AI & Natural Language Processing Specialists</span></div>
+                        <span class="indicator">Gemini API / TensorFlow</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Refine client-side prompt engineering pipelines. Implement voice transcript cleaning, semantic parsing for digital MSE, and automated SOAP compilation.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="title-wrapper"><span>4. Quality Assurance (QA) & Security Auditors</span></div>
+                        <span class="indicator">HIPAA Audits / Roborazzi</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Conduct regular software audits to verify local encryption vault bindings. Run automated tests (Robolectric, screenshot tests) to ensure UI stability.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- TAB PANE: CASE HISTORY & MSE SANDBOX -->
+    <!-- ========================================================= -->
+    <main class="container tab-pane" id="tab-casehistory">
+        <div class="glass-card">
+            <h2><i class="fa-solid fa-address-card"></i> Case History & MSE Sandbox</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 0.95rem;">
+                Select demographic details, chief complaints, and MSE parameters to compile a structured clinical brief.
+            </p>
+
+            <div class="sandbox-split-grid">
+                <!-- Sandbox Form -->
+                <div class="sandbox-form-side">
+                    <!-- Personal Info Card -->
+                    <div class="team-card" style="background: rgba(255,255,255,0.01);">
+                        <h4 style="margin-bottom: 14px; font-family: var(--font-heading); color: var(--color-secondary);">I. Personal Demographics</h4>
+                        <div class="form-grid-layout">
+                            <div class="field-group">
+                                <label class="field-label">Name of Individual</label>
+                                <input type="text" class="input-text" id="ch-name" value="Liam Carter">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Age</label>
+                                <input type="number" class="input-text" id="ch-age" value="28">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Sex Assigned at Birth</label>
+                                <select class="select-dropdown" id="ch-sex">
+                                    <option value="Male" selected>Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Intersex">Intersex</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Marital Status</label>
+                                <select class="select-dropdown" id="ch-status">
+                                    <option value="Single" selected>Single</option>
+                                    <option value="Married">Married</option>
+                                    <option value="Separated">Separated</option>
+                                    <option value="Divorced">Divorced</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Education Level</label>
+                                <input type="text" class="input-text" id="ch-education" value="Postgraduate (M.Sc)">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Occupation</label>
+                                <input type="text" class="input-text" id="ch-occupation" value="Software Engineer">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chief Complaint Card -->
+                    <div class="team-card" style="background: rgba(255,255,255,0.01);">
+                        <h4 style="margin-bottom: 14px; font-family: var(--font-heading); color: var(--color-secondary);">II. History of Presenting Illness</h4>
+                        <div class="form-grid-layout">
+                            <div class="field-group full-width">
+                                <label class="field-label">Chief Complaints (Patient Verbatim)</label>
+                                <textarea class="text-area" id="ch-complaint" rows="2">Feeling completely drained, unable to enjoy code hobbies, and experiencing severe insomnia for the past 3 weeks.</textarea>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Mode of Onset</label>
+                                <select class="select-dropdown" id="ch-onset">
+                                    <option value="Abrupt (within 48 hours)">Abrupt (Sudden)</option>
+                                    <option value="Acute (within 2 weeks)">Acute (Rapid)</option>
+                                    <option value="Insidious (more than 2 weeks)" selected>Insidious</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Course of Illness</label>
+                                <select class="select-dropdown" id="ch-course">
+                                    <option value="Continuous" selected>Continuous</option>
+                                    <option value="Episodic">Episodic</option>
+                                    <option value="Fluctuating">Fluctuating</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Progress of Illness</label>
+                                <select class="select-dropdown" id="ch-progress">
+                                    <option value="Improving">Improving</option>
+                                    <option value="Deteriorating" selected>Deteriorating</option>
+                                    <option value="Static">Static</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mental Status Exam (MSE) -->
+                    <div class="team-card" style="background: rgba(255,255,255,0.01);">
+                        <h4 style="margin-bottom: 14px; font-family: var(--font-heading); color: var(--color-secondary);">III. Mental Status Examination</h4>
+                        <div class="form-grid-layout">
+                            <div class="field-group">
+                                <label class="field-label">General Appearance</label>
+                                <select class="select-dropdown" id="mse-appearance">
+                                    <option value="Well-groomed, appropriate attire">Well-groomed</option>
+                                    <option value="Disheveled, poor hygiene" selected>Disheveled / Neglected</option>
+                                    <option value="Posture tense, hyper-vigilant">Tense / Vigilant</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Motor Behaviour</label>
+                                <select class="select-dropdown" id="mse-motor">
+                                    <option value="Cooperative, normal motor activity">Cooperative (Normal)</option>
+                                    <option value="Psychomotor agitation (restless foot tapping)" selected>Psychomotor Agitation</option>
+                                    <option value="Guarded, uncooperative">Guarded</option>
+                                    <option value="Psychomotor retardation (slowed movements)">Psychomotor Retardation</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Speech Characteristics</label>
+                                <select class="select-dropdown" id="mse-speech">
+                                    <option value="Normative rate, volume and responsive tone">Normative rate & volume</option>
+                                    <option value="Pressured, rapid rate, loud volume">Pressured / Rapid</option>
+                                    <option value="Abnormally soft, hesitant and scant speech" selected>Soft / Hesitant / Scant</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Mood and Affect Quality</label>
+                                <select class="select-dropdown" id="mse-mood">
+                                    <option value="Depressive mood, flat affect" selected>Depressed / Flat</option>
+                                    <option value="Anxious, restricted affect range">Anxious / Restricted</option>
+                                    <option value="Euthymic, congruent affect">Euthymic</option>
+                                    <option value="Elevated mood, labile affect">Elevated / Labile</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Patient Insight Grade</label>
+                                <select class="select-dropdown" id="mse-insight">
+                                    <option value="Grade 1 (Complete denial of illness)">Grade 1: Denial</option>
+                                    <option value="Grade 4 (Intellectual insight - aware but no changes)" selected>Grade 4: Intellectual Insight</option>
+                                    <option value="Grade 6 (True emotional insight - leading to behavioral changes)">Grade 6: True Emotional Insight</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Judgment Appraisal</label>
+                                <select class="select-dropdown" id="mse-judgment">
+                                    <option value="Socially sound, personal choices appropriate">Intact Judgment</option>
+                                    <option value="Impaired social choices, poor risk evaluation" selected>Impaired Judgment</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sandbox Outputs -->
+                <div class="sandbox-output-side">
+                    <h4 style="font-family: var(--font-heading); color: var(--color-primary);"><i class="fa-solid fa-file-invoice"></i> Compiled Prose Record</h4>
+                    <div class="output-console prose-rendered" id="case-prose-output">
+                        <!-- Prose generated here -->
+                    </div>
+
+                    <h4 style="font-family: var(--font-heading); color: var(--color-primary);"><i class="fa-solid fa-code"></i> Structured JSON Data</h4>
+                    <div class="output-console" id="case-json-output" style="font-size: 0.775rem;">
+                        <!-- JSON generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- TAB PANE: DIAGNOSTIC ENGINE SANDBOX -->
+    <!-- ========================================================= -->
+    <main class="container tab-pane" id="tab-diagnostics">
+        <div class="glass-card">
+            <h2><i class="fa-solid fa-vial"></i> Diagnostic Engine Sandbox</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 0.95rem;">
+                Replicate the rules defined in <code>diagnostic_engine.py</code>. Switch modes, select symptoms, adjust duration, and evaluate diagnostic criteria in real-time.
+            </p>
+
+            <div class="sandbox-split-grid">
+                <!-- Inputs side -->
+                <div class="sandbox-form-side">
+                    <!-- Engine Mode Toggle -->
+                    <div class="team-card" style="background: rgba(255,255,255,0.01);">
+                        <h4 style="margin-bottom: 12px; font-family: var(--font-heading); color: var(--color-secondary);">1. Diagnostic Mode</h4>
+                        <div style="display: flex; gap: 24px;">
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                <input type="radio" name="diag-mode" id="diag-mode-dsm" checked style="accent-color: var(--color-secondary);">
+                                <span>DSM-5-TR / ICD-10 Criteria</span>
+                            </label>
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                <input type="radio" name="diag-mode" id="diag-mode-mock" style="accent-color: var(--color-secondary);">
+                                <span>Conceptual / Mock Disorders</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- DSM-5-TR / ICD-10 Symptom Panel -->
+                    <div id="dsm-sandbox-inputs">
+                        <div class="team-card" style="background: rgba(255,255,255,0.01); margin-bottom: 16px;">
+                            <h4 style="margin-bottom: 12px; font-family: var(--font-heading); color: var(--color-primary);">A. Major Depressive Disorder (MDD) checklist</h4>
+                            <div class="checklist-container">
+                                <label class="checkbox-line"><input type="checkbox" id="mdd-mood" checked> <span>Depressed mood (Core symptom)</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mdd-anhedonia" checked> <span>Anhedonia / Loss of Interest (Core symptom)</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mdd-weight"> <span>Significant weight or appetite change</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mdd-sleep" checked> <span>Insomnia or hypersomnia daily</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mdd-motor"> <span>Psychomotor agitation or retardation</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mdd-fatigue" checked> <span>Fatigue or loss of energy</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mdd-worthless"> <span>Feelings of worthlessness or excessive guilt</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mdd-concentration" checked> <span>Diminished concentration or indecisiveness</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mdd-suicidal"> <span>Recurrent thoughts of death or suicidal ideation</span></label>
+                            </div>
+                        </div>
+
+                        <div class="team-card" style="background: rgba(255,255,255,0.01); margin-bottom: 16px;">
+                            <h4 style="margin-bottom: 12px; font-family: var(--font-heading); color: var(--color-primary);">B. Generalized Anxiety Disorder (GAD) checklist</h4>
+                            <div class="checklist-container">
+                                <label class="checkbox-line"><input type="checkbox" id="gad-anxiety"> <span>Excessive anxiety and worry (Core symptom)</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="gad-restless"> <span>Restlessness or feeling keyed up/on edge</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="gad-fatigue"> <span>Being easily fatigued</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="gad-concentration"> <span>Difficulty concentrating or mind going blank</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="gad-irritable"> <span>Irritability</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="gad-tension"> <span>Muscle tension</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="gad-sleep"> <span>Sleep disturbance (difficulty falling/staying asleep)</span></label>
+                            </div>
+                        </div>
+
+                        <div class="team-card" style="background: rgba(255,255,255,0.01);">
+                            <h4 style="margin-bottom: 12px; font-family: var(--font-heading); color: var(--color-secondary);">C. Duration & Exclusions</h4>
+                            <div class="field-group" style="margin-bottom: 14px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <label class="field-label">Active Symptoms Duration:</label>
+                                    <span id="diag-weeks-bubble" style="font-weight: 700; color: var(--color-primary);">4 weeks</span>
+                                </div>
+                                <input type="range" id="diag-duration-weeks" min="0" max="52" value="4" style="accent-color: var(--color-primary); cursor:pointer;">
+                            </div>
+                            <div class="checklist-container" style="max-height: 150px;">
+                                <label class="checkbox-line"><input type="checkbox" id="excl-substance" checked> <span>No physiological substance attribution</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="excl-medical" checked> <span>No medical condition attribution</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="excl-mania" checked> <span>No history of manic/hypomanic episodes</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conceptual / Mock Symptoms Panel -->
+                    <div id="mock-sandbox-inputs" style="display:none;">
+                        <div class="team-card" style="background: rgba(255,255,255,0.01); margin-bottom: 16px;">
+                            <h4 style="margin-bottom: 12px; font-family: var(--font-heading); color: var(--color-primary);">A. Basic Demographics & Onsets</h4>
+                            <div class="checklist-container" style="max-height: 180px;">
+                                <label class="checkbox-line"><input type="checkbox" id="basic-above18" checked> <span>Patient Age: Above 18 (Phantom threshold)</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="basic-above21"> <span>Patient Age: Above 21 (Hypothetical threshold)</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="basic-1year" checked> <span>Duration of symptoms: 1 year (Phantom threshold)</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="basic-6months"> <span>Duration of symptoms: 6 months (Hypothetical threshold)</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="basic-excl-phantom" checked> <span>Not attributable to Physiological conditions</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="basic-excl-hypo"> <span>Not better explained by other Physiological conditions</span></label>
+                            </div>
+                        </div>
+
+                        <div class="team-card" style="background: rgba(255,255,255,0.01);">
+                            <h4 style="margin-bottom: 12px; font-family: var(--font-heading); color: var(--color-primary);">B. Specific Conceptual Symptoms</h4>
+                            <div class="checklist-container">
+                                <label class="checkbox-line"><input type="checkbox" id="mock-PDss1" checked> <span>PDss1: Specific Phantom symptom 1</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-PDss2" checked> <span>PDss2: Specific Phantom symptom 2</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-PDss3"> <span>PDss3: Specific Phantom symptom 3</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-PDss4"> <span>PDss4: Specific Phantom symptom 4</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-PDss5"> <span>PDss5: Specific Phantom symptom 5</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-PDss6"> <span>PDss6: Specific Phantom symptom 6</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-CDss1" checked> <span>CDss1: Core Diagnostic symptom 1</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-CDss2"> <span>CDss2: Core Diagnostic symptom 2</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-HDss1"> <span>HDss1: Specific Hypothetical symptom 1</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-HDss2"> <span>HDss2: Specific Hypothetical symptom 2</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-HDss3"> <span>HDss3: Specific Hypothetical symptom 3</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-HDss4"> <span>HDss4: Specific Hypothetical symptom 4</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-HDss5"> <span>HDss5: Specific Hypothetical symptom 5</span></label>
+                                <label class="checkbox-line"><input type="checkbox" id="mock-HDss6"> <span>HDss6: Specific Hypothetical symptom 6</span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Outputs side -->
+                <div class="sandbox-output-side">
+                    <h4 style="font-family: var(--font-heading); color: var(--color-primary);"><i class="fa-solid fa-square-poll-vertical"></i> Evaluator Outcomes</h4>
+                    <div id="diagnostic-results-sandbox" style="width: 100%;">
+                        <!-- Outcomes injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- TAB PANE: WELLNESS PACER -->
+    <!-- ========================================================= -->
+    <main class="container tab-pane" id="tab-wellness">
+        <div class="glass-card">
+            <h2><i class="fa-solid fa-spa"></i> Somatic Restructuring & Breath Mandala</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 24px; font-size: 0.95rem;">
+                Replicate the Patient Wellness Lounge somatic pacer. Click the button to start the paced box breathing exercise.
+            </p>
+
+            <div class="breathing-mandala-box">
+                <div class="circle-pacer-node" id="breath-circle">
+                    <span class="breathing-text" id="breath-label">BREATHE</span>
+                </div>
+                
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); text-align: center; margin-bottom: 24px; line-height: 1.5; max-width: 450px;">
+                    Box breathing encourages cardiac coherence and stress management. 
+                    <br>
+                    <strong>Instructions:</strong> Breathe in as the mandala scales up, hold, breathe out as it scales down, hold.
+                </p>
+
+                <button class="btn-action" id="breath-pacer-toggle">Start Somatic Restructuring</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- --- FOOTER --- -->
+    <footer style="margin-top: 60px; text-align: center; color: var(--color-text-muted); font-size: 0.8rem; border-top: 1px solid var(--color-border); padding-top: 24px;">
+        <div class="container">
+            <p>PsyPyrus AI Operating System • Secure Diagnostic Decision Support Environment</p>
+            <p style="margin-top: 6px; font-size: 0.75rem;">Copyright Protected ©️ 2026. All Rights Reserved®</p>
+        </div>
+    </footer>
+
+    <!-- Main Module Application Hook -->
+    <script type="module" src="./js/blueprint.js"></script>
+</body>
+</html>

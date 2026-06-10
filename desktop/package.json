@@ -1,0 +1,51 @@
+{
+  "name": "psypyrus-desktop",
+  "version": "1.0.0",
+  "description": "PsyPyrus Desktop Client - HIPAA Compliant Mental Health OS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build:web": "npm run --prefix ../web build",
+    "copy:web": "node -e \"const fs = require('fs'); fs.cpSync('../web/dist', './dist', {recursive: true});\"",
+    "package": "npm run build:web && npm run copy:web && electron-builder --win",
+    "package:mac": "npm run build:web && npm run copy:web && electron-builder --mac"
+  },
+  "keywords": [
+    "psypyrus",
+    "ehr",
+    "mental-health",
+    "clinical",
+    "electron"
+  ],
+  "author": "Antigravity",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^31.3.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.psypyrus.desktop",
+    "productName": "PsyPyrus",
+    "win": {
+      "target": "portable",
+      "icon": "assets/icon.png"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.png",
+      "category": "public.app-category.healthcare-fitness"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "dist/**/*"
+    ],
+    "directories": {
+      "output": "out"
+    }
+  }
+}

@@ -1,0 +1,445 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A4AEB8221F9F53A9B506E135 /* PsyPyrusApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3ACF6CB2465B70A2CE7284 /* PsyPyrusApp.swift */; };
+		19CF1744F8B65226886488EF /* Entities.swift in Sources */ = {isa = PBXBuildFile; fileRef = E419E95A7BEC50268FF3CCE9 /* Entities.swift */; };
+		FA3A590250FB5644990D841B /* DiagnosticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8BACD0E31685E258AF05320 /* DiagnosticEngine.swift */; };
+		99D16CF6DD425749B412EFB1 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DBAE1E6DE85B3D8DF47B9F /* GeminiService.swift */; };
+		63B09D04A8C956E8A7BBF1ED /* ClinicalTrialsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5F556DC11E252EBBB9367A1 /* ClinicalTrialsService.swift */; };
+		A3A4F201D55B56E5AD86FCDA /* SecurityLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F12E7C8D958584688FBD67A /* SecurityLogger.swift */; };
+		3555D8C6EE5051968D3A2018 /* IcdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C0E5B94BE4597A849E82D8 /* IcdService.swift */; };
+		B760220DC9225ACE9E9A8879 /* PsyPyrusViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE5235A2E445F85ADB5BBE5 /* PsyPyrusViewModel.swift */; };
+		9DCFF415FA265D84ACA72AC9 /* CommonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D97C0C67E485F88B3766C1F /* CommonComponents.swift */; };
+		321007465FD4529BBE026FD8 /* BiometricLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A531134C112052998527CAAA /* BiometricLockView.swift */; };
+		C2DA1E5C09D55EF68520429B /* MainLayoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F89F1CE922675E26BCC91596 /* MainLayoutView.swift */; };
+		BA56B08222B0550DA6A2F92E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7184B998F2F5A13A35E8901 /* ContentView.swift */; };
+		3AD89E31B60D514485047854 /* ClinicianDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8861E5265AEF5BEA93B48B09 /* ClinicianDashboardView.swift */; };
+		33E488A2842054C29BC31900 /* SoapNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604840A2037956B5BFA7338F /* SoapNoteView.swift */; };
+		57FE4B349815503A843C3805 /* MentalStatusExamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DACAB8D1485F65AAA4CD31 /* MentalStatusExamView.swift */; };
+		ADD9EA557F4055219BCF9F87 /* DiagnosticsSuiteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EFC83C80B45AB58EF16318 /* DiagnosticsSuiteView.swift */; };
+		99800225E6AE5209A9FF8C1D /* TreatmentPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1896BD0CB55CE6987D3EFC /* TreatmentPlannerView.swift */; };
+		0C875A098AC85E418AAE229D /* InteractiveAssessmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2746FF561FB05360B725B942 /* InteractiveAssessmentsView.swift */; };
+		21BCA3AE4C5158DBAC02829C /* TeletherapyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0414024EC4FC5D55BB17C8F8 /* TeletherapyView.swift */; };
+		DAB71BE0B4805EE99B1F321F /* HipaSecurityShieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E49CFFEBB445256B4E0C822 /* HipaSecurityShieldView.swift */; };
+		EE3A367501395A41865DFB7E /* MarketplaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90A1A299246562E920E235E /* MarketplaceView.swift */; };
+		E7FB07EAD6025BA9BBEAC555 /* PatientDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A58683E9A55FBCAF111C8E /* PatientDashboardView.swift */; };
+		4A778B2A04465EDC82CA1577 /* WellnessLoungeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A561BFFE9E5CDEBDFD8252 /* WellnessLoungeView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		794C7298FB0F5E72846C3BE4 /* PsyPyrus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PsyPyrus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C3ACF6CB2465B70A2CE7284 /* PsyPyrusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PsyPyrusApp.swift; path = ../ios/PsyPyrus/PsyPyrusApp.swift; sourceTree = SOURCE_ROOT; };
+		E419E95A7BEC50268FF3CCE9 /* Entities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Entities.swift; path = ../ios/PsyPyrus/Models/Entities.swift; sourceTree = SOURCE_ROOT; };
+		C8BACD0E31685E258AF05320 /* DiagnosticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DiagnosticEngine.swift; path = ../ios/PsyPyrus/Services/DiagnosticEngine.swift; sourceTree = SOURCE_ROOT; };
+		43DBAE1E6DE85B3D8DF47B9F /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GeminiService.swift; path = ../ios/PsyPyrus/Services/GeminiService.swift; sourceTree = SOURCE_ROOT; };
+		F5F556DC11E252EBBB9367A1 /* ClinicalTrialsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClinicalTrialsService.swift; path = ../ios/PsyPyrus/Services/ClinicalTrialsService.swift; sourceTree = SOURCE_ROOT; };
+		8F12E7C8D958584688FBD67A /* SecurityLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SecurityLogger.swift; path = ../ios/PsyPyrus/Services/SecurityLogger.swift; sourceTree = SOURCE_ROOT; };
+		F1C0E5B94BE4597A849E82D8 /* IcdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IcdService.swift; path = ../ios/PsyPyrus/Services/IcdService.swift; sourceTree = SOURCE_ROOT; };
+		6EE5235A2E445F85ADB5BBE5 /* PsyPyrusViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PsyPyrusViewModel.swift; path = ../ios/PsyPyrus/ViewModels/PsyPyrusViewModel.swift; sourceTree = SOURCE_ROOT; };
+		4D97C0C67E485F88B3766C1F /* CommonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommonComponents.swift; path = ../ios/PsyPyrus/Views/CommonComponents.swift; sourceTree = SOURCE_ROOT; };
+		A531134C112052998527CAAA /* BiometricLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BiometricLockView.swift; path = ../ios/PsyPyrus/Views/BiometricLockView.swift; sourceTree = SOURCE_ROOT; };
+		F89F1CE922675E26BCC91596 /* MainLayoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MainLayoutView.swift; path = ../ios/PsyPyrus/Views/MainLayoutView.swift; sourceTree = SOURCE_ROOT; };
+		A7184B998F2F5A13A35E8901 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = ../ios/PsyPyrus/Views/ContentView.swift; sourceTree = SOURCE_ROOT; };
+		8861E5265AEF5BEA93B48B09 /* ClinicianDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClinicianDashboardView.swift; path = ../ios/PsyPyrus/Views/Professional/ClinicianDashboardView.swift; sourceTree = SOURCE_ROOT; };
+		604840A2037956B5BFA7338F /* SoapNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SoapNoteView.swift; path = ../ios/PsyPyrus/Views/Professional/SoapNoteView.swift; sourceTree = SOURCE_ROOT; };
+		48DACAB8D1485F65AAA4CD31 /* MentalStatusExamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MentalStatusExamView.swift; path = ../ios/PsyPyrus/Views/Professional/MentalStatusExamView.swift; sourceTree = SOURCE_ROOT; };
+		B2EFC83C80B45AB58EF16318 /* DiagnosticsSuiteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DiagnosticsSuiteView.swift; path = ../ios/PsyPyrus/Views/Professional/DiagnosticsSuiteView.swift; sourceTree = SOURCE_ROOT; };
+		1B1896BD0CB55CE6987D3EFC /* TreatmentPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TreatmentPlannerView.swift; path = ../ios/PsyPyrus/Views/Professional/TreatmentPlannerView.swift; sourceTree = SOURCE_ROOT; };
+		2746FF561FB05360B725B942 /* InteractiveAssessmentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InteractiveAssessmentsView.swift; path = ../ios/PsyPyrus/Views/Shared/InteractiveAssessmentsView.swift; sourceTree = SOURCE_ROOT; };
+		0414024EC4FC5D55BB17C8F8 /* TeletherapyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TeletherapyView.swift; path = ../ios/PsyPyrus/Views/Shared/TeletherapyView.swift; sourceTree = SOURCE_ROOT; };
+		8E49CFFEBB445256B4E0C822 /* HipaSecurityShieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HipaSecurityShieldView.swift; path = ../ios/PsyPyrus/Views/Shared/HipaSecurityShieldView.swift; sourceTree = SOURCE_ROOT; };
+		B90A1A299246562E920E235E /* MarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MarketplaceView.swift; path = ../ios/PsyPyrus/Views/Shared/MarketplaceView.swift; sourceTree = SOURCE_ROOT; };
+		02A58683E9A55FBCAF111C8E /* PatientDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PatientDashboardView.swift; path = ../ios/PsyPyrus/Views/Patient/PatientDashboardView.swift; sourceTree = SOURCE_ROOT; };
+		F3A561BFFE9E5CDEBDFD8252 /* WellnessLoungeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WellnessLoungeView.swift; path = ../ios/PsyPyrus/Views/Patient/WellnessLoungeView.swift; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		52492AA6E8C55C61B3165312 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3263DA8A6633587EA9A988F1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				794C7298FB0F5E72846C3BE4 /* PsyPyrus.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		614B7A65F2965397A03BD01B /* App */ = {
+			isa = PBXGroup;
+			children = (
+				4C3ACF6CB2465B70A2CE7284 /* PsyPyrusApp.swift */,
+			);
+			name = App;
+			sourceTree = "<group>";
+		};
+		E1C6B11DA0D257358B2353BF /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E419E95A7BEC50268FF3CCE9 /* Entities.swift */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		C6B2D20103BE58BD878EA1A4 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C8BACD0E31685E258AF05320 /* DiagnosticEngine.swift */,
+				43DBAE1E6DE85B3D8DF47B9F /* GeminiService.swift */,
+				F5F556DC11E252EBBB9367A1 /* ClinicalTrialsService.swift */,
+				8F12E7C8D958584688FBD67A /* SecurityLogger.swift */,
+				F1C0E5B94BE4597A849E82D8 /* IcdService.swift */,
+			);
+			name = Services;
+			sourceTree = "<group>";
+		};
+		ADFF8E0303BE5461A5B7A10B /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				6EE5235A2E445F85ADB5BBE5 /* PsyPyrusViewModel.swift */,
+			);
+			name = ViewModels;
+			sourceTree = "<group>";
+		};
+		DB32DBFCA8EA5AE58BD96A8F /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4790C7A94F4459FCB3482CC8 /* Patient */,
+				306EDCA5F34F5CCF9FC89081 /* Professional */,
+				84FD20E73A165C899CDE099B /* Shared */,
+				4D97C0C67E485F88B3766C1F /* CommonComponents.swift */,
+				A531134C112052998527CAAA /* BiometricLockView.swift */,
+				F89F1CE922675E26BCC91596 /* MainLayoutView.swift */,
+				A7184B998F2F5A13A35E8901 /* ContentView.swift */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
+		4790C7A94F4459FCB3482CC8 /* Patient */ = {
+			isa = PBXGroup;
+			children = (
+				02A58683E9A55FBCAF111C8E /* PatientDashboardView.swift */,
+				F3A561BFFE9E5CDEBDFD8252 /* WellnessLoungeView.swift */,
+			);
+			name = Patient;
+			sourceTree = "<group>";
+		};
+		306EDCA5F34F5CCF9FC89081 /* Professional */ = {
+			isa = PBXGroup;
+			children = (
+				8861E5265AEF5BEA93B48B09 /* ClinicianDashboardView.swift */,
+				604840A2037956B5BFA7338F /* SoapNoteView.swift */,
+				48DACAB8D1485F65AAA4CD31 /* MentalStatusExamView.swift */,
+				B2EFC83C80B45AB58EF16318 /* DiagnosticsSuiteView.swift */,
+				1B1896BD0CB55CE6987D3EFC /* TreatmentPlannerView.swift */,
+			);
+			name = Professional;
+			sourceTree = "<group>";
+		};
+		84FD20E73A165C899CDE099B /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				2746FF561FB05360B725B942 /* InteractiveAssessmentsView.swift */,
+				0414024EC4FC5D55BB17C8F8 /* TeletherapyView.swift */,
+				8E49CFFEBB445256B4E0C822 /* HipaSecurityShieldView.swift */,
+				B90A1A299246562E920E235E /* MarketplaceView.swift */,
+			);
+			name = Shared;
+			sourceTree = "<group>";
+		};
+		B42A1C40D69E5C328C4E78C2 = {
+			isa = PBXGroup;
+			children = (
+				614B7A65F2965397A03BD01B /* App */,
+				E1C6B11DA0D257358B2353BF /* Models */,
+				C6B2D20103BE58BD878EA1A4 /* Services */,
+				ADFF8E0303BE5461A5B7A10B /* ViewModels */,
+				DB32DBFCA8EA5AE58BD96A8F /* Views */,
+				3263DA8A6633587EA9A988F1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXProject section */
+		523F909C6A9E56BA9CCEFC67 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					8F2CDA28C44D55CA8BBE3A16 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 414F46BED1A35DB4887AAEE3 /* Build configuration list for PBXProject "PsyPyrus" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B42A1C40D69E5C328C4E78C2;
+			productRefGroup = 3263DA8A6633587EA9A988F1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8F2CDA28C44D55CA8BBE3A16 /* PsyPyrus */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1F3EBA468C9D58578FDAE3BA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A4AEB8221F9F53A9B506E135 /* PsyPyrusApp.swift in Sources */,
+				19CF1744F8B65226886488EF /* Entities.swift in Sources */,
+				FA3A590250FB5644990D841B /* DiagnosticEngine.swift in Sources */,
+				99D16CF6DD425749B412EFB1 /* GeminiService.swift in Sources */,
+				63B09D04A8C956E8A7BBF1ED /* ClinicalTrialsService.swift in Sources */,
+				A3A4F201D55B56E5AD86FCDA /* SecurityLogger.swift in Sources */,
+				3555D8C6EE5051968D3A2018 /* IcdService.swift in Sources */,
+				B760220DC9225ACE9E9A8879 /* PsyPyrusViewModel.swift in Sources */,
+				9DCFF415FA265D84ACA72AC9 /* CommonComponents.swift in Sources */,
+				321007465FD4529BBE026FD8 /* BiometricLockView.swift in Sources */,
+				C2DA1E5C09D55EF68520429B /* MainLayoutView.swift in Sources */,
+				BA56B08222B0550DA6A2F92E /* ContentView.swift in Sources */,
+				3AD89E31B60D514485047854 /* ClinicianDashboardView.swift in Sources */,
+				33E488A2842054C29BC31900 /* SoapNoteView.swift in Sources */,
+				57FE4B349815503A843C3805 /* MentalStatusExamView.swift in Sources */,
+				ADD9EA557F4055219BCF9F87 /* DiagnosticsSuiteView.swift in Sources */,
+				99800225E6AE5209A9FF8C1D /* TreatmentPlannerView.swift in Sources */,
+				0C875A098AC85E418AAE229D /* InteractiveAssessmentsView.swift in Sources */,
+				21BCA3AE4C5158DBAC02829C /* TeletherapyView.swift in Sources */,
+				DAB71BE0B4805EE99B1F321F /* HipaSecurityShieldView.swift in Sources */,
+				EE3A367501395A41865DFB7E /* MarketplaceView.swift in Sources */,
+				E7FB07EAD6025BA9BBEAC555 /* PatientDashboardView.swift in Sources */,
+				4A778B2A04465EDC82CA1577 /* WellnessLoungeView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		8F2CDA28C44D55CA8BBE3A16 /* PsyPyrus */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 09B5BF74164D5DEEAC71A4CF /* Build configuration list for PBXNativeTarget "PsyPyrus" */;
+			buildPhases = (
+				1F3EBA468C9D58578FDAE3BA /* Sources */,
+				52492AA6E8C55C61B3165312 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PsyPyrus;
+			productName = PsyPyrus;
+			productReference = 794C7298FB0F5E72846C3BE4 /* PsyPyrus.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin XCBuildConfiguration section */
+		ECA59B556A2B5FAE8BFA9623 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_REPLAY = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUICKTIME_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		22C4DA76FE595E038BE9D11C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_REPLAY = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUICKTIME_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		2E4D4B065E3B51069DFDB673 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "PsyPyrus";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.example.PsyPyrus.mac";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "macosx";
+			};
+			name = Debug;
+		};
+		96471F5C03985346BB8968EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "PsyPyrus";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.example.PsyPyrus.mac";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "macosx";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		414F46BED1A35DB4887AAEE3 /* Build configuration list for PBXProject "PsyPyrus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ECA59B556A2B5FAE8BFA9623 /* Debug */,
+				22C4DA76FE595E038BE9D11C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		09B5BF74164D5DEEAC71A4CF /* Build configuration list for PBXNativeTarget "PsyPyrus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2E4D4B065E3B51069DFDB673 /* Debug */,
+				96471F5C03985346BB8968EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 523F909C6A9E56BA9CCEFC67 /* Project object */;
+}

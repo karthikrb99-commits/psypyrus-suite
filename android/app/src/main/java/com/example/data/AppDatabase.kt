@@ -84,21 +84,138 @@ interface SecurityAuditLogDao {
 }
 
 @Dao
-interface HomeworkTaskDao {
+interface HomeworkDao {
     @Query("SELECT * FROM homework_tasks ORDER BY assignedDate DESC")
-    fun getAllHomework(): Flow<List<HomeworkTask>>
+    fun getAllHomeworkTasks(): Flow<List<Homework>>
 
     @Query("SELECT * FROM homework_tasks WHERE patientId = :patientId ORDER BY assignedDate DESC")
-    fun getHomeworkForPatient(patientId: Long): Flow<List<HomeworkTask>>
+    fun getHomeworkForPatient(patientId: Long): Flow<List<Homework>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertHomework(task: HomeworkTask): Long
+    suspend fun insertHomework(homework: Homework): Long
 
     @Update
-    suspend fun updateHomework(task: HomeworkTask)
+    suspend fun updateHomework(homework: Homework)
 
     @Query("DELETE FROM homework_tasks WHERE id = :id")
     suspend fun deleteHomeworkById(id: Long)
+}
+
+@Dao
+interface MedicationDao {
+    @Query("SELECT * FROM medications ORDER BY isActive DESC, id DESC")
+    fun getAllMedications(): Flow<List<Medication>>
+
+    @Query("SELECT * FROM medications WHERE patientId = :patientId ORDER BY isActive DESC, id DESC")
+    fun getMedicationsForPatient(patientId: Long): Flow<List<Medication>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMedication(medication: Medication): Long
+
+    @Update
+    suspend fun updateMedication(medication: Medication)
+
+    @Query("DELETE FROM medications WHERE id = :id")
+    suspend fun deleteMedicationById(id: Long)
+
+    @Query("SELECT * FROM adherence_logs ORDER BY timestamp DESC")
+    fun getAllAdherenceLogs(): Flow<List<AdherenceLog>>
+
+    @Query("SELECT * FROM adherence_logs WHERE patientId = :patientId ORDER BY timestamp DESC")
+    fun getAdherenceLogsForPatient(patientId: Long): Flow<List<AdherenceLog>>
+
+    @Query("SELECT * FROM adherence_logs WHERE medicationId = :medicationId ORDER BY timestamp DESC")
+    fun getAdherenceLogsForMedication(medicationId: Long): Flow<List<AdherenceLog>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAdherenceLog(log: AdherenceLog): Long
+
+    @Query("DELETE FROM adherence_logs WHERE medicationId = :medicationId AND dateString = :dateString")
+    suspend fun deleteAdherenceLogAtDate(medicationId: Long, dateString: String)
+}
+
+@Dao
+interface ScratchpadNoteDao {
+    @Query("SELECT * FROM scratchpad_notes ORDER BY timestamp DESC")
+    fun getAllScratchpadNotes(): Flow<List<ScratchpadNote>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertScratchpadNote(note: ScratchpadNote): Long
+
+    @Query("DELETE FROM scratchpad_notes WHERE id = :id")
+    suspend fun deleteScratchpadNoteById(id: Long)
+
+    @Query("DELETE FROM scratchpad_notes")
+    suspend fun deleteAllScratchpadNotes()
+}
+
+@Dao
+interface UserAccountDao {
+    @Query("SELECT * FROM user_accounts ORDER BY id DESC")
+    fun getAllUserAccounts(): Flow<List<UserAccount>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUserAccount(user: UserAccount): Long
+
+    @Query("SELECT * FROM user_accounts WHERE username = :username LIMIT 1")
+    suspend fun getUserByUsername(username: String): UserAccount?
+
+    @Query("SELECT * FROM user_accounts WHERE email = :email LIMIT 1")
+    suspend fun getUserByEmail(email: String): UserAccount?
+}
+
+@Dao
+interface AvailabilitySlotDao {
+    @Query("SELECT * FROM availability_slots ORDER BY dateString ASC, timeSlot ASC")
+    fun getAllAvailabilitySlots(): Flow<List<AvailabilitySlot>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAvailabilitySlot(slot: AvailabilitySlot): Long
+
+    @Update
+    suspend fun updateAvailabilitySlot(slot: AvailabilitySlot)
+
+    @Query("DELETE FROM availability_slots WHERE id = :id")
+    suspend fun deleteAvailabilitySlot(id: Long)
+
+    @Query("DELETE FROM availability_slots WHERE dateString = :dateString AND timeSlot = :timeSlot AND practitionerName = :practitionerName")
+    suspend fun deleteSlotByDetails(dateString: String, timeSlot: String, practitionerName: String)
+
+    @Query("SELECT * FROM availability_slots WHERE dateString = :dateString")
+    suspend fun getSlotsForDate(dateString: String): List<AvailabilitySlot>
+}
+
+@Dao
+interface PeerGroupDao {
+    @Query("SELECT * FROM peer_groups ORDER BY createdAt DESC")
+    fun getAllPeerGroups(): Flow<List<PeerGroup>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPeerGroup(group: PeerGroup): Long
+
+    @Update
+    suspend fun updatePeerGroup(group: PeerGroup)
+
+    @Query("DELETE FROM peer_groups WHERE id = :id")
+    suspend fun deletePeerGroup(id: Long)
+}
+
+@Dao
+interface PeerMessageDao {
+    @Query("SELECT * FROM peer_messages WHERE groupId = :groupId ORDER BY isPinned DESC, timestamp ASC")
+    fun getMessagesForGroup(groupId: Long): Flow<List<PeerMessage>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPeerMessage(message: PeerMessage): Long
+
+    @Query("DELETE FROM peer_messages WHERE id = :id")
+    suspend fun deletePeerMessage(id: Long)
+
+    @Query("UPDATE peer_messages SET isPinned = :isPinned WHERE id = :id")
+    suspend fun updateMessagePinStatus(id: Long, isPinned: Boolean)
+
+    @Query("UPDATE peer_messages SET likesCount = likesCount + 1 WHERE id = :id")
+    suspend fun likeMessage(id: Long)
 }
 
 @Database(
@@ -109,9 +226,16 @@ interface HomeworkTaskDao {
         AssessmentScore::class,
         MoodLog::class,
         SecurityAuditLog::class,
-        HomeworkTask::class
+        Homework::class,
+        Medication::class,
+        AdherenceLog::class,
+        ScratchpadNote::class,
+        UserAccount::class,
+        AvailabilitySlot::class,
+        PeerGroup::class,
+        PeerMessage::class
     ],
-    version = 1,
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -121,7 +245,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun assessmentScoreDao(): AssessmentScoreDao
     abstract fun moodLogDao(): MoodLogDao
     abstract fun securityAuditLogDao(): SecurityAuditLogDao
-    abstract fun homeworkTaskDao(): HomeworkTaskDao
+    abstract fun homeworkDao(): HomeworkDao
+    abstract fun medicationDao(): MedicationDao
+    abstract fun scratchpadNoteDao(): ScratchpadNoteDao
+    abstract fun userAccountDao(): UserAccountDao
+    abstract fun availabilitySlotDao(): AvailabilitySlotDao
+    abstract fun peerGroupDao(): PeerGroupDao
+    abstract fun peerMessageDao(): PeerMessageDao
 
     companion object {
         @Volatile

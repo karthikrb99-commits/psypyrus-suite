@@ -17,6 +17,12 @@ object GeminiService {
     private const val TAG = "GeminiService"
     private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent"
 
+    // Custom runtime integration parameters (synchronized by ViewModel)
+    var customGeminiKey: String = ""
+    var customOpenAiKey: String = ""
+    var customLlmUrl: String = "https://api.openai.com/v1/chat/completions"
+    var activeProvider: Int = 0 // 0: Gemini, 1: OpenAI/Custom
+
     private val client = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
@@ -25,12 +31,78 @@ object GeminiService {
 
     // Helper to check key existence
     fun isApiKeyConfigured(): Boolean {
-        val key = BuildConfig.GEMINI_API_KEY
+        if (activeProvider == 1) {
+            return customOpenAiKey.isNotEmpty()
+        }
+        val key = if (customGeminiKey.isNotEmpty()) customGeminiKey else BuildConfig.GEMINI_API_KEY
         return key.isNotEmpty() && key != "MY_GEMINI_API_KEY" && key != "GEMINI_API_KEY"
     }
 
+    private suspend fun callCustomLlm(prompt: String, systemInstruction: String): String = withContext(Dispatchers.IO) {
+        if (customOpenAiKey.isEmpty()) {
+            return@withContext "Error: OpenAI/Custom LLM API key is not configured in settings."
+        }
+        try {
+            val messagesArray = JSONArray().apply {
+                if (systemInstruction.isNotEmpty()) {
+                    put(JSONObject().apply {
+                        put("role", "system")
+                        put("content", systemInstruction)
+                    })
+                }
+                put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", prompt)
+                })
+            }
+            
+            val requestBodyJson = JSONObject().apply {
+                put("model", "gpt-4o-mini") // fallback model identifier
+                put("messages", messagesArray)
+                put("temperature", 0.3)
+            }
+            
+            val mediaType = "application/json; charset=utf-8".toMediaType()
+            val requestBody = requestBodyJson.toString().toRequestBody(mediaType)
+            
+            val request = Request.Builder()
+                .url(customLlmUrl)
+                .post(requestBody)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", "Bearer $customOpenAiKey")
+                .build()
+                
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    val errorBody = response.body?.string() ?: ""
+                    return@withContext "Custom LLM HTTP ${response.code}: $errorBody"
+                }
+                val responseBody = response.body?.string() ?: ""
+                if (responseBody.isEmpty()) return@withContext "Empty Custom LLM response."
+                
+                val responseJson = JSONObject(responseBody)
+                val choices = responseJson.optJSONArray("choices")
+                if (choices != null && choices.length() > 0) {
+                    val choice = choices.getJSONObject(0)
+                    val msg = choice.optJSONObject("message")
+                    if (msg != null) {
+                        return@withContext msg.optString("content", "No content found.")
+                    }
+                }
+                return@withContext "Parsing failure inside OpenAI response. Raw: $responseBody"
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in Custom LLM call", e)
+            return@withContext "Custom LLM Exception: ${e.localizedMessage}"
+        }
+    }
+
     suspend fun callGemini(prompt: String, systemInstruction: String = ""): String = withContext(Dispatchers.IO) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
+        if (activeProvider == 1) {
+            return@withContext callCustomLlm(prompt, systemInstruction)
+        }
+
+        val apiKey = if (customGeminiKey.isNotEmpty()) customGeminiKey else BuildConfig.GEMINI_API_KEY
         
         // Return structured mock outputs if API key is not available
         if (!isApiKeyConfigured()) {
@@ -213,6 +285,70 @@ object GeminiService {
                 2.  Support patient with emotional self-regulation exercises.
                 3.  Provide 24/7 National Crisis Line contacts as a universal safety net.
                 """.trimIndent()
+            }
+            lower.contains("proactive") || lower.contains("trends") || lower.contains("behavioral analysis") -> {
+                when {
+                    lower.contains("liam") -> {
+                        """
+                        ### 📈 1. BEHAVIORAL TRENDS & CONTEXT CORRELATIONS
+                        - **PHQ-9 Severity Track**: Standard assessment registers a critical PHQ-9 score of 21, indicating severe clinical depression.
+                        - **Mood Dynamics & Compliance**: Recent daily mood logs show severe flat affect and cognitive stagnation. Correlation matches low medication adherence (50% adherence logs missed) and uncompleted behavioral homework. Sleep duration of 11 hours is reported, which is highly consistent with unrefreshing hypersomnia typical of atypical depressive episodes.
+
+                        ### ⚠️ 2. POTENTIAL RISKS & CLINICAL DETERIORATION ALERTS
+                        - **Risk Screen Alert**: Although no active suicidal plan is documented in current text, the baseline risk status is **Severe** secondary to profound clinical withdrawal and extreme brain fog. Waking up unrefreshed despite hypersomnia increases exhaustion index.
+                        - **Somatic Risk**: Elevated cognitive stagnation. Check for severe lethargy and catastrophic negative thoughts.
+
+                        ### 🎯 3. THERAPEUTIC FOCUS & PROACTIVE RECOVERY STEPS
+                        - **Clinical Consideration**: Focus upcoming sessions on Behavioral Activation scheduling starting with minimal micro-goals (e.g. 5-minute sunlight walks).
+                        - **Plan Revision**: Conduct a structured sleep hygiene check-in and CBT rescheduling for sleep onset boundaries.
+                        - **Medical Consultation**: Advise a medication re-evaluation with Dr. Brewster to adjust the dosage of SSRIs or verify antidepressant compliance.
+                        """.trimIndent()
+                    }
+                    lower.contains("sarah") -> {
+                        """
+                        ### 📈 1. BEHAVIORAL TRENDS & CONTEXT CORRELATIONS
+                        - **GAD-7 Anxiety Curve**: Assessment score of 14 points, registering moderate-to-severe occupational anxiety. Worsens severely during corporately demanding presentation preparation.
+                        - **Somatic Indicators**: Correlates with epigastric discomfort, chest tightness, and rapid pulse. Shows strong somatic panic symptoms matching GAD-7 scores. Excellent compliance with diaphragmatic breathing training reduces physical tightness temporarily from 8/10 to 4/10 distress.
+
+                        ### ⚠️ 2. POTENTIAL RISKS & CLINICAL DETERIORATION ALERTS
+                        - **Somatic Panic Transitions**: High risk of panic onset around presentation dates.
+                        - **Coping Failure Risk**: In times of high pressure (>50 hours working weeks), client tends to experience racing thoughts and sleep latency spikes (~90 mins), indicating susceptibility to burnout and autonomic hyperarousal.
+
+                        ### 🎯 3. THERAPEUTIC FOCUS & PROACTIVE RECOVERY STEPS
+                        - **Somatic Skill Reinforcement**: Continue training on 4-4-4 chest diaphragmatic pacing; recommend box-breathing exercises 5 minutes before presentations.
+                        - **Restructuring Automatic Thoughts**: Conduct CBT Cognitive Restructuring focus on work-triggered catastrophizing ("I will fail and be fired").
+                        - **Medical referral**: PCP follow-up recommended to conduct a full thyroid panel and rule out organic endocrine hyperarousal.
+                        """.trimIndent()
+                    }
+                    lower.contains("sophia") -> {
+                        """
+                        ### 📈 1. BEHAVIORAL TRENDS & CONTEXT CORRELATIONS
+                        - **PTSD Traumatic Markers**: Elevated trauma scale scores (GAD-7 baseline 16) with intrusive memory flashbacks related to developmental trauma.
+                        - **Behavioral Patterns**: Scanning and hyperarousal are highest during public college lectures, leading to cognitive fatigue and social avoidance.
+
+                        ### ⚠️ 2. POTENTIAL RISKS & CLINICAL DETERIORATION ALERTS
+                        - **Panic & Dissociation Risks**: Intrusive memories may trigger acute dissociation or hyperarousal during lectures.
+                        - **Academic Impairment**: Concentration deficits present an imminent academic performance threat.
+
+                        ### 🎯 3. THERAPEUTIC FOCUS & PROACTIVE RECOVERY STEPS
+                        - **Phase Groundwork**: Focus next clinical sessions on EMDR Phase 2 grounding protocols and resources (e.g., safe place exercises, bilateral stimulation).
+                        - **Coping Resources**: Implement daily box breathing and somatic containment.
+                        """.trimIndent()
+                    }
+                    else -> {
+                        """
+                        ### 📈 1. BEHAVIORAL TRENDS & CONTEXT CORRELATIONS
+                        - **Activity Tracker**: Client demonstrates stable mood logs with minor cyclic dips. Standard scale scores are stable.
+                        - **Adherence Insight**: High medication compliance correlated with consistent daily gratitude logs.
+
+                        ### ⚠️ 2. POTENTIAL RISKS & CLINICAL DETERIORATION ALERTS
+                        - No severe risk alerts are currently triggered. Watch for persistent complaints of occupational stress.
+
+                        ### 🎯 3. THERAPEUTIC FOCUS & PROACTIVE RECOVERY STEPS
+                        - Encourage continued compliance with daily wellness habit tracking. Review CBT cognitive logs at the next session.
+                        """.trimIndent()
+                    }
+                }
             }
             else -> {
                 """

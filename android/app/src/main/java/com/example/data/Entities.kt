@@ -26,7 +26,8 @@ data class Appointment(
     val notes: String = "",
     val fee: Double = 150.0,
     val isVideo: Boolean = true,
-    val code: String = "" // teletherapy code e.g. "PSY-PYR-992"
+    val code: String = "", // teletherapy code e.g. "PSY-PYR-992"
+    val practitionerName: String = "Dr. Katherine Brewster"
 )
 
 @Entity(tableName = "clinical_notes")
@@ -74,10 +75,107 @@ data class SecurityAuditLog(
 )
 
 @Entity(tableName = "homework_tasks")
-data class HomeworkTask(
+data class Homework(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val patientId: Long,
+    val patientName: String,
+    val title: String,
     val description: String,
-    val isCompleted: Boolean = false,
+    val dueDate: String, // e.g. "15 Jun, 2026"
+    val status: String, // "Assigned", "In Progress", "Completed"
+    val patientNotes: String = "",
+    val professionalFeedback: String = "",
     val assignedDate: Long = System.currentTimeMillis()
 )
+
+@Entity(tableName = "medications")
+data class Medication(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val patientId: Long,
+    val patientName: String,
+    val name: String,
+    val dosage: String,         // e.g. "50mg"
+    val frequency: String,      // e.g. "Once daily (Morning)"
+    val purpose: String,        // e.g. "Anxiety management"
+    val instructions: String,   // e.g. "Take with food"
+    val startDate: String,      // e.g. "09 Jun, 2026"
+    val durationDays: Int = 30, // Prescription duration
+    val isActive: Boolean = true,
+    val prescribedBy: String = "Dr. Katherine Brewster"
+)
+
+@Entity(tableName = "adherence_logs")
+data class AdherenceLog(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val medicationId: Long,
+    val patientId: Long,
+    val dateString: String,      // e.g. "09 Jun, 2026"
+    val status: String,          // "Taken", "Missed"
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "scratchpad_notes")
+data class ScratchpadNote(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val text: String,
+    val timestamp: Long = System.currentTimeMillis(),
+    val tag: String = "General"
+)
+
+@Entity(tableName = "user_accounts")
+data class UserAccount(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val username: String,
+    val email: String,
+    val passwordPlain: String,
+    val role: String, // "Professional" or "Patient"
+    val fullName: String,
+    val licenseOrId: String = "",
+    val specialty: String = "",
+    val bio: String = "No bio provided yet. Update your professional profile builder to tell patients more about your background and clinical methods.",
+    val experienceYears: Int = 5,
+    val clinicAddress: String = "Suite 300, Integrative Psychiatric Group, NY",
+    val consultationFee: Double = 150.0,
+    val rating: Double = 4.8,
+    val availableHours: String = "9:00 AM - 5:00 PM",
+    val languagesSpoken: String = "English"
+)
+
+@Entity(tableName = "availability_slots")
+data class AvailabilitySlot(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val practitionerName: String,
+    val dateString: String,      // format: "YYYY-MM-DD" e.g. "2026-06-15"
+    val timeSlot: String,        // e.g. "09:00 AM", "10:30 AM", "01:00 PM"
+    val isBooked: Boolean = false,
+    val patientId: Long? = null,
+    val patientName: String? = null,
+    val notes: String = "",
+    val isVideo: Boolean = true,
+    val fee: Double = 150.0
+)
+
+@Entity(tableName = "peer_groups")
+data class PeerGroup(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val description: String,
+    val category: String, // e.g., "Anxiety", "Depression", "PTSD", "ADHD Coping", "General Wellness"
+    val facilitatorName: String = "",
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "peer_messages")
+data class PeerMessage(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val groupId: Long,
+    val senderName: String,
+    val senderRole: String,
+    val messageText: String,
+    val isAnonymous: Boolean = false,
+    val isPinned: Boolean = false,
+    val likesCount: Int = 0,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+
