@@ -175,6 +175,8 @@ public struct ClinicianDashboardView: View {
                 shortcutButton(title: "Digital MSE", icon: "pencil.and.outline", screen: "Digital MSE")
                 shortcutButton(title: "Treatment Planner", icon: "calendar.badge.clock", screen: "Planner")
                 shortcutButton(title: "Scale Assessments", icon: "checklist", screen: "Assessments")
+                shortcutButton(title: "HiTOP Matrix", icon: "sitemap.fill", screen: "HiTOP")
+                shortcutButton(title: "RDoC Matrix", icon: "dna", screen: "RDoC")
             }
         }
     }

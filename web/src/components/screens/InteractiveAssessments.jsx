@@ -151,6 +151,71 @@ export function InteractiveAssessments({ activePatientId = 1 }) {
                 if (score >= 15) return { label: "Moderate Traumatic Stress", color: "var(--color-warning)" };
                 return { label: "Mild / Sub-clinical Traumatic Stress", color: "var(--color-success)" };
             }
+        },
+        'B-HiTOP': {
+            title: "Brief Hierarchical Taxonomy of Psychopathology (B-HiTOP)",
+            shortName: "B-HiTOP",
+            description: "45-item self-report questionnaire assessing dimensional psychopathology (Spectra & p-Factor).",
+            estTime: "6 mins",
+            maxOptions: 4,
+            options: [
+                { val: 1, label: "Not at all" },
+                { val: 2, label: "A little" },
+                { val: 3, label: "Moderately" },
+                { val: 4, label: "A lot" }
+            ],
+            questions: [
+                "I found it easy to deceive others.",
+                "I deserved special treatment.",
+                "I saw things that were not really there.",
+                "My fantasies felt very real to me.",
+                "I liked having power.",
+                "I felt something was wrong with my body.",
+                "When I had the chance, I chose to be alone rather than with other people.",
+                "My moods were intense and unpredictable.",
+                "My mind was flooded with troubling images of a bad experience.",
+                "I had pains in several parts of my body.",
+                "I felt like I was outside of my body.",
+                "I was happiest when I was alone.",
+                "I found it easy to manipulate others.",
+                "I was bothered by several bodily symptoms (e.g., headache, fatigue or stomach problems) for which there was no clear or sufficient medical explanation.",
+                "I had trouble planning and keeping to schedules.",
+                "I lost things that I needed.",
+                "I was frustrated with having to convince others I had a real illness.",
+                "Even when I was very careful, I worried whether I had done something correctly.",
+                "Reading articles about disease made me worry about my health.",
+                "I paid my bills late or missed other important deadlines.",
+                "I could feel changes in my body.",
+                "I was disgusted with myself.",
+                "I felt on guard and on edge.",
+                "I was a messy person.",
+                "I did things to get others to notice me.",
+                "I noticed small changes to how my body feels.",
+                "Things went best when I told others what to do.",
+                "I heard things that no one else could hear.",
+                "I was never on time.",
+                "I had no interest in romantic relationships.",
+                "Romantic relationships seemed like a hassle to me.",
+                "I said things without thinking.",
+                "People told me I was coldhearted.",
+                "I made decisions quickly without thinking them through.",
+                "I quit tasks that became too challenging.",
+                "I had a hard time asserting myself to others.",
+                "I felt that I did not want to be in a close relationship.",
+                "I had trouble telling whether something really happened or I just imagined it.",
+                "I felt that things around me were not real.",
+                "I liked attracting the attention of others.",
+                "I was afraid that I might suffer from a serious illness",
+                "I thought a lot about death.",
+                "I bought much more than I needed.",
+                "I was overwhelmed by anxiety.",
+                "I expected to get treated better than others."
+            ],
+            interpret: (score) => {
+                const mean = score / 45;
+                if (mean >= 2.5) return { label: `Clinical Elevation (Mean: ${mean.toFixed(2)})`, color: "var(--color-error)" };
+                return { label: `Sub-clinical Profile (Mean: ${mean.toFixed(2)})`, color: "var(--color-success)" };
+            }
         }
     };
 
@@ -213,7 +278,8 @@ export function InteractiveAssessments({ activePatientId = 1 }) {
             patientId: Number(activePatientId),
             type: selectedStandard,
             score: score,
-            details: detailsObj.label
+            details: detailsObj.label,
+            answers: answers
         });
     };
 

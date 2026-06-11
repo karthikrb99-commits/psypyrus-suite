@@ -105,7 +105,7 @@ fun LoginSignupScreen(
             Spacer(modifier = Modifier.height(14.dp))
             
             Text(
-                text = "PsyPyrus AI OS",
+                text = "Papyrus AI OS",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Black,
                 color = Color.White,

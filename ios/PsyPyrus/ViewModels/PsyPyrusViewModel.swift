@@ -46,6 +46,15 @@ public class PsyPyrusViewModel: ObservableObject {
     @Published public var icdClientId: String = ""
     @Published public var icdClientSecret: String = ""
     
+    // --- STANDARDIZED GAMIFICATION & DIMENSION STATE ---
+    @Published public var mindCoins: Int = 0
+    @Published public var clinicianXp: Int = 0
+    @Published public var clinicianLevel: Int = 1
+    @Published public var unlockedSkins: Set<String> = ["Default Onyx"]
+    @Published public var hitopDimensions: [String: Double] = [:]
+    @Published public var rdocDomains: [String: Double] = [:]
+
+    
     public init() {
         // Load API key and theme from UserDefaults if saved
         self.geminiApiKey = UserDefaults.standard.string(forKey: "PsyPyrusGeminiApiKey") ?? ""
@@ -482,5 +491,40 @@ public class PsyPyrusViewModel: ObservableObject {
         let results = await IcdService.shared.searchIcd11(query: query)
         self.icdSearchResults = results
         self.isIcdLoading = false
+    }
+    
+    // --- GAMIFICATION & DIAGNOSTIC METHODS ---
+    public func addMindCoins(amount: Int) {
+        self.mindCoins += amount
+        logAudit(action: "MindCoins Earned", details: "User gained \(amount) MindCoins.")
+    }
+    
+    public func addClinicianXp(amount: Int) {
+        self.clinicianXp += amount
+        let currentXp = self.clinicianXp
+        let neededXp = self.clinicianLevel * 100
+        if currentXp >= neededXp {
+            self.clinicianLevel += 1
+            self.clinicianXp = currentXp - neededXp
+            logAudit(action: "Clinician Level Up", details: "Clinician leveled up to Level \(self.clinicianLevel).")
+        }
+    }
+    
+    public func unlockSkin(skinName: String, cost: Int) -> Bool {
+        if self.mindCoins >= cost {
+            self.mindCoins -= cost
+            self.unlockedSkins.insert(skinName)
+            logAudit(action: "Skin Unlocked", details: "Unlocked display theme skin: \(skinName)")
+            return true
+        }
+        return false
+    }
+    
+    public func updateHitopDimension(dimension: String, value: Double) {
+        self.hitopDimensions[dimension] = value
+    }
+    
+    public func updateRdocDomain(domain: String, value: Double) {
+        self.rdocDomains[domain] = value
     }
 }

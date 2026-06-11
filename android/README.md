@@ -1,6 +1,6 @@
 # 📱 PsyPyrus Android Client — Developer Guide
 
-This directory contains the native Android client for the **PsyPyrus Suite**, built using **Kotlin**, **Jetpack Compose** (Material 3), and **Room ORM** (SQLite). It implements an offline-first diagnostic rules engine, local security auditing for HIPAA compliance, and a connection to Google's Gemini 3.5 API.
+This directory contains the native Android client for the **PsiPyrus Suite**, built using **Kotlin**, **Jetpack Compose** (Material 3), and **Room ORM** (SQLite). It implements an offline-first diagnostic rules engine, local security auditing for HIPAA compliance, native biometric locks, and a connection to Google's Gemini 3.5 API.
 
 ---
 
@@ -10,13 +10,14 @@ The application is structured according to Android MVVM best practices:
 
 ```
 android/app/src/main/java/com/example/
-├── MainActivity.kt        # ComponentActivity launcher initializing Compose setContent
+├── MainActivity.kt        # ComponentActivity launcher initializing Compose & Biometrics
 │
 ├── data/                  # Data Layer (Database schemas, APIs, & rules engine)
 │   ├── AppDatabase.kt     # RoomDatabase builder, migrations, and DAO declarations
 │   ├── Entities.kt        # Data classes representing SQLite tables
 │   ├── Repository.kt      # PsyPyrusRepository wrapping Room DAOs and providing Flow streams
-│   ├── DiagnosticEngine.kt# Offline rule-based evaluator for MDD, GAD, & Mock disorders
+│   ├── DsmDatabase.kt     # 13-disorder structured clinical database
+│   ├── DiagnosticEngine.kt# Offline dynamic rule-based evaluator for 13 psychiatric conditions
 │   ├── GeminiService.kt   # OkHttp client for Gemini API content generation
 │   └── ClinicalTrialsService.kt # Retrofit/OkHttp client for ClinicalTrials.gov studies
 │
@@ -32,21 +33,24 @@ android/app/src/main/java/com/example/
 
 The local SQLite database (`psypyrus_ai_database`) exposes the following tables defined in [Entities.kt](file:///android/app/src/main/java/com/example/data/Entities.kt):
 
-*   **`patients`:** Stores clinician client charts (name, email, age, gender, diagnostic specialty, and severe/moderate risk flags).
+*   **`patients`:** Stores clinician client charts (name, email, age, gender, diagnostic specialty, and risk flags).
 *   **`appointments`:** Logged scheduling data, teletherapy session codes (`PSY-PYR-xxx`), and fees.
-*   **`clinical_notes`:** Patient SOAP notes, MSE narratives, and treatment plans with crisis flag indicators.
-*   **`assessments`:** Historical self-report score logs (PHQ-9, GAD-7) mapping recovery progress.
+*   **`clinical_notes`:** Patient SOAP notes, MSE narratives, and treatment plans with crisis flags.
+*   **`assessments`:** Historical self-report score logs (PHQ-9, GAD-7, HiTOP-DSM-5) mapping recovery progress.
 *   **`mood_logs`:** Mood indices (1-10), gratitude statements, and deep breathing durations.
 *   **`security_audit_logs`:** HIPAA audit trails tracking practitioner logins, data reads, and AI calls.
 *   **`homework_tasks`:** Patient tasks assigned by practitioners, tracked via completion status checkmarks.
+*   **`gamification_profiles`:** XP levels, MindCoins, and unlocked theme states.
 
 ---
 
-## 🧠 Local Diagnostic Engine Rules
+## 🧠 Dynamic Diagnostic Engine Rules
 
-The [DiagnosticEngine.kt](file:///android/app/src/main/java/com/example/data/DiagnosticEngine.kt) class implements direct rules-based checks matching the DSM-5-TR:
-*   **Major Depressive Disorder (MDD):** Verifies the presence of $\ge 5$ distinct symptoms for a duration of $\ge 2$ weeks. Requires at least one core symptom (depressed mood or loss of interest/pleasure). Excludes cases where substance abuse, manic/hypomanic history, or general medical conditions are listed.
-*   **Generalized Anxiety Disorder (GAD):** Verifies excessive anxiety present for a duration of $\ge 26$ weeks (6 months) with $\ge 3$ somatic anxiety indicators (restlessness, fatigue, muscle tension, sleep disturbance, irritability, concentration difficulty).
+The [DiagnosticEngine.kt](file:///android/app/src/main/java/com/example/data/DiagnosticEngine.kt) class implements dynamic rules-based checks matching the **13 DSM-5-TR disorders** in the database:
+*   Matches checked symptoms against disorder keywords.
+*   Evaluates minimum criteria thresholds and core symptom dependencies (e.g. depressed mood or anhedonia for MDD).
+*   Verifies duration limits (e.g. 2 weeks for MDD, 6 months for GAD/SAD/Phobia).
+*   Checks exclusion parameters (no physiological substance or medical condition attributions).
 
 ---
 
@@ -78,12 +82,7 @@ Connect a device or launch an Android Emulator, then click **Run** (`Shift + F10
 
 ## 🧪 Testing
 
-The `/android/app/src/test` directory contains unit and integration tests using:
-*   **Robolectric:** For executing Android framework APIs locally on the JVM.
-*   **Roborazzi:** For automated screenshot rendering and screenshot comparison testing.
-*   **JUnit 4:** For evaluating diagnostic engine calculations.
-
-Run tests using Gradle in the `/android` folder:
+Run unit and integration tests using Gradle in the `/android` folder:
 ```bash
 ./gradlew test
 ```

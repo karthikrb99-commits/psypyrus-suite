@@ -22,7 +22,7 @@ psypyrus/ (Repository Root)
 ├── README.md                 # Unified Multi-Platform Documentation (This file)
 │
 ├── android/                  # Native Android Client
-│   ├── app/                  # Kotlin Compose UI & database source code
+│   ├── app/                  # Kotlin Compose UI, Room Database, & Biometric source code
 │   ├── build.gradle.kts      # Android build definitions
 │   └── README.md             # Developer guide for compiling and testing Android
 │
@@ -49,35 +49,34 @@ psypyrus/ (Repository Root)
 
 ---
 
-## 📊 Platform Feature Support Matrix
+## 📊 Platform Feature Support Matrix (Parity Sync)
 
-| Feature Module | Android (Kotlin) | Web (React) | Desktop (Electron) | iOS / macOS (SwiftUI) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Dual-Persona Workspace** (Clinician/Patient) | Yes | Yes | Yes | Yes |
-| **Expanded DSM-5-TR Database** (13 Disorders) | Yes | Yes | Yes | Yes |
-| **WHO ICD-11 Registry client** (OAuth2 Credentials) | — | Yes | Yes | — |
-| **Local Diagnostic Engine** (Checklist & Multi-Scores)| Yes | Yes | Yes | Yes |
-| **Interactive SVG Ontology Graph** | — | Yes | Yes | — |
-| **EHR Case History & Genogram Canvas** | — | Yes | Yes | — |
-| **Gamification & MindShop Rewards** | — | Yes | Yes | — |
-| **Global Quick-Search Command Palette** | — | Yes | Yes | — |
-| **AI SOAP Note Compiler** (Gemini 3.5 Flash) | Yes | Yes | Yes | Yes |
-| **AI MSE Narrative Compiler** (Checklist to Prose)| Yes | Yes | Yes | Yes |
-| **AI SMART Treatment Planner** | Yes | Yes | Yes | Yes |
-| **AI Suicide/Crisis Risk Screening** | Yes | Yes | Yes | Yes |
-| **ClinicalTrials.gov Integration** | Yes | Yes | Yes | Yes |
-| **Patient Wellness Lounge** (Breathing, Mood logs) | Yes | Yes | Yes | Yes |
-| **Local Secure Storage** | Room DB | LocalStorage | LocalStorage | Local State & Cache |
-| **HIPAA Security Audit Logs** | SQLite DB | LocalStorage | `AppData` Files | Local memory cache |
-| **Native Integrations** (System tray, Toast alerts) | — | — | Yes (Windows) | — |
-| **Code-Shared Target Build** (Relative file links)| — | — | — | Yes (macOS imports iOS source) |
+| Feature Module | Android (Kotlin) | Web (React) | Desktop (Electron) | iOS / macOS (SwiftUI) | Cloud / Sync |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Dual-Persona Workspace** (Clinician/Patient) | Yes | Yes | Yes | Yes | Yes |
+| **Expanded DSM-5-TR Database** (13 Disorders) | Yes | Yes | Yes | Yes | Yes |
+| **WHO ICD-11 Registry client** (OAuth2 Credentials) | Yes | Yes | Yes | Yes | Yes |
+| **Local Diagnostic Engine** (Checklist & Multi-Scores)| Yes | Yes | Yes | Yes | Yes |
+| **Interactive SVG Ontology Graph** | Yes | Yes | Yes | Yes | Yes |
+| **EHR Case History & Genogram Canvas** | Yes | Yes | Yes | Yes | Yes |
+| **Gamification & MindShop Rewards** | Yes | Yes | Yes | Yes | Yes |
+| **Global Quick-Search Command Palette** | Yes | Yes | Yes | Yes | Yes |
+| **AI SOAP Note Compiler** (Gemini 3.5 Flash) | Yes | Yes | Yes | Yes | Yes |
+| **AI MSE Narrative Compiler** (Checklist to Prose)| Yes | Yes | Yes | Yes | Yes |
+| **AI SMART Treatment Planner** | Yes | Yes | Yes | Yes | Yes |
+| **AI Suicide/Crisis Risk Screening** | Yes | Yes | Yes | Yes | Yes |
+| **ClinicalTrials.gov Integration** | Yes | Yes | Yes | Yes | Yes |
+| **Patient Wellness Lounge** (Breathing, Mood logs) | Yes | Yes | Yes | Yes | Yes |
+| **Local Secure Storage** | Room DB | IndexedDB | LocalStorage | SQLite & CoreData | Cloud DB |
+| **Security Biometrics** | BiometricPrompt | Mock Scanner | Mock Scanner | LocalAuthentication | OAuth2 / RLS |
+| **Cloud Synchronization** | REST Sync | REST Sync | REST Sync | REST Sync | WebSocket / REST |
 
 ---
 
 ## 🌟 Latest Feature & Clinical Updates
 
-### 1. Expanded DSM-5-TR Catalog & Database (`dsmDatabase.js`)
-The local database contains structured criteria summaries, keyword arrays, exclusion rules, comorbidity weights, and interventions for **13 primary psychiatric conditions**:
+### 1. Synced DSM-5-TR Catalog & Database (`DsmDatabase`)
+The local database on all client engines has been expanded to support **13 primary psychiatric conditions** with diagnostic checklists, comorbidity weights, criteria summaries, and interventions:
 *   *Depressive:* Major Depressive Disorder (MDD), Single Episode
 *   *Anxiety:* Generalized Anxiety Disorder (GAD), Panic Disorder, Social Anxiety Disorder (SAD), Specific Phobia
 *   *Trauma-Related & Stress-Response:* Post-Traumatic Stress Disorder (PTSD), Adjustment Disorder, Acute Stress Disorder
@@ -92,23 +91,27 @@ The local database contains structured criteria summaries, keyword arrays, exclu
 *   Handles token retrieval, token caching, API headers, and strips search results HTML markup.
 *   Includes a **23-class psychiatric local fallback search** to guarantee functionality in offline environments or if credentials are omitted.
 
-### 3. Gamification & Patient Adherence Engine (`gamification.js`)
+### 3. Gamification & Patient Adherence Engine
 A behavioral design layer to combat documentation burnout and patient dropouts:
 *   **Clinician Progression:** Clinicians earn XP for logging encounters, running diagnostics, and completing SOAP notes.
 *   **Patient Progression & MindCoins:** Patients earn XP and **MindCoins** for logging moods, executing breathing exercises, and finishing homework.
 *   **The MindShop:** Allows patients to spend coins to unlock ambient soundscapes (Rainforest, Fireplace), visual styles (Glassmorphism layout, Retro CRT skin), and personalized AI companions (Lisa).
 *   **Badges & Daily Quests:** Auto-tracks milestones (e.g. *Scribe Master*, *Zen Master*, *Homework Hero*).
 
-### 4. Interactive SVG Ontology Graph Visualizer
+### 4. Interactive SVG/Canvas Ontology Graph Visualizer
 *   Renders a real-time reactive network diagram inside the Diagnostics suite.
 *   Visualizes the patient node connected to calculated candidate diagnoses, adding comorbidity links with dash-arrays and statistical correlation weights (e.g. 62% MDD-GAD comorbidity line).
 
 ### 5. EHR Case History & Genogram Drawing Canvas
 *   **Comprehensive Intake:** Captures verbatim chief complaints, developmental history, pre-morbid personality indices, negative somatic histories, and a 6-grade psychiatric insight scale.
-*   **HTML5 Genogram Canvas:** Features a built-in drawing board with drawing tools (pen, eraser, color settings, line sizes) enabling practitioners to draw family genograms directly on screen and save them to local databases.
+*   **HTML5 & Vector Genogram Canvas:** Features a drawing board with drawing tools (pen, eraser, color settings, line sizes) enabling practitioners to draw family genograms directly on screen and save them to local/cloud databases.
 
-### 6. Keyboard Shortcut Command Palette (`CommandPalette.jsx`)
-*   Provides a quick-search launcher (triggered via global shortcut bindings) allowing clinicians to search screens, select patient directories, and launch actions rapidly.
+### 6. Keyboard Shortcut Command Palette
+*   Provides a quick-search launcher (triggered via global shortcut bindings like `Ctrl + K` / `Cmd + K`) allowing clinicians to search screens, select patient directories, and launch actions rapidly.
+
+### 7. Native Biometrics & Cloud Sync Engine
+*   **Biometrics Parity**: Integrates `BiometricPrompt` (Android) and `LocalAuthentication` (iOS/macOS) for cryptographically locked biometric sessions.
+*   **REST/WebSocket Sync**: Syncs local database records to the cloud utilizing automated conflict-resolution handlers.
 
 ---
 

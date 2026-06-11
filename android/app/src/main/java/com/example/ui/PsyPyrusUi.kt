@@ -107,7 +107,7 @@ fun PsyPyrusMainLayout(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "PsyPyrus AI",
+                                        text = "Papyrus AI",
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
@@ -239,7 +239,7 @@ fun PsyPyrusNavRail(
                     modifier = Modifier.size(36.dp)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("PsyPyrus", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text("Papyrus", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Text("AI OS v1", fontSize = 10.sp, color = MaterialTheme.colorScheme.primary)
             }
         }
@@ -389,7 +389,7 @@ fun BiometricLockScreen(onVerify: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                "PsyPyrus AI OS",
+                "Papyrus AI OS",
                 fontSize = 28.sp,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,

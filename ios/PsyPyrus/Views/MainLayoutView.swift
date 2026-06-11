@@ -4,16 +4,30 @@ public struct MainLayoutView: View {
     @ObservedObject var viewModel: PsyPyrusViewModel
     @State private var showingSettings = false
     @State private var showingAddAppt = false
+    @State private var showingCommandPalette = false
     
     public init(viewModel: PsyPyrusViewModel) {
         self.viewModel = viewModel
+    }
+    
+    private var currentBackground: Color {
+        let t = viewModel.theme.lowercased()
+        if t.contains("cyberpunk") {
+            return Color(red: 10/255, green: 5/255, blue: 25/255)
+        } else if t.contains("crt") {
+            return Color(red: 2/255, green: 16/255, blue: 4/255)
+        } else if t == "light" {
+            return PremiumTheme.bgLight
+        } else {
+            return PremiumTheme.bgDark
+        }
     }
     
     public var body: some View {
         NavigationView {
             ZStack {
                 // Background
-                (viewModel.theme == "light" ? PremiumTheme.bgLight : PremiumTheme.bgDark)
+                currentBackground
                     .ignoresSafeArea()
                 
                 // Screen content routing
@@ -30,6 +44,12 @@ public struct MainLayoutView: View {
                     
                     bottomTabBar
                 }
+                
+                // CRT Scanlines visual effect overlay
+                if viewModel.theme.lowercased().contains("crt") {
+                    CrtOverlayView()
+                        .allowsHitTesting(false)
+                }
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $showingSettings) {
@@ -37,6 +57,9 @@ public struct MainLayoutView: View {
             }
             .sheet(isPresented: $showingAddAppt) {
                 addApptSheet
+            }
+            .sheet(isPresented: $showingCommandPalette) {
+                CommandPaletteView(viewModel: viewModel, isPresented: $showingCommandPalette)
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -95,8 +118,15 @@ public struct MainLayoutView: View {
             .cornerRadius(16)
             .padding(.trailing, 8)
             
-            // Lock and Settings icons
+            // Palette, Lock and Settings icons
             HStack(spacing: 12) {
+                Button(action: {
+                    showingCommandPalette = true
+                }) {
+                    Image(systemName: "command.circle.fill")
+                        .foregroundColor(viewModel.theme == "light" ? PremiumTheme.textSecondaryLight : PremiumTheme.textSecondaryDark)
+                }
+                
                 Button(action: {
                     viewModel.isBiometricVerified = false
                     viewModel.logAudit(action: "Biometric Session Locked", details: "EHR cryptographic session locked by user.")
@@ -144,7 +174,7 @@ public struct MainLayoutView: View {
                 Spacer()
                 tabButton(title: "Scale", icon: "checklist", targetScreen: "Assessments")
                 Spacer()
-                tabButton(title: "Store", icon: "bag.fill", targetScreen: "Marketplace")
+                tabButton(title: "Shop", icon: "cart.fill", targetScreen: "MindShop")
             }
             
             Spacer()
@@ -202,6 +232,10 @@ public struct MainLayoutView: View {
                 MarketplaceView(viewModel: viewModel)
             case "HIPAA Shield":
                 HipaSecurityShieldView(viewModel: viewModel)
+            case "HiTOP":
+                HitopMatrixExplorerView(viewModel: viewModel)
+            case "RDoC":
+                RdocMatrixExplorerView(viewModel: viewModel)
             default:
                 Text("Dashboard Panel")
             }
@@ -220,6 +254,8 @@ public struct MainLayoutView: View {
                 MarketplaceView(viewModel: viewModel)
             case "HIPAA Shield":
                 HipaSecurityShieldView(viewModel: viewModel)
+            case "MindShop":
+                MindShopView(viewModel: viewModel)
             default:
                 Text("Dashboard Panel")
             }
@@ -278,8 +314,10 @@ public struct MainLayoutView: View {
                         )) {
                             Text("Standard Dark Mode").tag("dark")
                             Text("Standard Light Mode").tag("light")
+                            Text("Retro CRT Scanlines").tag("retro crt scanline filter")
+                            Text("Neon Cyberpunk").tag("neon cyberpunk theme")
                         }
-                        .pickerStyle(SegmentedPickerStyle())
+                        .pickerStyle(MenuPickerStyle())
                     }
                 }
                 .background(Color.clear)
@@ -355,6 +393,156 @@ public struct MainLayoutView: View {
                     }
                 }
                 .background(Color.clear)
+            }
+        }
+    }
+}
+
+// CRT Scanlines visual effect overlay view definition
+struct CrtOverlayView: View {
+    var body: some View {
+        GeometryReader { geo in
+            Path { path in
+                let spacing: CGFloat = 3
+                for y in stride(from: 0, to: geo.size.height, by: spacing) {
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: geo.size.width, y: y))
+                }
+            }
+            .stroke(Color.green.opacity(0.08), lineWidth: 1)
+        }
+    }
+}
+
+// Unified Command Palette Modal Sheet View
+struct CommandPaletteView: View {
+    @ObservedObject var viewModel: PsyPyrusViewModel
+    @Binding var isPresented: Bool
+    @State private var query = ""
+    
+    // Command item structure
+    struct PaletteItem: Identifiable {
+        let id = UUID()
+        let name: String
+        let category: String
+        let screen: String
+        let icon: String
+        var patientId: Int64? = nil
+    }
+    
+    private func getItems() -> [PaletteItem] {
+        var items: [PaletteItem] = []
+        
+        if viewModel.activeRole == "Professional" {
+            items = [
+                PaletteItem(name: "Clinician Dashboard", category: "Navigation", screen: "Dashboard", icon: "house.fill"),
+                PaletteItem(name: "AI SOAP Notes Copilot", category: "Navigation", screen: "AI Copilot", icon: "sparkles"),
+                PaletteItem(name: "Digital Mental Status Exam (MSE)", category: "Navigation", screen: "Digital MSE", icon: "pencil.and.outline"),
+                PaletteItem(name: "Diagnostics Suite", category: "Navigation", screen: "Diagnostics", icon: "waveform.path.ecg"),
+                PaletteItem(name: "Teletherapy Session Space", category: "Navigation", screen: "Teletherapy", icon: "video.fill"),
+                PaletteItem(name: "CBT Goal Treatment Planner", category: "Navigation", screen: "Planner", icon: "calendar.badge.clock"),
+                PaletteItem(name: "Clinical Scale Assessments", category: "Navigation", screen: "Assessments", icon: "checklist"),
+                PaletteItem(name: "HiTOP Matrix Explorer", category: "Navigation", screen: "HiTOP", icon: "sitemap.fill"),
+                PaletteItem(name: "RDoC Matrix Explorer", category: "Navigation", screen: "RDoC", icon: "dna"),
+                PaletteItem(name: "HIPAA Security & Audit Shield", category: "Navigation", screen: "HIPAA Shield", icon: "shield.checkered"),
+                PaletteItem(name: "PsyPyrus Marketplace Packages", category: "Navigation", screen: "Marketplace", icon: "bag.fill")
+            ]
+            
+            // Add patients as queryable actions
+            for p in viewModel.patients {
+                items.append(PaletteItem(name: "Patient Profile: \(p.name)", category: "EHR Patient Charts", screen: "Dashboard", icon: "person.crop.circle.fill", patientId: p.id))
+            }
+        } else {
+            items = [
+                PaletteItem(name: "Patient Home Dashboard", category: "Navigation", screen: "Dashboard", icon: "house.fill"),
+                PaletteItem(name: "Wellness Breathing Lounge", category: "Navigation", screen: "Wellness", icon: "wind"),
+                PaletteItem(name: "CBT Scale Questionnaires", category: "Navigation", screen: "Assessments", icon: "checklist"),
+                PaletteItem(name: "MindShop Reward Lounge", category: "Navigation", screen: "MindShop", icon: "cart.fill"),
+                PaletteItem(name: "HIPAA Privacy Shield Logs", category: "Navigation", screen: "HIPAA Shield", icon: "shield.checkered")
+            ]
+        }
+        
+        return items
+    }
+    
+    var body: some View {
+        ZStack {
+            (viewModel.theme == "light" ? PremiumTheme.bgLight : PremiumTheme.bgDark)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 16) {
+                // Header search field
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.gray)
+                    
+                    TextField("Search screens, patients, clinical actions...", text: $query)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                    
+                    if !query.isEmpty {
+                        Button(action: { query = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    
+                    Button("Close") {
+                        isPresented = false
+                    }
+                    .foregroundColor(PremiumTheme.clinicianPrimary)
+                    .padding(.leading, 8)
+                }
+                .padding()
+                .background(viewModel.theme == "light" ? Color.white : PremiumTheme.cardDark)
+                .cornerRadius(12)
+                .padding(.horizontal)
+                .padding(.top, 20)
+                
+                // Query results list
+                let filteredItems = getItems().filter {
+                    query.isEmpty ||
+                    $0.name.localizedCaseInsensitiveContains(query) ||
+                    $0.category.localizedCaseInsensitiveContains(query)
+                }
+                
+                List {
+                    ForEach(filteredItems) { item in
+                        Button(action: {
+                            if let patId = item.patientId {
+                                viewModel.setSelectedPatient(id: patId)
+                            }
+                            viewModel.navigate(screen: item.screen)
+                            isPresented = false
+                        }) {
+                            HStack(spacing: 12) {
+                                Image(systemName: item.icon)
+                                    .foregroundColor(viewModel.activeRole == "Professional" ? PremiumTheme.clinicianPrimary : PremiumTheme.patientPrimary)
+                                    .frame(width: 32, height: 32)
+                                    .background(Color.gray.opacity(0.1))
+                                    .cornerRadius(6)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(viewModel.theme == "light" ? PremiumTheme.textPrimaryLight : PremiumTheme.textPrimaryDark)
+                                    
+                                    Text(item.category)
+                                        .font(.caption2)
+                                        .foregroundColor(.gray)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .listRowBackground(viewModel.theme == "light" ? Color.white : PremiumTheme.cardDark)
+                    }
+                }
+                .listStyle(PlainListStyle())
             }
         }
     }

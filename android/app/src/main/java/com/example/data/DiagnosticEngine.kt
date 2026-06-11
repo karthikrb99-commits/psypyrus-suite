@@ -102,7 +102,7 @@ object DiagnosticEngine {
     }
 
     /**
-     * Evaluates actual DSM-5-TR disorders (MDD & GAD) locally.
+     * Evaluates actual DSM-5-TR disorders locally.
      */
     fun evaluateDsm5Disorders(
         mddSymptoms: List<String>,
@@ -111,49 +111,68 @@ object DiagnosticEngine {
         exclusions: List<String>
     ): List<LocalDiagnosticResult> {
         val results = mutableListOf<LocalDiagnosticResult>()
+        val allSymptoms = (mddSymptoms + gadSymptoms).distinct()
 
-        // 1. Major Depressive Disorder (MDD)
-        // Symptoms: depressed_mood, anhedonia, fatigue, sleep_disturbance, weight_change, psychomotor, worthlessness, concentration_difficulty, suicidal_ideation
-        val hasCoreMdd = "depressed_mood" in mddSymptoms || "anhedonia" in mddSymptoms
-        val hasEnoughMddSymptoms = mddSymptoms.distinct().size >= 5
-        val meetsMddDuration = durationWeeks >= 2
-        
         val noSubstance = "No physiological substance attribution" in exclusions
         val noMedical = "No medical condition attribution" in exclusions
         val noManic = "No manic/hypomanic history" in exclusions
 
-        if (hasCoreMdd && hasEnoughMddSymptoms && meetsMddDuration && noSubstance && noMedical) {
-            val confidence = if (noManic) "High" else "Moderate (Verify Mania/Hypomania Exclusions)"
-            results.add(
-                LocalDiagnosticResult(
-                    disorderName = "Major Depressive Disorder (MDD)",
-                    code = "DSM-5 296.2x / ICD-10 F32.x",
-                    confidence = confidence,
-                    explanation = "Met 2-week duration with ${mddSymptoms.size} clinical symptoms including core indicators."
+        for (disorder in DsmDatabase.disorders) {
+            // Map keywords to standardized symptom keys
+            val matchedSymptoms = disorder.symptomsKeywords.filter { key ->
+                val mappedKey = when(key) {
+                    "sadness", "depression", "unhappy", "cry", "hopeless", "depressed_mood" -> "depressed_mood"
+                    "anhedonia", "pleasure loss" -> "anhedonia"
+                    "fatigue", "tired" -> "fatigue"
+                    "sleep", "insomnia", "sleep_disturbance" -> if ("insomnia" in allSymptoms) "insomnia" else "sleep_disturbance"
+                    "worthless", "guilt", "worthlessness" -> "worthlessness"
+                    "concentration", "concentration_difficulty" -> "concentration_difficulty"
+                    "suicide", "suicidal_ideation" -> "suicidal_ideation"
+                    "weight", "weight_change", "appetite_change" -> "appetite_change"
+                    "psychomotor" -> "psychomotor"
+                    "anxiety", "worry", "stress", "excessive_anxiety" -> "excessive_anxiety"
+                    "restless", "keyed up", "on edge", "restlessness" -> "restlessness"
+                    "irritability" -> "irritability"
+                    "tension", "muscle_tension" -> "muscle_tension"
+                    else -> key
+                }
+                mappedKey in allSymptoms
+            }
+
+            val requiredWeeks = when {
+                disorder.name.contains("MDD") -> 2
+                disorder.name.contains("GAD") || disorder.name.contains("SAD") || disorder.name.contains("Phobia") -> 26
+                disorder.name.contains("PTSD") -> 4
+                disorder.name.contains("ADHD") || disorder.name.contains("Bipolar") -> 26
+                disorder.name.contains("Acute Stress") -> 1
+                else -> 2
+            }
+
+            val meetsDuration = durationWeeks >= requiredWeeks
+            val hasEnoughSymptoms = matchedSymptoms.size >= disorder.minCriteriaRequired
+
+            val passesCoreCheck = when {
+                disorder.name.contains("MDD") -> "depressed_mood" in allSymptoms || "anhedonia" in allSymptoms
+                disorder.name.contains("GAD") -> "excessive_anxiety" in allSymptoms
+                else -> true
+            }
+
+            if (hasEnoughSymptoms && meetsDuration && noSubstance && noMedical && passesCoreCheck) {
+                val confidence = when {
+                    disorder.name.contains("MDD") && !noManic -> "Moderate (Verify Mania/Hypomania Exclusions)"
+                    else -> "High"
+                }
+                results.add(
+                    LocalDiagnosticResult(
+                        disorderName = disorder.name,
+                        code = "DSM-5 ${disorder.dsmCode} / ICD-10 ${disorder.icd10Code}",
+                        confidence = confidence,
+                        explanation = "Met duration of $requiredWeeks weeks with ${matchedSymptoms.size}/${disorder.minCriteriaRequired} symptoms matched."
+                    )
                 )
-            )
+            }
         }
-
-        // 2. Generalized Anxiety Disorder (GAD)
-        // Symptoms: excessive_anxiety, restlessness, fatigue, concentration_difficulty, irritability, muscle_tension, sleep_disturbance
-        val hasCoreGad = "excessive_anxiety" in gadSymptoms
-        val anxietyIndicators = setOf(
-            "restlessness", "fatigue", "concentration_difficulty", "irritability", "muscle_tension", "sleep_disturbance"
-        )
-        val matchedGadIndicatorsCount = gadSymptoms.distinct().filter { it in anxietyIndicators }.size
-        val meetsGadDuration = durationWeeks >= 26 // 6 months
-
-        if (hasCoreGad && matchedGadIndicatorsCount >= 3 && meetsGadDuration && noSubstance && noMedical) {
-            results.add(
-                LocalDiagnosticResult(
-                    disorderName = "Generalized Anxiety Disorder (GAD)",
-                    code = "DSM-5 300.02 / ICD-10 F41.1",
-                    confidence = "High",
-                    explanation = "Excessive anxiety present for >= 6 months with $matchedGadIndicatorsCount somatic/cognitive anxiety symptoms."
-                )
-            )
-        }
-
+        
         return results
     }
 }

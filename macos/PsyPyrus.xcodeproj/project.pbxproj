@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A4AEB8221F9F53A9B506E135 /* PsyPyrusApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3ACF6CB2465B70A2CE7284 /* PsyPyrusApp.swift */; };
 		19CF1744F8B65226886488EF /* Entities.swift in Sources */ = {isa = PBXBuildFile; fileRef = E419E95A7BEC50268FF3CCE9 /* Entities.swift */; };
+		7E47C535FCCF55959E8A764C /* DsmDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD200EAFFD35287B7F2A47C /* DsmDatabase.swift */; };
 		FA3A590250FB5644990D841B /* DiagnosticEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8BACD0E31685E258AF05320 /* DiagnosticEngine.swift */; };
 		99D16CF6DD425749B412EFB1 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43DBAE1E6DE85B3D8DF47B9F /* GeminiService.swift */; };
 		63B09D04A8C956E8A7BBF1ED /* ClinicalTrialsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5F556DC11E252EBBB9367A1 /* ClinicalTrialsService.swift */; };
@@ -24,18 +25,22 @@
 		57FE4B349815503A843C3805 /* MentalStatusExamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DACAB8D1485F65AAA4CD31 /* MentalStatusExamView.swift */; };
 		ADD9EA557F4055219BCF9F87 /* DiagnosticsSuiteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EFC83C80B45AB58EF16318 /* DiagnosticsSuiteView.swift */; };
 		99800225E6AE5209A9FF8C1D /* TreatmentPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1896BD0CB55CE6987D3EFC /* TreatmentPlannerView.swift */; };
+		C7B11DC6CDEF50359C8596C8 /* HitopMatrixExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A73D47BFD4586F9A1F23E4 /* HitopMatrixExplorerView.swift */; };
+		CBC9239219DF58E587944A9C /* RdocMatrixExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98A4BEEE2E450F8B6B39E21 /* RdocMatrixExplorerView.swift */; };
 		0C875A098AC85E418AAE229D /* InteractiveAssessmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2746FF561FB05360B725B942 /* InteractiveAssessmentsView.swift */; };
 		21BCA3AE4C5158DBAC02829C /* TeletherapyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0414024EC4FC5D55BB17C8F8 /* TeletherapyView.swift */; };
 		DAB71BE0B4805EE99B1F321F /* HipaSecurityShieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E49CFFEBB445256B4E0C822 /* HipaSecurityShieldView.swift */; };
 		EE3A367501395A41865DFB7E /* MarketplaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90A1A299246562E920E235E /* MarketplaceView.swift */; };
 		E7FB07EAD6025BA9BBEAC555 /* PatientDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A58683E9A55FBCAF111C8E /* PatientDashboardView.swift */; };
 		4A778B2A04465EDC82CA1577 /* WellnessLoungeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A561BFFE9E5CDEBDFD8252 /* WellnessLoungeView.swift */; };
+		86F9ED544A7F5323AC0E5F2B /* MindShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DDCA4C205D259610E935 /* MindShopView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		794C7298FB0F5E72846C3BE4 /* PsyPyrus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PsyPyrus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C3ACF6CB2465B70A2CE7284 /* PsyPyrusApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PsyPyrusApp.swift; path = ../ios/PsyPyrus/PsyPyrusApp.swift; sourceTree = SOURCE_ROOT; };
 		E419E95A7BEC50268FF3CCE9 /* Entities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Entities.swift; path = ../ios/PsyPyrus/Models/Entities.swift; sourceTree = SOURCE_ROOT; };
+		2AD200EAFFD35287B7F2A47C /* DsmDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DsmDatabase.swift; path = ../ios/PsyPyrus/Services/DsmDatabase.swift; sourceTree = SOURCE_ROOT; };
 		C8BACD0E31685E258AF05320 /* DiagnosticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DiagnosticEngine.swift; path = ../ios/PsyPyrus/Services/DiagnosticEngine.swift; sourceTree = SOURCE_ROOT; };
 		43DBAE1E6DE85B3D8DF47B9F /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GeminiService.swift; path = ../ios/PsyPyrus/Services/GeminiService.swift; sourceTree = SOURCE_ROOT; };
 		F5F556DC11E252EBBB9367A1 /* ClinicalTrialsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClinicalTrialsService.swift; path = ../ios/PsyPyrus/Services/ClinicalTrialsService.swift; sourceTree = SOURCE_ROOT; };
@@ -51,12 +56,15 @@
 		48DACAB8D1485F65AAA4CD31 /* MentalStatusExamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MentalStatusExamView.swift; path = ../ios/PsyPyrus/Views/Professional/MentalStatusExamView.swift; sourceTree = SOURCE_ROOT; };
 		B2EFC83C80B45AB58EF16318 /* DiagnosticsSuiteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DiagnosticsSuiteView.swift; path = ../ios/PsyPyrus/Views/Professional/DiagnosticsSuiteView.swift; sourceTree = SOURCE_ROOT; };
 		1B1896BD0CB55CE6987D3EFC /* TreatmentPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TreatmentPlannerView.swift; path = ../ios/PsyPyrus/Views/Professional/TreatmentPlannerView.swift; sourceTree = SOURCE_ROOT; };
+		F0A73D47BFD4586F9A1F23E4 /* HitopMatrixExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HitopMatrixExplorerView.swift; path = ../ios/PsyPyrus/Views/Professional/HitopMatrixExplorerView.swift; sourceTree = SOURCE_ROOT; };
+		D98A4BEEE2E450F8B6B39E21 /* RdocMatrixExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RdocMatrixExplorerView.swift; path = ../ios/PsyPyrus/Views/Professional/RdocMatrixExplorerView.swift; sourceTree = SOURCE_ROOT; };
 		2746FF561FB05360B725B942 /* InteractiveAssessmentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InteractiveAssessmentsView.swift; path = ../ios/PsyPyrus/Views/Shared/InteractiveAssessmentsView.swift; sourceTree = SOURCE_ROOT; };
 		0414024EC4FC5D55BB17C8F8 /* TeletherapyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TeletherapyView.swift; path = ../ios/PsyPyrus/Views/Shared/TeletherapyView.swift; sourceTree = SOURCE_ROOT; };
 		8E49CFFEBB445256B4E0C822 /* HipaSecurityShieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HipaSecurityShieldView.swift; path = ../ios/PsyPyrus/Views/Shared/HipaSecurityShieldView.swift; sourceTree = SOURCE_ROOT; };
 		B90A1A299246562E920E235E /* MarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MarketplaceView.swift; path = ../ios/PsyPyrus/Views/Shared/MarketplaceView.swift; sourceTree = SOURCE_ROOT; };
 		02A58683E9A55FBCAF111C8E /* PatientDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PatientDashboardView.swift; path = ../ios/PsyPyrus/Views/Patient/PatientDashboardView.swift; sourceTree = SOURCE_ROOT; };
 		F3A561BFFE9E5CDEBDFD8252 /* WellnessLoungeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WellnessLoungeView.swift; path = ../ios/PsyPyrus/Views/Patient/WellnessLoungeView.swift; sourceTree = SOURCE_ROOT; };
+		9FC4DDCA4C205D259610E935 /* MindShopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MindShopView.swift; path = ../ios/PsyPyrus/Views/Patient/MindShopView.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +105,7 @@
 		C6B2D20103BE58BD878EA1A4 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				2AD200EAFFD35287B7F2A47C /* DsmDatabase.swift */,
 				C8BACD0E31685E258AF05320 /* DiagnosticEngine.swift */,
 				43DBAE1E6DE85B3D8DF47B9F /* GeminiService.swift */,
 				F5F556DC11E252EBBB9367A1 /* ClinicalTrialsService.swift */,
@@ -133,6 +142,7 @@
 			children = (
 				02A58683E9A55FBCAF111C8E /* PatientDashboardView.swift */,
 				F3A561BFFE9E5CDEBDFD8252 /* WellnessLoungeView.swift */,
+				9FC4DDCA4C205D259610E935 /* MindShopView.swift */,
 			);
 			name = Patient;
 			sourceTree = "<group>";
@@ -145,6 +155,8 @@
 				48DACAB8D1485F65AAA4CD31 /* MentalStatusExamView.swift */,
 				B2EFC83C80B45AB58EF16318 /* DiagnosticsSuiteView.swift */,
 				1B1896BD0CB55CE6987D3EFC /* TreatmentPlannerView.swift */,
+				F0A73D47BFD4586F9A1F23E4 /* HitopMatrixExplorerView.swift */,
+				D98A4BEEE2E450F8B6B39E21 /* RdocMatrixExplorerView.swift */,
 			);
 			name = Professional;
 			sourceTree = "<group>";
@@ -211,6 +223,7 @@
 			files = (
 				A4AEB8221F9F53A9B506E135 /* PsyPyrusApp.swift in Sources */,
 				19CF1744F8B65226886488EF /* Entities.swift in Sources */,
+				7E47C535FCCF55959E8A764C /* DsmDatabase.swift in Sources */,
 				FA3A590250FB5644990D841B /* DiagnosticEngine.swift in Sources */,
 				99D16CF6DD425749B412EFB1 /* GeminiService.swift in Sources */,
 				63B09D04A8C956E8A7BBF1ED /* ClinicalTrialsService.swift in Sources */,
@@ -226,12 +239,15 @@
 				57FE4B349815503A843C3805 /* MentalStatusExamView.swift in Sources */,
 				ADD9EA557F4055219BCF9F87 /* DiagnosticsSuiteView.swift in Sources */,
 				99800225E6AE5209A9FF8C1D /* TreatmentPlannerView.swift in Sources */,
+				C7B11DC6CDEF50359C8596C8 /* HitopMatrixExplorerView.swift in Sources */,
+				CBC9239219DF58E587944A9C /* RdocMatrixExplorerView.swift in Sources */,
 				0C875A098AC85E418AAE229D /* InteractiveAssessmentsView.swift in Sources */,
 				21BCA3AE4C5158DBAC02829C /* TeletherapyView.swift in Sources */,
 				DAB71BE0B4805EE99B1F321F /* HipaSecurityShieldView.swift in Sources */,
 				EE3A367501395A41865DFB7E /* MarketplaceView.swift in Sources */,
 				E7FB07EAD6025BA9BBEAC555 /* PatientDashboardView.swift in Sources */,
 				4A778B2A04465EDC82CA1577 /* WellnessLoungeView.swift in Sources */,
+				86F9ED544A7F5323AC0E5F2B /* MindShopView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

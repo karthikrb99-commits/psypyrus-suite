@@ -28,15 +28,32 @@ public struct PatientDashboardView: View {
     }
     
     private var welcomeBanner: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Good Morning, Liam")
-                .font(.title2)
-                .fontWeight(.black)
-                .foregroundColor(viewModel.theme == "light" ? PremiumTheme.textPrimaryLight : PremiumTheme.textPrimaryDark)
+        HStack {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Good Morning, Liam")
+                    .font(.title2)
+                    .fontWeight(.black)
+                    .foregroundColor(viewModel.theme == "light" ? PremiumTheme.textPrimaryLight : PremiumTheme.textPrimaryDark)
+                
+                Text("Recovering step-by-step. Keep up with your daily pacing targets.")
+                    .font(.footnote)
+                    .foregroundColor(viewModel.theme == "light" ? PremiumTheme.textSecondaryLight : PremiumTheme.textSecondaryDark)
+            }
+            Spacer()
             
-            Text("Recovering step-by-step. Keep up with your daily pacing targets.")
-                .font(.footnote)
-                .foregroundColor(viewModel.theme == "light" ? PremiumTheme.textSecondaryLight : PremiumTheme.textSecondaryDark)
+            Button(action: { viewModel.navigate(screen: "MindShop") }) {
+                HStack(spacing: 4) {
+                    Image(systemName: "circle.circle.fill")
+                        .foregroundColor(PremiumTheme.accentYellow)
+                    Text("\(viewModel.mindCoins)")
+                        .fontWeight(.bold)
+                        .foregroundColor(PremiumTheme.accentYellow)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(PremiumTheme.accentYellow.opacity(0.15))
+                .cornerRadius(12)
+            }
         }
         .padding(.vertical, 8)
     }

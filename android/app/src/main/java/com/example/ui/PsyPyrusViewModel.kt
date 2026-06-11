@@ -430,6 +430,63 @@ class PsyPyrusViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    // --- STANDARDIZED GAMIFICATION & DIMENSION STATE ---
+    private val _mindCoins = MutableStateFlow(0)
+    val mindCoins: StateFlow<Int> = _mindCoins.asStateFlow()
+
+    private val _clinicianXp = MutableStateFlow(0)
+    val clinicianXp: StateFlow<Int> = _clinicianXp.asStateFlow()
+
+    private val _clinicianLevel = MutableStateFlow(1)
+    val clinicianLevel: StateFlow<Int> = _clinicianLevel.asStateFlow()
+
+    private val _unlockedSkins = MutableStateFlow(setOf("Default Onyx"))
+    val unlockedSkins: StateFlow<Set<String>> = _unlockedSkins.asStateFlow()
+
+    private val _hitopDimensions = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val hitopDimensions: StateFlow<Map<String, Double>> = _hitopDimensions.asStateFlow()
+
+    private val _rdocDomains = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val rdocDomains: StateFlow<Map<String, Double>> = _rdocDomains.asStateFlow()
+
+    fun addMindCoins(amount: Int) {
+        _mindCoins.value += amount
+        logAudit("MindCoins Earned", "User gained $amount MindCoins.")
+    }
+
+    fun addClinicianXp(amount: Int) {
+        _clinicianXp.value += amount
+        val currentXp = _clinicianXp.value
+        val neededXp = _clinicianLevel.value * 100
+        if (currentXp >= neededXp) {
+            _clinicianLevel.value += 1
+            _clinicianXp.value = currentXp - neededXp
+            logAudit("Clinician Level Up", "Clinician leveled up to Level ${_clinicianLevel.value}.")
+        }
+    }
+
+    fun unlockSkin(skinName: String, cost: Int): Boolean {
+        if (_mindCoins.value >= cost) {
+            _mindCoins.value -= cost
+            _unlockedSkins.value = _unlockedSkins.value + skinName
+            logAudit("Skin Unlocked", "Unlocked display theme skin: $skinName")
+            return true
+        }
+        return false
+    }
+
+    fun updateHitopDimension(dimension: String, value: Double) {
+        val current = _hitopDimensions.value.toMutableMap()
+        current[dimension] = value
+        _hitopDimensions.value = current
+    }
+
+    fun updateRdocDomain(domain: String, value: Double) {
+        val current = _rdocDomains.value.toMutableMap()
+        current[domain] = value
+        _rdocDomains.value = current
+    }
+
     init {
         // Hydrate GeminiService with loaded parameters
         GeminiService.customGeminiKey = _customGeminiKey.value

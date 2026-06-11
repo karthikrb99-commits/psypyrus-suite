@@ -22,8 +22,10 @@ export function CommandPalette({
         { id: 'teletherapy', name: 'Teletherapy Session', category: 'Navigation', screen: 'Teletherapy', icon: 'fa-video' },
         { id: 'planner', name: 'CBT Goal Planner', category: 'Navigation', screen: 'Planner', icon: 'fa-calendar-check' },
         { id: 'assessments', name: 'Clinical Assessment Instruments', category: 'Navigation', screen: 'Assessments', icon: 'fa-square-poll-horizontal' },
+        { id: 'intake', name: 'Digital Intake Forms & Consent Hub', category: 'Navigation', screen: 'Intake Forms', icon: 'fa-file-signature' },
         { id: 'analytics', name: 'Performance & Billing Analytics', category: 'Navigation', screen: 'Analytics', icon: 'fa-chart-line' },
         { id: 'marketplace', name: 'PsyPyrus Marketplace', category: 'Navigation', screen: 'Marketplace', icon: 'fa-shop' },
+        { id: 'rdoc', name: 'NIMH RDoC Matrix Explorer & Biosignature Workspace', category: 'Navigation', screen: 'RDoC Matrix', icon: 'fa-dna' },
         { id: 'hipaa', name: 'HIPAA Security & Audit Shield', category: 'Navigation', screen: 'HIPAA Shield', icon: 'fa-user-shield' },
     ];
 
@@ -31,6 +33,7 @@ export function CommandPalette({
         { id: 'p-dashboard', name: 'Patient Dashboard', category: 'Navigation', screen: 'Dashboard', icon: 'fa-house-medical' },
         { id: 'p-wellness', name: 'Wellness Lounge', category: 'Navigation', screen: 'Wellness', icon: 'fa-spa' },
         { id: 'p-assessments', name: 'Patient Assessments', category: 'Navigation', screen: 'Assessments', icon: 'fa-file-invoice' },
+        { id: 'p-intake', name: 'Intake Forms & Permissions', category: 'Navigation', screen: 'Intake Forms', icon: 'fa-file-signature' },
         { id: 'p-telehealth', name: 'Telehealth Session', category: 'Navigation', screen: 'Teletherapy', icon: 'fa-video' },
         { id: 'p-marketplace', name: 'Wellness Store', category: 'Navigation', screen: 'Marketplace', icon: 'fa-shop' },
         { id: 'p-hipaa', name: 'Security & Consent Logs', category: 'Navigation', screen: 'HIPAA Shield', icon: 'fa-shield-halved' }

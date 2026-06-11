@@ -13,7 +13,8 @@ const STORAGE_KEYS = {
     MOOD_LOGS: 'psypyrus_mood_logs',
     AUDIT_LOGS: 'psypyrus_audit_logs',
     HOMEWORK: 'psypyrus_homework_tasks',
-    INSTALLED_APPS: 'psypyrus_installed_apps'
+    INSTALLED_APPS: 'psypyrus_installed_apps',
+    INTAKE_FORMS: 'psypyrus_intake_forms'
 };
 
 // Initial Clinical Seed Data
@@ -36,7 +37,11 @@ const SEED_DATA = {
         { id: 3, patientId: 1, type: "PHQ-9", score: 15, details: "Moderate Depression", date: Date.now() },
         { id: 4, patientId: 2, type: "GAD-7", score: 16, details: "Severe Anxiety", date: Date.now() - 86400000 * 20 },
         { id: 5, patientId: 2, type: "GAD-7", score: 13, details: "Moderate Anxiety", date: Date.now() - 86400000 * 10 },
-        { id: 6, patientId: 2, type: "GAD-7", score: 9, details: "Mild Anxiety", date: Date.now() }
+        { id: 6, patientId: 2, type: "GAD-7", score: 9, details: "Mild Anxiety", date: Date.now() },
+        { id: 7, patientId: 1, type: "B-HiTOP", score: 98, details: "p-Factor mean: 2.33", answers: [1, 1, 1, 1, 1, 3, 2, 4, 4, 3, 1, 3, 1, 4, 2, 2, 3, 4, 3, 2, 2, 4, 4, 1, 1, 3, 1, 1, 2, 2, 2, 2, 1, 1, 3, 3, 2, 1, 1, 1, 3, 4, 2, 4, 1], date: Date.now() - 86400000 * 5 },
+        { id: 8, patientId: 2, type: "B-HiTOP", score: 92, details: "p-Factor mean: 2.17", answers: [1, 1, 1, 1, 1, 3, 1, 3, 2, 4, 1, 2, 1, 4, 2, 1, 2, 4, 4, 2, 3, 4, 4, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 3, 3, 2, 4, 1], date: Date.now() - 86400000 * 4 },
+        { id: 9, patientId: 3, type: "B-HiTOP", score: 98, details: "p-Factor mean: 1.83", answers: [2, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1, 4, 4, 1, 2, 1, 4, 1, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 4, 2, 4, 4, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2], date: Date.now() - 86400000 * 3 },
+        { id: 10, patientId: 4, type: "B-HiTOP", score: 99, details: "p-Factor mean: 2.25", answers: [1, 1, 1, 1, 1, 2, 3, 4, 4, 2, 2, 4, 1, 2, 2, 2, 2, 3, 2, 2, 2, 3, 4, 1, 1, 2, 1, 2, 2, 3, 4, 2, 1, 1, 2, 3, 4, 2, 2, 1, 2, 3, 2, 4, 1], date: Date.now() - 86400000 * 2 }
     ],
     clinical_notes: [
         { id: 1, patientId: 1, title: "Initial Intake Note", noteType: "GENERAL", bodyJson: "Patient presented with a history of recurrent low mood, complete anhedonia, and diminished energy. Sleeping 11 hours daily with poor quality. Passive suicidal ideation with no current plans or intent.", timestamp: Date.now() - 86400000 * 5, isRiskAlert: false, riskDisclaimer: "AI-assisted note. Licensed practitioner has reviewed." },
@@ -77,6 +82,22 @@ export class Database {
             localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(SEED_DATA.audit_logs));
             localStorage.setItem(STORAGE_KEYS.INSTALLED_APPS, JSON.stringify([]));
             console.log("PsyPyrus offline local database initialized and seeded.");
+        }
+        if (!localStorage.getItem(STORAGE_KEYS.INTAKE_FORMS)) {
+            localStorage.setItem(STORAGE_KEYS.INTAKE_FORMS, JSON.stringify([]));
+        }
+
+        // Hot patch existing localstorage assessments with HiTOP seed data if absent
+        const assessments = this.get(STORAGE_KEYS.ASSESSMENTS);
+        if (assessments.length > 0 && !assessments.some(a => a.type === 'B-HiTOP')) {
+            const hitopSeeds = [
+                { id: 7, patientId: 1, type: "B-HiTOP", score: 98, details: "p-Factor mean: 2.33", answers: [1, 1, 1, 1, 1, 3, 2, 4, 4, 3, 1, 3, 1, 4, 2, 2, 3, 4, 3, 2, 2, 4, 4, 1, 1, 3, 1, 1, 2, 2, 2, 2, 1, 1, 3, 3, 2, 1, 1, 1, 3, 4, 2, 4, 1], date: Date.now() - 86400000 * 5 },
+                { id: 8, patientId: 2, type: "B-HiTOP", score: 92, details: "p-Factor mean: 2.17", answers: [1, 1, 1, 1, 1, 3, 1, 3, 2, 4, 1, 2, 1, 4, 2, 1, 2, 4, 4, 2, 3, 4, 4, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 3, 3, 2, 4, 1], date: Date.now() - 86400000 * 4 },
+                { id: 9, patientId: 3, type: "B-HiTOP", score: 98, details: "p-Factor mean: 1.83", answers: [2, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1, 4, 4, 1, 2, 1, 4, 1, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 4, 2, 4, 4, 2, 1, 1, 1, 2, 1, 1, 3, 2, 2], date: Date.now() - 86400000 * 3 },
+                { id: 10, patientId: 4, type: "B-HiTOP", score: 99, details: "p-Factor mean: 2.25", answers: [1, 1, 1, 1, 1, 2, 3, 4, 4, 2, 2, 4, 1, 2, 2, 2, 2, 3, 2, 2, 2, 3, 4, 1, 1, 2, 1, 2, 2, 3, 4, 2, 1, 1, 2, 3, 4, 2, 2, 1, 2, 3, 2, 4, 1], date: Date.now() - 86400000 * 2 }
+            ];
+            this.set(STORAGE_KEYS.ASSESSMENTS, [...assessments, ...hitopSeeds]);
+            console.log("Hot-patched B-HiTOP clinical seeds into active local storage database.");
         }
     }
 
@@ -350,6 +371,49 @@ export class Database {
         window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.HOMEWORK } }));
     }
 
+    // --- Intake Forms ---
+    static getIntakeForms(patientId = null) {
+        const forms = this.get(STORAGE_KEYS.INTAKE_FORMS) || [];
+        if (patientId) {
+            return forms.filter(f => f.patientId === Number(patientId));
+        }
+        return forms;
+    }
+
+    static insertIntakeForm(formData) {
+        const forms = this.get(STORAGE_KEYS.INTAKE_FORMS) || [];
+        const newForm = {
+            ...formData,
+            id: forms.length ? Math.max(...forms.map(f => f.id)) + 1 : 1,
+            date: Date.now()
+        };
+        forms.push(newForm);
+        this.set(STORAGE_KEYS.INTAKE_FORMS, forms);
+        this.logAudit("Saved Intake Form", `Saved completed form '${newForm.formTitle}' (Form ID: ${newForm.id}) for Patient ID ${newForm.patientId}`);
+        
+        // Gamification Hook
+        const activeRole = localStorage.getItem('psypyrus_active_role') || 'Professional';
+        if (activeRole === 'Professional') {
+            GamificationService.trackAction('Professional', 'WRITE_NOTE');
+            GamificationService.awardXp('Professional', 20, 'Digitized Intake Form');
+        } else {
+            GamificationService.trackAction('Patient', 'COMPLETE_HOMEWORK');
+            GamificationService.awardXp('Patient', 30, 'Completed Intake Form');
+            GamificationService.awardCoins('Patient', 15, 'Intake Form Bonus');
+        }
+
+        window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.INTAKE_FORMS } }));
+        return newForm.id;
+    }
+
+    static deleteIntakeForm(formId) {
+        const forms = this.get(STORAGE_KEYS.INTAKE_FORMS) || [];
+        const filtered = forms.filter(f => f.id !== formId);
+        this.set(STORAGE_KEYS.INTAKE_FORMS, filtered);
+        this.logAudit("Deleted Intake Form", `Deleted completed form ID ${formId}`);
+        window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.INTAKE_FORMS } }));
+    }
+
     // --- Marketplace Installed Apps ---
     static getInstalledApps() {
         return this.get(STORAGE_KEYS.INSTALLED_APPS) || [];
@@ -449,12 +513,16 @@ export class Database {
         const moodLogs = this.get(STORAGE_KEYS.MOOD_LOGS).filter(l => l.patientId !== pId);
         this.set(STORAGE_KEYS.MOOD_LOGS, moodLogs);
 
+        const intakeForms = this.get(STORAGE_KEYS.INTAKE_FORMS).filter(f => f.patientId !== pId);
+        this.set(STORAGE_KEYS.INTAKE_FORMS, intakeForms);
+
         this.logAudit("Patient Deleted", `Cascade deleted patient ID ${pId} and all related clinical logs.`);
         
         // Dispatch changes
         window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.PATIENTS } }));
         window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.APPOINTMENTS } }));
         window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.CLINICAL_NOTES } }));
+        window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.INTAKE_FORMS } }));
         return true;
     }
 
@@ -494,6 +562,7 @@ export class Database {
         localStorage.removeItem(STORAGE_KEYS.HOMEWORK);
         localStorage.removeItem(STORAGE_KEYS.AUDIT_LOGS);
         localStorage.removeItem(STORAGE_KEYS.INSTALLED_APPS);
+        localStorage.removeItem(STORAGE_KEYS.INTAKE_FORMS);
         this.init();
     }
 }

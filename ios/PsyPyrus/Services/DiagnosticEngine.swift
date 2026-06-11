@@ -109,45 +109,89 @@ public struct DiagnosticEngine {
         exclusions: [String]
     ) -> [LocalDiagnosticResult] {
         var results: [LocalDiagnosticResult] = []
-        
-        // 1. Major Depressive Disorder (MDD)
-        let hasCoreMdd = mddSymptoms.contains("depressed_mood") || mddSymptoms.contains("anhedonia")
-        let hasEnoughMddSymptoms = Set(mddSymptoms).count >= 5
-        let meetsMddDuration = durationWeeks >= 2
+        let allSymptoms = Array(Set(mddSymptoms + gadSymptoms))
         
         let noSubstance = exclusions.contains("No physiological substance attribution")
         let noMedical = exclusions.contains("No medical condition attribution")
         let noManic = exclusions.contains("No manic/hypomanic history")
         
-        if hasCoreMdd && hasEnoughMddSymptoms && meetsMddDuration && noSubstance && noMedical {
-            let confidence = noManic ? "High" : "Moderate (Verify Mania/Hypomania Exclusions)"
-            results.append(
-                LocalDiagnosticResult(
-                    disorderName: "Major Depressive Disorder (MDD)",
-                    code: "DSM-5 296.2x / ICD-10 F32.x",
-                    confidence: confidence,
-                    explanation: "Met 2-week duration with \(mddSymptoms.count) clinical symptoms including core indicators."
+        for disorder in DsmDatabase.disorders {
+            let matchedSymptoms = disorder.symptomsKeywords.filter { key in
+                let mappedKey: String
+                switch key {
+                case "sadness", "depression", "unhappy", "cry", "hopeless", "depressed_mood":
+                    mappedKey = "depressed_mood"
+                case "anhedonia", "pleasure loss":
+                    mappedKey = "anhedonia"
+                case "fatigue", "tired":
+                    mappedKey = "fatigue"
+                case "sleep", "insomnia", "sleep_disturbance":
+                    mappedKey = allSymptoms.contains("insomnia") ? "insomnia" : "sleep_disturbance"
+                case "worthless", "guilt", "worthlessness":
+                    mappedKey = "worthlessness"
+                case "concentration", "concentration_difficulty":
+                    mappedKey = "concentration_difficulty"
+                case "suicide", "suicidal_ideation":
+                    mappedKey = "suicidal_ideation"
+                case "weight", "weight_change", "appetite_change":
+                    mappedKey = "appetite_change"
+                case "psychomotor":
+                    mappedKey = "psychomotor"
+                case "anxiety", "worry", "stress", "excessive_anxiety":
+                    mappedKey = "excessive_anxiety"
+                case "restless", "keyed up", "on edge", "restlessness":
+                    mappedKey = "restlessness"
+                case "irritability":
+                    mappedKey = "irritability"
+                case "tension", "muscle_tension":
+                    mappedKey = "muscle_tension"
+                default:
+                    mappedKey = key
+                }
+                return allSymptoms.contains(mappedKey)
+            }
+            
+            let requiredWeeks: Int
+            if disorder.name.contains("MDD") {
+                requiredWeeks = 2
+            } else if disorder.name.contains("GAD") || disorder.name.contains("SAD") || disorder.name.contains("Phobia") {
+                requiredWeeks = 26
+            } else if disorder.name.contains("PTSD") {
+                requiredWeeks = 4
+            } else if disorder.name.contains("ADHD") || disorder.name.contains("Bipolar") {
+                requiredWeeks = 26
+            } else if disorder.name.contains("Acute Stress") {
+                requiredWeeks = 1
+            } else {
+                requiredWeeks = 2
+            }
+            
+            let meetsDuration = durationWeeks >= requiredWeeks
+            let hasEnoughSymptoms = matchedSymptoms.count >= disorder.minCriteriaRequired
+            
+            var passesCoreCheck = true
+            if disorder.name.contains("MDD") {
+                passesCoreCheck = allSymptoms.contains("depressed_mood") || allSymptoms.contains("anhedonia")
+            } else if disorder.name.contains("GAD") {
+                passesCoreCheck = allSymptoms.contains("excessive_anxiety")
+            }
+            
+            if hasEnoughSymptoms && meetsDuration && noSubstance && noMedical && passesCoreCheck {
+                let confidence: String
+                if disorder.name.contains("MDD") && !noManic {
+                    confidence = "Moderate (Verify Mania/Hypomania Exclusions)"
+                } else {
+                    confidence = "High"
+                }
+                results.append(
+                    LocalDiagnosticResult(
+                        disorderName: disorder.name,
+                        code: "DSM-5 \(disorder.dsmCode) / ICD-10 \(disorder.icd10Code)",
+                        confidence: confidence,
+                        explanation: "Met duration of \(requiredWeeks) weeks with \(matchedSymptoms.count)/\(disorder.minCriteriaRequired) symptoms matched."
+                    )
                 )
-            )
-        }
-        
-        // 2. Generalized Anxiety Disorder (GAD)
-        let hasCoreGad = gadSymptoms.contains("excessive_anxiety")
-        let anxietyIndicators: Set<String> = [
-            "restlessness", "fatigue", "concentration_difficulty", "irritability", "muscle_tension", "sleep_disturbance"
-        ]
-        let matchedGadIndicatorsCount = Set(gadSymptoms).filter { anxietyIndicators.contains($0) }.count
-        let meetsGadDuration = durationWeeks >= 26 // 6 months
-        
-        if hasCoreGad && matchedGadIndicatorsCount >= 3 && meetsGadDuration && noSubstance && noMedical {
-            results.append(
-                LocalDiagnosticResult(
-                    disorderName: "Generalized Anxiety Disorder (GAD)",
-                    code: "DSM-5 300.02 / ICD-10 F41.1",
-                    confidence: "High",
-                    explanation: "Excessive anxiety present for >= 6 months with \(matchedGadIndicatorsCount) somatic/cognitive anxiety symptoms."
-                )
-            )
+            }
         }
         
         return results

@@ -25,7 +25,8 @@ object DsmDatabase {
         "Bipolar",
         "OCD-Related",
         "Personality",
-        "Eating"
+        "Eating",
+        "Stress-Response"
     )
 
     val disorders = listOf(
@@ -223,6 +224,86 @@ object DsmDatabase {
             differentials = listOf("Avoidant/Restrictive Food Intake Disorder (ARFID - lacks body image concern)", "Major Depressive Disorder (decreased appetite)", "Inflammatory Bowel Disease / Celiac", "Hyperthyroidism"),
             comorbidities = listOf("Depression", "Anxiety", "Obsessive-Compulsive Disorder", "Self-harm/BPD traits"),
             interventions = listOf("Family-Based Treatment (FBT / Maudsley Model)", "Cognitive Behavioral Therapy for Eating Disorders (CBT-E)", "Nutritional Rehabilitation Support", "Multidisciplinary Medical Monitoring")
+        ),
+        DsmDisorder(
+            name = "Social Anxiety Disorder (SAD)",
+            dsmCode = "300.23",
+            icd10Code = "F40.10",
+            category = "Anxiety",
+            briefDescription = "Marked fear or anxiety about one or more social situations in which the individual is exposed to possible scrutiny by others.",
+            criteriaSummary = "Fear or anxiety is out of proportion to the actual threat. The social situations are avoided or endured with intense fear. Lasts >= 6 months.",
+            criteriaList = listOf(
+                "Marked fear or anxiety about one or more social situations in which the individual is exposed to possible scrutiny by others",
+                "Fear that he or she will act in a way or show anxiety symptoms that will be negatively evaluated",
+                "The social situations almost always provoke fear or anxiety",
+                "The social situations are actively avoided or endured with intense fear or anxiety",
+                "The fear, anxiety, or avoidance is persistent, typically lasting for 6 months or more"
+            ),
+            minCriteriaRequired = 4,
+            symptomsKeywords = listOf("social", "anxiety", "fear", "scrutiny", "negative evaluation", "avoidance", "social phobia"),
+            differentials = listOf("Agoraphobia", "Panic Disorder", "Generalized Anxiety Disorder", "Schizoid Personality Disorder"),
+            comorbidities = listOf("Major Depressive Disorder", "Substance Use (Alcohol self-medication)", "Generalized Anxiety Disorder", "Avoidant Personality Disorder"),
+            interventions = listOf("Cognitive Behavioral Therapy (CBT)", "Social Skills Training", "Exposure Therapy (Roleplaying)", "SSRI/Beta-blockers for performance anxiety")
+        ),
+        DsmDisorder(
+            name = "Specific Phobia",
+            dsmCode = "300.29",
+            icd10Code = "F40.2",
+            category = "Anxiety",
+            briefDescription = "Marked fear or anxiety about a specific object or situation (e.g., flying, heights, animals, receiving an injection, seeing blood).",
+            criteriaSummary = "The phobic object or situation almost always provokes immediate fear or anxiety, and is actively avoided. Lasts >= 6 months.",
+            criteriaList = listOf(
+                "Marked fear or anxiety about a specific object or situation (e.g., flying, heights, animals, blood)",
+                "The phobic object or situation almost always provokes immediate fear or anxiety",
+                "The phobic object or situation is actively avoided or endured with intense fear or anxiety",
+                "The fear or anxiety is out of proportion to the actual danger posed by the specific object",
+                "The fear, anxiety, or avoidance is persistent, typically lasting for 6 months or more"
+            ),
+            minCriteriaRequired = 4,
+            symptomsKeywords = listOf("specific phobia", "phobic", "fear object", "avoid object", "stimulus", "heights", "flying", "injections", "blood"),
+            differentials = listOf("Agoraphobia", "Social Anxiety Disorder", "PTSD (trauma cues trigger phobic reactions)"),
+            comorbidities = listOf("Other Specific Phobias", "Anxiety Disorders", "Depressive Disorders"),
+            interventions = listOf("Systematic Desensitization", "In-Vivo Exposure Therapy", "Cognitive Restructuring", "Virtual Reality Exposure Therapy (VRET)")
+        ),
+        DsmDisorder(
+            name = "Adjustment Disorder",
+            dsmCode = "309.9",
+            icd10Code = "F43.2",
+            category = "Stress-Response",
+            briefDescription = "The development of emotional or behavioral symptoms in response to an identifiable stressor occurring within 3 months of the onset of the stressor.",
+            criteriaSummary = "Marked distress that is out of proportion to the severity or intensity of the stressor, and significant impairment in functioning, resolving within 6 months of stressor termination.",
+            criteriaList = listOf(
+                "Development of emotional or behavioral symptoms in response to an identifiable stressor occurring within 3 months of stressor onset",
+                "Marked distress that is out of proportion to the severity of the stressor, taking into account context",
+                "Significant impairment in social, occupational, or other important areas of functioning",
+                "Symptoms do not represent normal bereavement or another mental disorder",
+                "Once the stressor or its consequences have terminated, the symptoms do not persist for more than an additional 6 months"
+            ),
+            minCriteriaRequired = 3,
+            symptomsKeywords = listOf("stressor", "coping", "life stress", "adjustment", "situational depression", "functional impairment", "grief"),
+            differentials = listOf("MDD", "PTSD", "Acute Stress Disorder", "Normal Bereavement"),
+            comorbidities = listOf("Somatic Symptom Disorders", "Substance Use Disorders", "Anxiety Disorders"),
+            interventions = listOf("Brief Psychodynamic Therapy", "Crisis Intervention", "Stress Management & Coping Strategies", "Cognitive Behavioral Therapy (CBT)", "Support Groups")
+        ),
+        DsmDisorder(
+            name = "Acute Stress Disorder",
+            dsmCode = "308.3",
+            icd10Code = "F43.0",
+            category = "Stress-Response",
+            briefDescription = "The development of characteristic symptoms lasting from 3 days to 1 month following exposure to one or more traumatic events.",
+            criteriaSummary = "Exposure to trauma, followed by 9 or more symptoms from any of the five categories: intrusion, negative mood, dissociation, avoidance, and arousal. Lasts 3 days to 1 month.",
+            criteriaList = listOf(
+                "Exposure to actual or threatened death, serious injury, or sexual violation",
+                "Presence of 9 or more symptoms from categories: intrusion, negative mood, dissociation, avoidance, arousal",
+                "Symptom duration is 3 days to 1 month after trauma exposure",
+                "Causes clinically significant distress or impairment in social, occupational, or other areas",
+                "Not attributable to physiological effects of a substance or another medical condition"
+            ),
+            minCriteriaRequired = 4,
+            symptomsKeywords = listOf("acute stress", "trauma exposure", "dissociation", "intrusion", "avoidance trauma", "hyperarousal", "flashbacks"),
+            differentials = listOf("PTSD (diagnosed only after 1 month)", "Adjustment Disorder", "Panic Disorder", "Substance-Induced Delirium"),
+            comorbidities = listOf("Depressive Disorders", "Panic Attacks", "Substance Abuse"),
+            interventions = listOf("Psychological First Aid (PFA)", "Cognitive Behavioral Therapy (CBT)", "Trauma-Focused Therapy", "Relaxation Techniques", "Sleep support and tracking")
         )
     )
 }

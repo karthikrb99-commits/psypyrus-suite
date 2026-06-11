@@ -16,6 +16,7 @@ bundle_identifier = "com.example.PsyPyrus.mac"
 files_and_groups = {
     "PsyPyrusApp.swift": "App",
     "Models/Entities.swift": "Models",
+    "Services/DsmDatabase.swift": "Services",
     "Services/DiagnosticEngine.swift": "Services",
     "Services/GeminiService.swift": "Services",
     "Services/ClinicalTrialsService.swift": "Services",
@@ -31,12 +32,15 @@ files_and_groups = {
     "Views/Professional/MentalStatusExamView.swift": "Views/Professional",
     "Views/Professional/DiagnosticsSuiteView.swift": "Views/Professional",
     "Views/Professional/TreatmentPlannerView.swift": "Views/Professional",
+    "Views/Professional/HitopMatrixExplorerView.swift": "Views/Professional",
+    "Views/Professional/RdocMatrixExplorerView.swift": "Views/Professional",
     "Views/Shared/InteractiveAssessmentsView.swift": "Views/Shared",
     "Views/Shared/TeletherapyView.swift": "Views/Shared",
     "Views/Shared/HipaSecurityShieldView.swift": "Views/Shared",
     "Views/Shared/MarketplaceView.swift": "Views/Shared",
     "Views/Patient/PatientDashboardView.swift": "Views/Patient",
-    "Views/Patient/WellnessLoungeView.swift": "Views/Patient"
+    "Views/Patient/WellnessLoungeView.swift": "Views/Patient",
+    "Views/Patient/MindShopView.swift": "Views/Patient"
 }
 
 # Generate UUIDs for all elements

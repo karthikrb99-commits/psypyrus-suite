@@ -26,6 +26,11 @@ import { HIPAASecurityShield } from './components/screens/HIPAASecurityShield';
 import { Marketplace } from './components/screens/Marketplace';
 import { LandingPage } from './components/screens/LandingPage';
 import { PatientDetail } from './components/screens/PatientDetail';
+import { IntakeFormsWorkspace } from './components/screens/IntakeFormsWorkspace';
+import { IntegrationHub } from './components/screens/IntegrationHub';
+import { RdocMatrixExplorer } from './components/screens/RdocMatrixExplorer';
+import { HitopMatrixExplorer } from './components/screens/HitopMatrixExplorer';
+
 
 function MainAppContent() {
     const { showToast } = useToast();
@@ -219,6 +224,15 @@ function MainAppContent() {
                             activePatientId={activePatientId}
                         />
                     );
+                case 'Intake Forms':
+                    return (
+                        <IntakeFormsWorkspace
+                            patients={patients}
+                            activePatientId={activePatientId}
+                            activeRole={activeRole}
+                            onSetActivePatientId={handleSelectPatient}
+                        />
+                    );
                 case 'Analytics':
                     return (
                         <PerformanceAnalytics />
@@ -228,6 +242,30 @@ function MainAppContent() {
                         <Marketplace 
                             activeRole={activeRole}
                             activePatientId={activePatientId}
+                        />
+                    );
+                case 'Integration Hub':
+                    return (
+                        <IntegrationHub 
+                            patients={patients}
+                            activePatientId={activePatientId}
+                            onSetActivePatientId={handleSelectPatient}
+                        />
+                    );
+                case 'RDoC Matrix':
+                    return (
+                        <RdocMatrixExplorer 
+                            patients={patients}
+                            activePatientId={activePatientId}
+                            onSetActivePatientId={handleSelectPatient}
+                        />
+                    );
+                case 'HiTOP Matrix':
+                    return (
+                        <HitopMatrixExplorer 
+                            patients={patients}
+                            activePatientId={activePatientId}
+                            onSetActivePatientId={handleSelectPatient}
                         />
                     );
                 case 'HIPAA Shield':
@@ -256,6 +294,15 @@ function MainAppContent() {
                     return (
                         <InteractiveAssessments 
                             activePatientId={activePatientId}
+                        />
+                    );
+                case 'Intake Forms':
+                    return (
+                        <IntakeFormsWorkspace
+                            patients={patients}
+                            activePatientId={activePatientId}
+                            activeRole={activeRole}
+                            onSetActivePatientId={handleSelectPatient}
                         />
                     );
                 case 'Teletherapy':

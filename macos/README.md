@@ -1,50 +1,35 @@
-# 🍎 PsyPyrus Native macOS Client
+# 🍏 PsyPyrus macOS Client — Developer Guide
 
-This folder contains the native macOS desktop client configuration for the **PsyPyrus Suite**, built using native **SwiftUI**.
-
-It mirrors the high-fidelity native iOS client and shares the exact same SwiftUI Views, Models, ViewModels, and Services located in the `/ios` folder. By using file reference links, this architecture prevents code duplication and maintains a single source of truth for Apple platforms.
+This directory contains the native macOS target for the **PsyPyrus Suite**. To maximize code reuse, the macOS client is compiled using **SwiftUI** and is designed to dynamically import and reference the shared source files from the `/ios` client module.
 
 ---
 
-## 🏛️ Architecture & Code Sharing
+## 🏛️ Architecture & Shared Build Strategy
 
-The native macOS app references the core logic and visual interface directly from the `ios/` folder:
+The macOS client is configured as a native Mac Catalyst (or native SwiftUI) workspace. Instead of duplicating views, models, and viewmodels, the Xcode project maps references to files located under the `/ios/PsyPyrus/` directory.
 
 ```
-psypyrus/
-├── ios/
-│   └── PsyPyrus/             # Core Swift codebase (Views, ViewModels, Models, Services)
-└── macos/
-    ├── generate_xcodeproj.py # Python script to construct the macOS project structure
-    └── PsyPyrus.xcodeproj/   # [GENERATED] Compiled macOS Xcode Project configuration
+macos/
+├── generate_xcodeproj.py # Python script to generate macOS Xcode project structure
+├── PsyPyrus.xcodeproj/   # Generated macOS Xcode workspace
+└── README.md             # This developer setup guide
 ```
 
-By referencing the source files using relative paths (`../ios/PsyPyrus/...`), any enhancement made to the models, viewmodels, or views will instantly reflect in both the iOS and macOS native applications.
+*   **Shared Views**: `MainLayoutView.swift`, `BiometricLockView.swift`, and all views under `Professional/` and `Patient/` are shared.
+*   **Shared Models & Services**: `Entities.swift`, `DsmDatabase.swift`, `DiagnosticEngine.swift`, and `GeminiService.swift` compile identically.
 
 ---
 
-## 🛠️ Project Bootstrapping
+## 🛠️ Project Setup & Building
 
-Since Xcode projects are XML/plist structures that can be cumbersome to manage via Git in multi-developer environments, we utilize a Python generator script to assemble the Xcode project dynamically.
+To generate the macOS project workspace, run the python script in the terminal:
 
-### 1. Generate the Xcode Project
-Run the generator script from the `macos/` directory:
 ```bash
+cd macos
 python generate_xcodeproj.py
 ```
 
-This will create `PsyPyrus.xcodeproj` inside the `macos/` folder.
-
-### 2. Open and Build in Xcode
-1. Open the generated `PsyPyrus.xcodeproj` using **Xcode** on a macOS system.
-2. Select the **PsyPyrus** target.
-3. Ensure the active destination scheme is set to **My Mac** (either Mac Designed for iPad or native macOS App target depending on your compilation path. The script is configured for native macOS build target).
-4. Press `Cmd + R` to run and compile the application.
-
----
-
-## 🔒 Security & HIPAA Features
-
-The macOS client features the same security integrations as the iOS client:
-* **Simulated Biometric Verification:** Instantly locks and unlocks the local clinical session using face or passcode simulation.
-* **Cryptographic Local Auditing:** Operations (such as logins, role switching, note syntheses, and diagnostics) automatically write secure audit log events.
+1. Open the generated `PsyPyrus.xcodeproj` in **Xcode** on a macOS system.
+2. Select **My Mac** as the destination target.
+3. Configure the **Gemini API Key** in the settings panel sheet.
+4. Click **Run** (`Cmd + R`) to compile and launch.

@@ -41,8 +41,12 @@ export function Sidebar({
         { name: 'Teletherapy', icon: 'fa-video' },
         { name: 'Planner', icon: 'fa-calendar-check' },
         { name: 'Assessments', icon: 'fa-square-poll-horizontal' },
+        { name: 'Intake Forms', icon: 'fa-file-signature', badge: 'New' },
         { name: 'Analytics', icon: 'fa-chart-line' },
         { name: 'Marketplace', icon: 'fa-shop' },
+        { name: 'Integration Hub', icon: 'fa-circle-nodes', badge: 'Hub' },
+        { name: 'RDoC Matrix', icon: 'fa-dna', badge: 'Research' },
+        { name: 'HiTOP Matrix', icon: 'fa-sitemap', badge: 'Research' },
         { name: 'HIPAA Shield', icon: 'fa-user-shield' }
     ], []);
 
@@ -50,6 +54,7 @@ export function Sidebar({
         { name: 'Dashboard', icon: 'fa-house-medical' },
         { name: 'Wellness', icon: 'fa-spa', label: 'Wellness Lounge', badge: 'New' },
         { name: 'Assessments', icon: 'fa-file-invoice' },
+        { name: 'Intake Forms', icon: 'fa-file-signature', label: 'Intake & Consent', badge: 'New' },
         { name: 'Teletherapy', icon: 'fa-video', label: 'Telehealth' },
         { name: 'Marketplace', icon: 'fa-shop', label: 'Wellness Store' },
         { name: 'HIPAA Shield', icon: 'fa-shield-halved', label: 'Security logs' }
