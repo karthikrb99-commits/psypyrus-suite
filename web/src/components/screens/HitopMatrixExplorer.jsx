@@ -136,7 +136,7 @@ WHERE {
             patientId: Number(activePatient.id),
             type: "B-HiTOP",
             score: totalScore,
-            details: `p-Factor mean: ${liveReport.secondary.find(s => s.id === 'p_factor')?.score}`,
+            details: `p-Factor mean: ${liveReport?.secondary?.find(s => s.id === 'p_factor')?.score}`,
             answers: formAnswers
         });
 
@@ -248,6 +248,7 @@ WHERE {
 
     // Graph hierarchy details dictionary for interactive nodes
     const nodeDetailsInfo = useMemo(() => {
+        if (!activePatient) return {};
         return {
             patient: {
                 title: activePatient.name,
@@ -259,7 +260,7 @@ WHERE {
                 title: "General p-Factor",
                 type: "HiTOP Super-ordinate Dimension",
                 def: "Reflects the common variance shared by all psychological symptoms. A high score suggests general psychiatric vulnerability and complexity.",
-                clinicalNote: `Patient Liam Carter exhibits a high general p-Factor (${liveReport?.secondary.find(s => s.id === 'p_factor')?.score || 1.0}) indicating severe multi-spectra distress.`
+                clinicalNote: `Patient Liam Carter exhibits a high general p-Factor (${liveReport?.secondary?.find(s => s.id === 'p_factor')?.score || 1.0}) indicating severe multi-spectra distress.`
             },
             internalizing: {
                 title: "Internalizing Spectrum",
@@ -770,7 +771,7 @@ WHERE {
                                             strokeWidth="2"
                                         />
                                         <text x={svgContent.patientNode.x} y={svgContent.patientNode.y + 4} textAnchor="middle" fill="#fff" fontSize="9" fontWeight="bold">
-                                            {activePatient.name.split(' ')[0]}
+                                            {activePatient?.name ? activePatient.name.split(' ')[0] : ''}
                                         </text>
                                         <text x={svgContent.patientNode.x} y={svgContent.patientNode.y + 15} textAnchor="middle" fill="var(--color-text-muted)" fontSize="8">
                                             EHR Root
@@ -797,7 +798,7 @@ WHERE {
                                             p-Factor
                                         </text>
                                         <text x={svgContent.pFactorNode.x} y={svgContent.pFactorNode.y + 10} textAnchor="middle" fill="var(--color-primary)" fontSize="10" fontWeight="800">
-                                            {liveReport.secondary.find(s => s.id === 'p_factor')?.score.toFixed(2)}
+                                            {liveReport?.secondary?.find(s => s.id === 'p_factor')?.score.toFixed(2)}
                                         </text>
                                     </g>
                                 )}
@@ -915,7 +916,7 @@ WHERE {
                                     </div>
                                 </div>
                                 <div className="query-console-block">
-                                    {rdfLog || `# Click 'Compile Triples' to generate RDF mapping for patient ${activePatient.name}.`}
+                                    {rdfLog || `# Click 'Compile Triples' to generate RDF mapping for patient ${activePatient?.name || ''}.`}
                                 </div>
 
                                 {/* SPARQL Simulator block */}
@@ -977,7 +978,7 @@ WHERE {
                                     </button>
                                 </div>
                                 <div className="query-console-block" style={{ color: '#10b981' }}>
-                                    {cypherLog || `// Click 'Compile Cypher Script' to generate Neo4j schema definitions for patient ${activePatient.name}.`}
+                                    {cypherLog || `// Click 'Compile Cypher Script' to generate Neo4j schema definitions for patient ${activePatient?.name || ''}.`}
                                 </div>
                             </div>
                         )}
