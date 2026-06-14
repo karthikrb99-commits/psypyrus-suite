@@ -62,6 +62,8 @@ import { IntegrationHub } from './components/screens/IntegrationHub';
 import { RdocMatrixExplorer } from './components/screens/RdocMatrixExplorer';
 import { HitopMatrixExplorer } from './components/screens/HitopMatrixExplorer';
 import { CareRequests } from './components/screens/CareRequests';
+import { PricingAgreements } from './components/screens/PricingAgreements';
+import { ResearchHub } from './components/screens/ResearchHub';
 
 
 function MainAppContent() {
@@ -582,6 +584,20 @@ function MainAppContent() {
                             currentUser={currentUser}
                         />
                     );
+                case 'Pricing Hub':
+                    return (
+                        <PricingAgreements 
+                            activeRole={activeRole}
+                            currentUser={currentUser}
+                        />
+                    );
+                case 'Research Hub':
+                    return (
+                        <ResearchHub 
+                            activeRole={activeRole}
+                            currentUser={currentUser}
+                        />
+                    );
                 case 'HIPAA Shield':
                     return (
                         <HIPAASecurityShield />
@@ -682,6 +698,20 @@ function MainAppContent() {
                             setActiveTab={setActiveScreen}
                         />
                     );
+                case 'Pricing Hub':
+                    return (
+                        <PricingAgreements 
+                            activeRole={activeRole}
+                            currentUser={currentUser}
+                        />
+                    );
+                case 'Research Hub':
+                    return (
+                        <ResearchHub 
+                            activeRole={activeRole}
+                            currentUser={currentUser}
+                        />
+                    );
                 default:
                     return <div>Screen not found.</div>;
             }
@@ -778,6 +808,20 @@ function MainAppContent() {
                 case 'Support Requests':
                     return (
                         <CareRequests 
+                            activeRole={activeRole}
+                            currentUser={currentUser}
+                        />
+                    );
+                case 'Pricing Hub':
+                    return (
+                        <PricingAgreements 
+                            activeRole={activeRole}
+                            currentUser={currentUser}
+                        />
+                    );
+                case 'Research Hub':
+                    return (
+                        <ResearchHub 
                             activeRole={activeRole}
                             currentUser={currentUser}
                         />

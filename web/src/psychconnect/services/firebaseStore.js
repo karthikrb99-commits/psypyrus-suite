@@ -311,3 +311,74 @@ export async function deletePatientProblemFromFirebase(problemId) {
         handleFirestoreError(err, OperationType.DELETE, path);
     }
 }
+
+// 12. Research Hub Actions
+export async function createResearchInviteInFirebase(invite) {
+    const path = `research_invites/${invite.id}`;
+    try {
+        const ref = doc(db, "research_invites", String(invite.id));
+        await setDoc(ref, invite);
+    } catch (err) {
+        handleFirestoreError(err, OperationType.CREATE, path);
+    }
+}
+
+export async function upvoteResearchInviteInFirebase(inviteId) {
+    const path = `research_invites/${inviteId}`;
+    try {
+        const ref = doc(db, "research_invites", String(inviteId));
+        await updateDoc(ref, {
+            upvotes: increment(1)
+        });
+    } catch (err) {
+        handleFirestoreError(err, OperationType.UPDATE, path);
+    }
+}
+
+export async function addResearchCommentInFirebase(inviteId, comment) {
+    const path = `research_invites/${inviteId}`;
+    try {
+        const ref = doc(db, "research_invites", String(inviteId));
+        await updateDoc(ref, {
+            comments: arrayUnion(comment)
+        });
+    } catch (err) {
+        handleFirestoreError(err, OperationType.UPDATE, path);
+    }
+}
+
+export async function applyToResearchInFirebase(inviteId, collaboration) {
+    const path = `research_invites/${inviteId}`;
+    try {
+        const ref = doc(db, "research_invites", String(inviteId));
+        await updateDoc(ref, {
+            collaborations: arrayUnion(collaboration)
+        });
+    } catch (err) {
+        handleFirestoreError(err, OperationType.UPDATE, path);
+    }
+}
+
+// 13. Pricing Agreements Actions
+export async function createPricingAgreementInFirebase(agreement) {
+    const path = `pricing_agreements/${agreement.id}`;
+    try {
+        const ref = doc(db, "pricing_agreements", String(agreement.id));
+        await setDoc(ref, agreement);
+    } catch (err) {
+        handleFirestoreError(err, OperationType.CREATE, path);
+    }
+}
+
+export async function updatePricingAgreementInFirebase(agreementId, status, counterFee = null, msg = null) {
+    const path = `pricing_agreements/${agreementId}`;
+    try {
+        const ref = doc(db, "pricing_agreements", String(agreementId));
+        const updates = { status };
+        if (counterFee !== null) updates.proposedFee = counterFee;
+        if (msg !== null) updates.message = msg;
+        await updateDoc(ref, updates);
+    } catch (err) {
+        handleFirestoreError(err, OperationType.UPDATE, path);
+    }
+}

@@ -19,7 +19,9 @@ const STORAGE_KEYS = {
     HOMEWORK: 'psypyrus_homework_tasks',
     INSTALLED_APPS: 'psypyrus_installed_apps',
     INTAKE_FORMS: 'psypyrus_intake_forms',
-    CARE_REQUESTS: 'psypyrus_care_requests'
+    CARE_REQUESTS: 'psypyrus_care_requests',
+    RESEARCH_INVITES: 'psypyrus_research_invites',
+    PRICING_AGREEMENTS: 'psypyrus_pricing_agreements'
 };
 
 // Initial Clinical Seed Data
@@ -72,6 +74,15 @@ const SEED_DATA = {
         { id: 1, action: "System Database Initialized", details: "Pre-populated database with compliant mock electronic health charts.", timestamp: Date.now(), actor: "System Core", ipAddress: "127.0.0.1", encryptionStandard: "AES-GCM-256" },
         { id: 2, action: "User Authentication", details: "Dr. Katherine Brewster successfully authenticated. Session secured under compliance ID #1004.", timestamp: Date.now(), actor: "Dr. Katherine Brewster (Admin)", ipAddress: "192.168.1.104", encryptionStandard: "AES-GCM-256" },
         { id: 3, action: "Key Ring Verification", details: "Checked Local Storage security vault integrity. E2E envelope encryption standards validated.", timestamp: Date.now(), actor: "Dr. Katherine Brewster (Admin)", ipAddress: "192.168.1.104", encryptionStandard: "AES-GCM-256" }
+    ],
+    research_invites: [
+        { id: 1, title: "Somatic Breathing for Panic Disorder", institution: "Stanford University School of Medicine", category: "Anxiety", description: "This study evaluates the effectiveness of real-time somatic breathing pacing on somatic indicators during panic episodes. Looking for patients diagnosed with panic disorder.", principalInvestigator: "Dr. Alicia Vance", compensation: "$50 Stipend + Free Wearable Tracker", eligibility: "Age 18-45, diagnosed with panic disorder or high anxiety.", status: "Open Studies", upvotes: 18, comments: [ { id: 1, userName: "Sarah Jenkins", comment: "Is remote participation available?", date: Date.now() - 86400000 } ], collaborations: [], timestamp: Date.now() - 86400000 * 3 },
+        { id: 2, title: "CBT Habit Tracking and Executive Dysfunction", institution: "PsyPyrus Institute of Tech-Care", category: "ADHD & Anxiety", description: "Evaluating user interface variations in cognitive behavior therapy micro-habit logs. Involves a 3-week study with active daily journaling.", principalInvestigator: "Dr. Liam Carter", compensation: "Certificate of Participation + $25 Wellness Credit", eligibility: "Active clinic patient, experiencing ADHD/GAD.", status: "In Review", upvotes: 12, comments: [], collaborations: [], timestamp: Date.now() - 86400000 * 2 },
+        { id: 3, title: "Socioeconomic Factors in E-Mental Health Adherence", institution: "All-India Institute of Medical Sciences", category: "General Psychiatry", description: "Determining adherence trends across various demographics using standard online wellness lounges. Multi-center collaboration.", principalInvestigator: "Prof. Aarav Sharma", compensation: "$100 Participation Stipend", eligibility: "Age 18-70, currently using a mental wellness application.", status: "Ongoing", upvotes: 35, comments: [], collaborations: [ { professionalName: "Dr. Liam Carter", message: "Interested in contributing patient demography data." } ], timestamp: Date.now() - 86400000 }
+    ],
+    pricing_agreements: [
+        { id: 1, patientId: 1, patientName: "Liam Carter", professionalId: "dr_liam", professionalName: "Dr. Liam Carter", proposedFee: 60, tier: "Student", status: "Approved", message: "Currently enrolled in a university program and working part-time. Requesting student sliding scale rate.", date: Date.now() - 86400000 * 10 },
+        { id: 2, patientId: 2, patientName: "Sarah Jenkins", professionalId: "dr_liam", professionalName: "Dr. Liam Carter", proposedFee: 0, tier: "Low Income Pro Bono", status: "Pending", message: "In between jobs, requesting low-income tier pro bono therapy sessions.", date: Date.now() - 86400000 * 2 }
     ]
 };
 
@@ -493,6 +504,12 @@ export class Database {
         }
         if (!localStorage.getItem(STORAGE_KEYS.CARE_REQUESTS)) {
             localStorage.setItem(STORAGE_KEYS.CARE_REQUESTS, JSON.stringify([]));
+        }
+        if (!localStorage.getItem(STORAGE_KEYS.RESEARCH_INVITES)) {
+            localStorage.setItem(STORAGE_KEYS.RESEARCH_INVITES, JSON.stringify(SEED_DATA.research_invites));
+        }
+        if (!localStorage.getItem(STORAGE_KEYS.PRICING_AGREEMENTS)) {
+            localStorage.setItem(STORAGE_KEYS.PRICING_AGREEMENTS, JSON.stringify(SEED_DATA.pricing_agreements));
         }
 
         // Hot patch existing localstorage patients with Aarav and Leela if absent
@@ -1191,7 +1208,7 @@ export class Database {
                 dateTime: "Today, 5:00 PM",
                 status: "Scheduled",
                 notes: `Session booked via Care Request matching: ${request.title}. Professional proposal: ${offer.message}`,
-                fee: 150.0,
+                fee: offer.proposedFee !== undefined && offer.proposedFee !== null ? Number(offer.proposedFee) : 150.0,
                 isVideo: true,
                 code: `PSY-PYR-${randomNum}`
             };
@@ -1235,6 +1252,157 @@ export class Database {
                 window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.INSTALLED_APPS } }));
             }
         }, [STORAGE_KEYS.INSTALLED_APPS, STORAGE_KEYS.AUDIT_LOGS]);
+    }
+
+    // --- Research Hub ---
+    static getResearchInvites() {
+        return this.get(STORAGE_KEYS.RESEARCH_INVITES) || [];
+    }
+
+    static insertResearchInvite(invite) {
+        return this.runInTransaction(() => {
+            this.checkRateLimit();
+            const invites = this._readRaw(STORAGE_KEYS.RESEARCH_INVITES) || [];
+            const newInvite = {
+                ...invite,
+                id: invites.length ? Math.max(...invites.map(i => i.id)) + 1 : 1,
+                upvotes: 0,
+                comments: [],
+                collaborations: [],
+                timestamp: Date.now()
+            };
+            invites.push(newInvite);
+            localStorage.setItem(STORAGE_KEYS.RESEARCH_INVITES, JSON.stringify(invites));
+            this.logAudit("Posted Research Invite", `Research invite '${newInvite.title}' posted by ${newInvite.principalInvestigator}`);
+            window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.RESEARCH_INVITES } }));
+            return newInvite.id;
+        }, [STORAGE_KEYS.RESEARCH_INVITES, STORAGE_KEYS.AUDIT_LOGS]);
+    }
+
+    static upvoteResearchInvite(inviteId) {
+        return this.runInTransaction(() => {
+            const invites = this._readRaw(STORAGE_KEYS.RESEARCH_INVITES) || [];
+            const idx = invites.findIndex(i => i.id === Number(inviteId));
+            if (idx !== -1) {
+                invites[idx].upvotes = (invites[idx].upvotes || 0) + 1;
+                localStorage.setItem(STORAGE_KEYS.RESEARCH_INVITES, JSON.stringify(invites));
+                window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.RESEARCH_INVITES } }));
+                return true;
+            }
+            return false;
+        }, [STORAGE_KEYS.RESEARCH_INVITES]);
+    }
+
+    static addResearchComment(inviteId, commentObj) {
+        return this.runInTransaction(() => {
+            const invites = this._readRaw(STORAGE_KEYS.RESEARCH_INVITES) || [];
+            const idx = invites.findIndex(i => i.id === Number(inviteId));
+            if (idx !== -1) {
+                const comment = {
+                    ...commentObj,
+                    id: invites[idx].comments.length ? Math.max(...invites[idx].comments.map(c => c.id)) + 1 : 1,
+                    date: Date.now()
+                };
+                invites[idx].comments.push(comment);
+                localStorage.setItem(STORAGE_KEYS.RESEARCH_INVITES, JSON.stringify(invites));
+                window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.RESEARCH_INVITES } }));
+                return comment.id;
+            }
+            return null;
+        }, [STORAGE_KEYS.RESEARCH_INVITES]);
+    }
+
+    static applyToResearch(inviteId, collabObj) {
+        return this.runInTransaction(() => {
+            const invites = this._readRaw(STORAGE_KEYS.RESEARCH_INVITES) || [];
+            const idx = invites.findIndex(i => i.id === Number(inviteId));
+            if (idx !== -1) {
+                invites[idx].collaborations = invites[idx].collaborations || [];
+                invites[idx].collaborations.push({
+                    ...collabObj,
+                    date: Date.now()
+                });
+                localStorage.setItem(STORAGE_KEYS.RESEARCH_INVITES, JSON.stringify(invites));
+                this.logAudit("Research Collaboration Request", `Collaboration request for study ID ${inviteId}`);
+                window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.RESEARCH_INVITES } }));
+                return true;
+            }
+            return false;
+        }, [STORAGE_KEYS.RESEARCH_INVITES, STORAGE_KEYS.AUDIT_LOGS]);
+    }
+
+    static updateResearchInviteStatus(inviteId, newStatus) {
+        return this.runInTransaction(() => {
+            const invites = this._readRaw(STORAGE_KEYS.RESEARCH_INVITES) || [];
+            const idx = invites.findIndex(i => i.id === Number(inviteId));
+            if (idx !== -1) {
+                invites[idx].status = newStatus;
+                localStorage.setItem(STORAGE_KEYS.RESEARCH_INVITES, JSON.stringify(invites));
+                this.logAudit("Research Status Updated", `Research study ID ${inviteId} status set to ${newStatus}`);
+                window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.RESEARCH_INVITES } }));
+                return true;
+            }
+            return false;
+        }, [STORAGE_KEYS.RESEARCH_INVITES, STORAGE_KEYS.AUDIT_LOGS]);
+    }
+
+    // --- Pricing Agreements ---
+    static getPricingAgreements() {
+        return this.get(STORAGE_KEYS.PRICING_AGREEMENTS) || [];
+    }
+
+    static createPricingAgreement(agreement) {
+        return this.runInTransaction(() => {
+            this.checkRateLimit();
+            const agreements = this._readRaw(STORAGE_KEYS.PRICING_AGREEMENTS) || [];
+            const newAgreement = {
+                ...agreement,
+                id: agreements.length ? Math.max(...agreements.map(a => a.id)) + 1 : 1,
+                status: 'Pending',
+                date: Date.now()
+            };
+            agreements.push(newAgreement);
+            localStorage.setItem(STORAGE_KEYS.PRICING_AGREEMENTS, JSON.stringify(agreements));
+            this.logAudit("Created Pricing Agreement Proposal", `Patient ${newAgreement.patientName} proposed sliding scale fee of $${newAgreement.proposedFee} to clinician ${newAgreement.professionalName}`);
+            window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.PRICING_AGREEMENTS } }));
+            return newAgreement.id;
+        }, [STORAGE_KEYS.PRICING_AGREEMENTS, STORAGE_KEYS.AUDIT_LOGS]);
+    }
+
+    static updatePricingAgreement(agreementId, status, counterFee = null, msg = null) {
+        return this.runInTransaction(() => {
+            this.checkRateLimit();
+            const agreements = this._readRaw(STORAGE_KEYS.PRICING_AGREEMENTS) || [];
+            const idx = agreements.findIndex(a => a.id === Number(agreementId));
+            if (idx === -1) return false;
+
+            agreements[idx].status = status;
+            if (counterFee !== null) {
+                agreements[idx].proposedFee = counterFee;
+            }
+            if (msg !== null) {
+                agreements[idx].message = msg;
+            }
+            agreements[idx].date = Date.now();
+
+            localStorage.setItem(STORAGE_KEYS.PRICING_AGREEMENTS, JSON.stringify(agreements));
+            this.logAudit("Updated Pricing Agreement Status", `Pricing agreement ID ${agreementId} status set to ${status}`);
+            
+            // If approved, update existing/future appointment fees or save to patient's record
+            if (status === 'Approved') {
+                const appointments = this._readRaw(STORAGE_KEYS.APPOINTMENTS) || [];
+                appointments.forEach(a => {
+                    if (a.patientId === agreements[idx].patientId && a.psychologistId === agreements[idx].professionalId) {
+                        a.fee = agreements[idx].proposedFee;
+                    }
+                });
+                localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(appointments));
+                window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.APPOINTMENTS } }));
+            }
+
+            window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.PRICING_AGREEMENTS } }));
+            return true;
+        }, [STORAGE_KEYS.PRICING_AGREEMENTS, STORAGE_KEYS.APPOINTMENTS, STORAGE_KEYS.AUDIT_LOGS]);
     }
 
     // --- Clinical Search & Actions ---

@@ -12,6 +12,12 @@ export function CareRequests({ activeRole, currentUser }) {
     const [newDescription, setNewDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Pricing & Accessibility preferences
+    const [pricingTier, setPricingTier] = useState('Standard');
+    const [requestedFee, setRequestedFee] = useState(80);
+    const [studentOrLowIncome, setStudentOrLowIncome] = useState('None');
+    const [incomeDeclaration, setIncomeDeclaration] = useState('');
+
     // Clinician Search/Filter State
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState('All');
@@ -20,6 +26,7 @@ export function CareRequests({ activeRole, currentUser }) {
     // Clinician Proposal Input State
     const [selectedReqIdForOffer, setSelectedReqIdForOffer] = useState(null);
     const [proposalMessage, setProposalMessage] = useState('');
+    const [proposalFee, setProposalFee] = useState(100);
 
     const CATEGORIES = [
         'Stress & Burnout',
@@ -70,7 +77,11 @@ export function CareRequests({ activeRole, currentUser }) {
             title: newTitle,
             category: newCategory,
             severity: newSeverity,
-            description: newDescription
+            description: newDescription,
+            pricingTier,
+            requestedFee: pricingTier === 'Pro Bono' ? 0 : Number(requestedFee),
+            studentOrLowIncome: pricingTier === 'Standard' ? 'None' : studentOrLowIncome,
+            incomeDeclared: incomeDeclaration ? Number(incomeDeclaration) : null
         });
 
         if (reqId) {
@@ -95,7 +106,8 @@ export function CareRequests({ activeRole, currentUser }) {
         const success = Database.addOfferToCareRequest(reqId, {
             professionalId: currentUser.id,
             professionalName: currentUser.name,
-            message: proposalMessage
+            message: proposalMessage,
+            proposedFee: Number(proposalFee)
         });
 
         if (success !== false) {
@@ -243,6 +255,65 @@ export function CareRequests({ activeRole, currentUser }) {
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1">Pricing Preference</label>
+                                    <select 
+                                        value={pricingTier}
+                                        onChange={(e) => setPricingTier(e.target.value)}
+                                        className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-teal-500/50"
+                                    >
+                                        <option value="Standard">Standard Rate</option>
+                                        <option value="Sliding Scale">Sliding Scale Request</option>
+                                        <option value="Pro Bono">Pro Bono Request</option>
+                                    </select>
+                                </div>
+                                {pricingTier !== 'Standard' && (
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-400 mb-1">Verification Status</label>
+                                        <select 
+                                            value={studentOrLowIncome}
+                                            onChange={(e) => setStudentOrLowIncome(e.target.value)}
+                                            className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-teal-500/50"
+                                        >
+                                            <option value="None">None</option>
+                                            <option value="Student">Student Status</option>
+                                            <option value="Low Income">Low Income Status</option>
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+
+                            {pricingTier === 'Sliding Scale' && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1 flex justify-between">
+                                        <span>Proposed Session Fee</span>
+                                        <span className="text-teal-400 font-bold">${requestedFee}</span>
+                                    </label>
+                                    <input 
+                                        type="range"
+                                        min="30"
+                                        max="120"
+                                        value={requestedFee}
+                                        onChange={(e) => setRequestedFee(Number(e.target.value))}
+                                        className="w-full accent-teal-500"
+                                    />
+                                </div>
+                            )}
+
+                            {pricingTier !== 'Standard' && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1">Monthly Income Declaration ($)</label>
+                                    <input 
+                                        type="number"
+                                        placeholder="e.g. 1500"
+                                        value={incomeDeclaration}
+                                        onChange={(e) => setIncomeDeclaration(e.target.value)}
+                                        className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50"
+                                    />
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-xs font-semibold text-slate-400 mb-1">Describe What You Are Going Through</label>
                                 <textarea 
@@ -303,6 +374,15 @@ export function CareRequests({ activeRole, currentUser }) {
                                         <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-xl border border-white/5">
                                             {req.description}
                                         </p>
+
+                                        {req.pricingTier && req.pricingTier !== 'Standard' && (
+                                            <div className="flex gap-4 text-[10px] text-teal-400 bg-teal-500/5 p-2 rounded border border-teal-500/10">
+                                                <span>Requested Pricing: <strong>{req.pricingTier}</strong></span>
+                                                {req.pricingTier === 'Sliding Scale' && <span>Proposed Fee: <strong>${req.requestedFee}/session</strong></span>}
+                                                {req.studentOrLowIncome && req.studentOrLowIncome !== 'None' && <span>Status: <strong>{req.studentOrLowIncome}</strong></span>}
+                                                {req.incomeDeclared !== null && <span>Income: <strong>${req.incomeDeclared}/mo</strong></span>}
+                                            </div>
+                                        )}
 
                                         {/* Offers section */}
                                         <div className="border-t border-white/5 pt-4 mt-1">
@@ -462,6 +542,14 @@ export function CareRequests({ activeRole, currentUser }) {
                                                 <p className="text-xs text-slate-400 mt-2 leading-relaxed bg-slate-950/40 p-3 rounded-xl border border-white/5 min-h-[90px]">
                                                     {req.description}
                                                 </p>
+                                                {req.pricingTier && req.pricingTier !== 'Standard' && (
+                                                    <div className="flex flex-wrap gap-3 text-[10px] text-teal-400 bg-teal-500/5 p-2 rounded border border-teal-500/10 mt-2">
+                                                        <span>Pricing: <strong>{req.pricingTier}</strong></span>
+                                                        {req.pricingTier === 'Sliding Scale' && <span>Proposed Fee: <strong>${req.requestedFee}/session</strong></span>}
+                                                        {req.studentOrLowIncome && req.studentOrLowIncome !== 'None' && <span>Status: <strong>{req.studentOrLowIncome}</strong></span>}
+                                                        {req.incomeDeclared !== null && <span>Income: <strong>${req.incomeDeclared}/mo</strong></span>}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
@@ -477,7 +565,7 @@ export function CareRequests({ activeRole, currentUser }) {
                                                     </div>
                                                     <p className="text-xs text-slate-300 italic">"{clinicianOffer.message}"</p>
                                                     <div className="text-[9px] text-slate-500 text-right mt-1">
-                                                        Status: <strong>{clinicianOffer.status}</strong>
+                                                        Proposed Rate: <strong>${clinicianOffer.proposedFee || 150}/session</strong> | Status: <strong>{clinicianOffer.status}</strong>
                                                     </div>
                                                 </div>
                                             ) : req.status === 'Connected' ? (
@@ -494,6 +582,16 @@ export function CareRequests({ activeRole, currentUser }) {
                                                         className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-teal-500/50 resize-none"
                                                         required
                                                     />
+                                                    <div className="flex items-center gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-white/5">
+                                                        <label className="text-[10px] uppercase text-slate-500 font-bold">Counter / Negotiated Fee ($/session):</label>
+                                                        <input 
+                                                            type="number"
+                                                            value={proposalFee}
+                                                            onChange={(e) => setProposalFee(Number(e.target.value))}
+                                                            className="w-20 bg-slate-900 border border-white/10 rounded px-2 py-1 text-xs text-white"
+                                                            required
+                                                        />
+                                                    </div>
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
                                                             type="button"
