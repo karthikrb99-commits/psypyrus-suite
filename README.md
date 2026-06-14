@@ -1,5 +1,6 @@
 # 🧠 PsyPyrus Suite — Multi-Platform Mental Health Operating System & Wellness Hub
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Build Status - Android](https://img.shields.io/badge/Android-Target--SDK--36-green?logo=android)](file:///android)
 [![Build Status - iOS & macOS](https://img.shields.io/badge/Apple-iOS--17%20%7C%20macOS--14-blue?logo=apple)](file:///ios)
 [![Build Status - Web](https://img.shields.io/badge/Web-Vite%20%2B%20React%20%2B%20ES6-purple?logo=react)](file:///web)
@@ -174,3 +175,15 @@ A behavioral design layer to combat documentation burnout and patient dropouts:
 
 ## 🔒 HIPAA & Clinical Disclaimer
 This application is designed as a **Clinical Decision Support System (CDSS)**. All AI-generated outputs, diagnostics, summaries, and treatment plans are intended for educational and clinical assistance only and must be reviewed, edited, and approved by a licensed clinical practitioner prior to integration into any active Electronic Health Record.
+
+---
+
+## 🤝 Open Source & Contributing
+
+We welcome contributions to the PsyPyrus Suite! Please read our [Contributing Guidelines](CONTRIBUTING.md) to get started. By participating, you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+For clinical safety or security vulnerabilities, please refer to our [Security Policy](SECURITY.md).
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
