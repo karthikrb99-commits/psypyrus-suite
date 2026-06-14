@@ -1,6 +1,6 @@
 # Document 05 — Backend Schema (Data Model & Security Architecture)
 
-This document establishes the synchronized relational database schemas, table models, data types, indexes, and Cloud Sync Gateway specifications for the **PsyPyrus Suite**.
+This document establishes the synchronized relational database schemas, table models, data types, indexes, and Cloud Sync Gateway specifications for the **PsyPyrus Suite** operating within the **Papyrus Ecosystem**.
 
 ---
 
@@ -77,7 +77,7 @@ Wellness tracker logs.
 *   `date` (Integer / Timestamp)
 
 ### 1.6 Table: `security_audit_logs`
-HIPAA logging logs.
+Compliance audit trails tracking session access.
 *   `id` (Integer / Primary Key)
 *   `action` (Text): e.g. `"Generated SOAP Note via AI"`, `"Biometric Lock Triggered"`.
 *   `details` (Text): Activity descriptions.

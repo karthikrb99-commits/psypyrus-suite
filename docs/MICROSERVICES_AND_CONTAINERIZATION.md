@@ -1,6 +1,6 @@
 # Architectural Guide: Containerization, Microservices & Real-Time Orchestration
 
-This document details the practical implementation, design choices, and deployment instructions for containerization, microservice communication, distributed tracing, structured logging, and WebSocket connection management in the **PsyPyrus Suite**.
+This document details the practical implementation, design choices, and deployment instructions for containerization, microservice communication, distributed tracing, structured logging, and WebSocket connection management in the **PsyPyrus Suite** operating within the **Papyrus Ecosystem**.
 
 ---
 

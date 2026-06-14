@@ -1,6 +1,8 @@
 # 🍎 PsyPyrus iOS Client — Developer Guide
 
-This directory contains the native iOS client for the **PsyPyrus Suite**, compiled using **SwiftUI**, **Combine**, and native SQLite database connections. It implements an offline-first diagnostic rules engine matching 13 DSM-5 disorders, local security auditing, native biometric locks (Face ID / Touch ID), and a connection to Google's Gemini 3.5 API.
+This directory contains the native iOS client for the **PsyPyrus Suite**, operating as part of the **Papyrus Open Mental Health Intelligence Ecosystem**.
+
+It is compiled using **SwiftUI**, **Combine**, and native SQLite database connections. It implements an offline-first diagnostic rules engine matching 13 DSM-5 disorders, local security auditing, native biometric locks (Face ID / Touch ID), and a connection to Google's Gemini 3.5 API.
 
 ---
 
@@ -20,7 +22,7 @@ ios/PsyPyrus/
 │   ├── DiagnosticEngine.swift # Offline dynamic rules evaluator
 │   ├── GeminiService.swift # REST client for Gemini API notes compilation
 │   ├── ClinicalTrialsService.swift # Client for ClinicalTrials.gov search
-│   └── SecurityLogger.swift # Local HIPAA audit logger
+│   └── SecurityLogger.swift # Local HIPAA/DISHA audit logger
 │
 ├── ViewModels/            # Presentation Layer
 │   └── PsyPyrusViewModel.swift # Published state provider and business logic

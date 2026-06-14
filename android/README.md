@@ -1,6 +1,8 @@
 # 📱 PsyPyrus Android Client — Developer Guide
 
-This directory contains the native Android client for the **PsiPyrus Suite**, built using **Kotlin**, **Jetpack Compose** (Material 3), and **Room ORM** (SQLite). It implements an offline-first diagnostic rules engine, local security auditing for HIPAA compliance, native biometric locks, and a connection to Google's Gemini 3.5 API.
+This directory contains the native Android client for the **PsyPyrus Suite**, operating as the mobile interface layer of the **Papyrus Open Mental Health Intelligence Ecosystem**. 
+
+It is built using **Kotlin**, **Jetpack Compose** (Material 3), and **Room ORM** (SQLite). It implements an offline-first diagnostic rules engine, local security auditing for HIPAA/DISHA compliance, native biometric locks, and a connection to Google's Gemini 3.5 API.
 
 ---
 
@@ -38,7 +40,7 @@ The local SQLite database (`psypyrus_ai_database`) exposes the following tables 
 *   **`clinical_notes`:** Patient SOAP notes, MSE narratives, and treatment plans with crisis flags.
 *   **`assessments`:** Historical self-report score logs (PHQ-9, GAD-7, HiTOP-DSM-5) mapping recovery progress.
 *   **`mood_logs`:** Mood indices (1-10), gratitude statements, and deep breathing durations.
-*   **`security_audit_logs`:** HIPAA audit trails tracking practitioner logins, data reads, and AI calls.
+*   **`security_audit_logs`:** HIPAA/DISHA audit trails tracking practitioner logins, data reads, and AI calls.
 *   **`homework_tasks`:** Patient tasks assigned by practitioners, tracked via completion status checkmarks.
 *   **`gamification_profiles`:** XP levels, MindCoins, and unlocked theme states.
 

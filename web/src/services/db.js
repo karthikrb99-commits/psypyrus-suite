@@ -28,7 +28,9 @@ const SEED_DATA = {
         { id: 1, name: "Liam Carter", age: 29, gender: "Male", email: "liam.carter@health.me", phone: "555-0192", riskStatus: "Severe", specialty: "Major Depres. (Single Ep.)", registrationDate: Date.now() - 86400000 * 45 },
         { id: 2, name: "Sarah Jenkins", age: 34, gender: "Female", email: "sarah.j@outlook.com", phone: "555-2311", riskStatus: "Moderate", specialty: "Generalized Anxiety Disorder", registrationDate: Date.now() - 86400000 * 30 },
         { id: 3, name: "John Doe", age: 42, gender: "Male", email: "j.doe@company.com", phone: "555-8833", riskStatus: "None", specialty: "ADHD Clinical Consultation", registrationDate: Date.now() - 86400000 * 20 },
-        { id: 4, name: "Sophia Patel", age: 23, gender: "Female", email: "sophia.patel@edu.org", phone: "555-4422", riskStatus: "Low", specialty: "PTSD Trauma Therapy", registrationDate: Date.now() - 86400000 * 15 }
+        { id: 4, name: "Sophia Patel", age: 23, gender: "Female", email: "sophia.patel@edu.org", phone: "555-4422", riskStatus: "Low", specialty: "PTSD Trauma Therapy", registrationDate: Date.now() - 86400000 * 15, abhaNumber: "91-2345-6789-0123", abhaAddress: "sophia.patel@abdm" },
+        { id: 5, name: "Aarav Sharma", age: 10, gender: "Male", email: "aarav.sharma@health.in", phone: "91-98765-43210", riskStatus: "Low", specialty: "ADHD Clinical Consultation", registrationDate: Date.now() - 86400000 * 10, abhaNumber: "91-4455-6677-8899", abhaAddress: "aarav@abdm" },
+        { id: 6, name: "Leela Devi", age: 72, gender: "Female", email: "leela.devi@care.in", phone: "91-87654-32109", riskStatus: "Moderate", specialty: "Major Depres. (Single Ep.)", registrationDate: Date.now() - 86400000 * 5, abhaNumber: "91-1122-3344-5566", abhaAddress: "leela@abdm" }
     ],
     appointments: [
         { id: 1, patientId: 1, patientName: "Liam Carter", dateTime: "Today, 10:00 AM", status: "Scheduled", notes: "Pre-assessment for Severe cognitive stagnation. Risk indicators require supervision.", fee: 175.0, isVideo: true, code: "PSY-PYR-401" },
@@ -493,6 +495,17 @@ export class Database {
             localStorage.setItem(STORAGE_KEYS.CARE_REQUESTS, JSON.stringify([]));
         }
 
+        // Hot patch existing localstorage patients with Aarav and Leela if absent
+        const currentPatients = this._readRaw(STORAGE_KEYS.PATIENTS);
+        if (currentPatients.length > 0 && !currentPatients.some(p => p.name === "Aarav Sharma")) {
+            const extraPatients = [
+                { id: 5, name: "Aarav Sharma", age: 10, gender: "Male", email: "aarav.sharma@health.in", phone: "91-98765-43210", riskStatus: "Low", specialty: "ADHD Clinical Consultation", registrationDate: Date.now() - 86400000 * 10, abhaNumber: "91-4455-6677-8899", abhaAddress: "aarav@abdm" },
+                { id: 6, name: "Leela Devi", age: 72, gender: "Female", email: "leela.devi@care.in", phone: "91-87654-32109", riskStatus: "Moderate", specialty: "Major Depres. (Single Ep.)", registrationDate: Date.now() - 86400000 * 5, abhaNumber: "91-1122-3344-5566", abhaAddress: "leela@abdm" }
+            ];
+            this.set(STORAGE_KEYS.PATIENTS, [...currentPatients, ...extraPatients]);
+            console.log("Hot-patched pediatric & geriatric patients into active local storage database.");
+        }
+
         // Hot patch existing localstorage assessments with HiTOP seed data if absent
         const assessments = this._readRaw(STORAGE_KEYS.ASSESSMENTS);
         if (assessments.length > 0 && !assessments.some(a => a.type === 'B-HiTOP')) {
@@ -593,6 +606,10 @@ export class Database {
 
         window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: STORAGE_KEYS.AUDIT_LOGS } }));
         return newLog;
+    }
+
+    static getAuditLogs() {
+        return this.get(STORAGE_KEYS.AUDIT_LOGS) || [];
     }
 
     // --- Patients ---

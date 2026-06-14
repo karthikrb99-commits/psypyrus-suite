@@ -7,6 +7,7 @@ import { GeminiService } from '../../services/ai';
 import { IcdService } from '../../services/icdService';
 import { useToast } from '../ToastProvider';
 import { GamificationService } from '../../services/gamification';
+import { MedicationService } from '../../services/medicationService';
 
 const ALL_SYMPTOMS_GROUPED = {
     "Mood Indicators": [
@@ -117,6 +118,22 @@ export function DiagnosticsSuite({ patients, activePatientId }) {
     );
     const [aiResultText, setAiResultText] = useState("");
     const [isAiLoading, setIsAiLoading] = useState(false);
+
+    // --- TAB 3: PHARMACOTHERAPY & MEDICATION ADVISOR STATE ---
+    const [draftPrescription, setDraftPrescription] = useState([]);
+    const [selectedDrugDetails, setSelectedDrugDetails] = useState(null);
+    const [rxJustificationNote, setRxJustificationNote] = useState("");
+    const [isRxJustificationLoading, setIsRxJustificationLoading] = useState(false);
+    const [isSyncingToAbdm, setIsSyncingToAbdm] = useState(false);
+    const [abdmReceipt, setAbdmReceipt] = useState(null);
+
+    // Security/Safety: Clear prescription draft when switching patients
+    useEffect(() => {
+        setDraftPrescription([]);
+        setSelectedDrugDetails(null);
+        setRxJustificationNote("");
+        setAbdmReceipt(null);
+    }, [activePatientId]);
 
     const activePatient = patients.find(p => p.id === activePatientId) || patients[0];
     const specialtyCondition = activePatient ? activePatient.specialty : 'None';
@@ -267,6 +284,80 @@ Provide a structured differential diagnostics analysis conforming to DSM-5-TR gu
         }
     };
 
+    // --- TAB 3: PHARMACOTHERAPY HANDLERS ---
+    const handleTogglePrescribe = (drug) => {
+        setDraftPrescription(prev => {
+            const exists = prev.some(d => d.id === drug.id);
+            if (exists) {
+                showToast(`${drug.name} removed from draft prescription.`, "info");
+                return prev.filter(d => d.id !== drug.id);
+            } else {
+                showToast(`${drug.name} added to draft prescription.`, "success");
+                return [...prev, drug];
+            }
+        });
+    };
+
+    const generateAiRxJustification = async () => {
+        if (draftPrescription.length === 0) {
+            showToast("Cannot generate justification for an empty prescription.", "warning");
+            return;
+        }
+
+        setIsRxJustificationLoading(true);
+        setRxJustificationNote("");
+
+        const drugsStr = draftPrescription.map(d => `${d.name} (${d.usBrand}) - typical dose: ${d.dosage}`).join("\n");
+        const patientCohort = activePatient.age < 18 ? "Pediatric" : activePatient.age > 65 ? "Geriatric" : "Adult";
+
+        const prompt = `You are an expert clinical psychopharmacology advisor. Formulate a brief, professional, and explainable clinical justification note for prescribing the following medication(s) for a ${activePatient.age}-year-old patient (${patientCohort} cohort) presenting with symptoms of ${specialtyCondition}. Also include brief instructions for patient counseling (e.g. side effects to watch out for). Keep it extremely concise and professional (maximum 150 words).
+
+Medications:
+${drugsStr}
+
+Provide only the clinical note itself. No intro or outro.`;
+
+        try {
+            const result = await GeminiService.callGemini(prompt, "You are a clinical decision support advisor specializing in psychopharmacology and patient medication safety.");
+            setRxJustificationNote(result.trim());
+            showToast("AI Clinical Justification generated successfully.", "success");
+        } catch (e) {
+            console.error("AI Rx Justification generation error:", e);
+            setRxJustificationNote("Clinical rationale formulated based on standard psychiatric guidelines. Monitor for therapeutic response and watch for initial somatic indicators.");
+            showToast("AI generation offline. Fallback justification set.", "warning");
+        } finally {
+            setIsRxJustificationLoading(false);
+        }
+    };
+
+    const submitToAbdm = async () => {
+        if (draftPrescription.length === 0) {
+            showToast("Prescription draft is empty.", "warning");
+            return;
+        }
+
+        setIsSyncingToAbdm(true);
+        setAbdmReceipt(null);
+
+        try {
+            const receipt = await MedicationService.syncPrescriptionToAbdm({
+                patientId: activePatient.id,
+                patientName: activePatient.name,
+                abhaNumber: activePatient.abhaNumber || "91-0000-0000-0000",
+                medications: draftPrescription,
+                clinicalJustification: rxJustificationNote
+            });
+
+            setAbdmReceipt(receipt);
+            showToast("Prescription signed & synced to ABDM Health Locker!", "success");
+        } catch (e) {
+            console.error("ABDM Sync Error:", e);
+            showToast(`ABDM Sync Failed: ${e.message}`, "error");
+        } finally {
+            setIsSyncingToAbdm(false);
+        }
+    };
+
     // Filtered disorders
     const filteredDisorders = DsmDatabase.disorders.filter(dis => {
         const matchesCategory = selectedCategory === "All Disorders" || dis.category === selectedCategory;
@@ -285,7 +376,7 @@ Provide a structured differential diagnostics analysis conforming to DSM-5-TR gu
             </div>
 
             {/* Premium Navigator */}
-            <div className="persona-switcher-pill" style={{ marginBottom: '24px', maxWidth: '600px' }}>
+            <div className="persona-switcher-pill" style={{ marginBottom: '24px', maxWidth: '800px' }}>
                 <button 
                     className={`persona-pill-btn ${activeTab === 0 ? 'active' : ''}`}
                     onClick={() => setActiveTab(0)}
@@ -306,6 +397,13 @@ Provide a structured differential diagnostics analysis conforming to DSM-5-TR gu
                     style={{ flex: 1, justifyContent: 'center' }}
                 >
                     <i className="fa-solid fa-wand-magic-sparkles"></i> AI Differential
+                </button>
+                <button 
+                    className={`persona-pill-btn ${activeTab === 3 ? 'active' : ''}`}
+                    onClick={() => setActiveTab(3)}
+                    style={{ flex: 1, justifyContent: 'center' }}
+                >
+                    <i className="fa-solid fa-pills"></i> Medication Advisor
                 </button>
             </div>
 
@@ -359,7 +457,7 @@ Provide a structured differential diagnostics analysis conforming to DSM-5-TR gu
                                         >
                                             <div>
                                                 <span className="badge-text-tag video" style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '4px' }}>
-                                                    DSM {disorder.dsmCode} / ICD-10 {disorder.icd10Code}
+                                                    DSM {disorder.dsmCode} / ICD-10 {disorder.icd10Code} {disorder.snomedCode ? ` / SNOMED CT ${disorder.snomedCode}` : ''}
                                                 </span>
                                                 <h4 style={{ margin: '6px 0 2px 0', color: '#fff' }}>{disorder.name}</h4>
                                                 <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Category: {disorder.category}</span>
@@ -610,7 +708,7 @@ Provide a structured differential diagnostics analysis conforming to DSM-5-TR gu
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <div>
                                                         <strong style={{ color: '#fff', fontSize: '13.5px' }}>{d.disorderName}</strong>
-                                                        <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>{d.code}</div>
+                                                        <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>{d.code} {d.snomedCode ? ` / SNOMED CT ${d.snomedCode}` : ''}</div>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <span className="badge-text-tag recruiting" style={{ fontSize: '10px' }}>{d.severity}</span>
@@ -629,7 +727,7 @@ Provide a structured differential diagnostics analysis conforming to DSM-5-TR gu
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <div>
                                                         <strong style={{ color: 'var(--color-text-muted)', fontSize: '13.5px' }}>{d.disorderName} (Differential)</strong>
-                                                        <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>{d.code}</div>
+                                                        <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>{d.code} {d.snomedCode ? ` / SNOMED CT ${d.snomedCode}` : ''}</div>
                                                     </div>
                                                     <strong style={{ color: 'gray', fontSize: '14px' }}>{d.confidenceScore}%</strong>
                                                 </div>
@@ -821,6 +919,267 @@ Provide a structured differential diagnostics analysis conforming to DSM-5-TR gu
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* TAB 3: PHARMACOTHERAPY & MEDICATION ADVISOR */}
+            {activeTab === 3 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', alignItems: 'start' }}>
+                    {/* Left Column: Recommendations & Safety Audit */}
+                    <div style={{ display: 'grid', gap: '20px' }}>
+                        {/* Recommendations Panel */}
+                        <div className="workspace-card" style={{ border: '1px solid var(--color-border)' }}>
+                            <h3 className="radio-group-title" style={{ fontSize: '15px', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <i className="fa-solid fa-pills"></i>
+                                Pharmacotherapy Recommendations
+                            </h3>
+                            <p style={{ fontSize: '12.5px', color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
+                                Recommended medications based on the client's evaluated candidate diagnoses:
+                            </p>
+
+                            {diagReport.diagnoses.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--color-text-muted)', fontSize: '13px' }}>
+                                    <i className="fa-solid fa-circle-exclamation" style={{ fontSize: '20px', marginBottom: '8px', display: 'block', color: 'var(--color-warning)' }}></i>
+                                    No candidate diagnoses calculated. Go to the <strong>Rule-Based Checker</strong> tab and select symptoms to generate recommendations.
+                                </div>
+                            ) : (
+                                <div style={{ display: 'grid', gap: '14px' }}>
+                                    {MedicationService.getRecommendationsForDisorders(diagReport.diagnoses.map(d => d.disorderName)).map(drug => {
+                                        const isInDraft = draftPrescription.some(d => d.id === drug.id);
+                                        return (
+                                            <div key={drug.id} className="metric-card" style={{ padding: '16px', border: '1px solid var(--color-border)', borderRadius: '8px', background: 'rgba(255,255,255,0.01)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div>
+                                                        <span className="badge-text-tag clinical" style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(6, 182, 212, 0.1)', color: 'var(--color-primary)' }}>
+                                                            {drug.name} ({drug.usBrand})
+                                                        </span>
+                                                        <h4 style={{ margin: '6px 0 2px 0', fontSize: '14px', color: '#fff' }}>Generic: {drug.name}</h4>
+                                                        <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', margin: '0' }}>Target: {drug.originatingDiagnosis}</p>
+                                                    </div>
+                                                    <button
+                                                        className={`action-button-btn ${isInDraft ? 'secondary' : ''}`}
+                                                        onClick={() => handleTogglePrescribe(drug)}
+                                                        style={{ padding: '6px 12px', fontSize: '11px' }}
+                                                    >
+                                                        {isInDraft ? "Remove" : "Add to Draft"}
+                                                    </button>
+                                                </div>
+                                                <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+                                                    <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>Typical dose: <strong>{drug.dosage}</strong></span>
+                                                    <button 
+                                                        className="auth-switch-btn"
+                                                        onClick={() => setSelectedDrugDetails(drug)}
+                                                        style={{ fontSize: '11px', background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}
+                                                    >
+                                                        Details <i className="fa-solid fa-arrow-right"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Safety & Contraindications Audit */}
+                        <div className="workspace-card" style={{ border: '1px solid var(--color-border)' }}>
+                            <h3 className="radio-group-title" style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <i className="fa-solid fa-shield-halved" style={{ color: 'var(--color-success)' }}></i>
+                                Real-Time Safety Audit
+                            </h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', margin: '10px 0' }}>
+                                <span style={{ fontSize: '12px' }}>Client: <strong>{activePatient.name}</strong></span>
+                                <span style={{ fontSize: '12px' }}>Age: <strong>{activePatient.age}</strong></span>
+                                <span style={{ fontSize: '12px' }}>Cohort: <strong>{activePatient.age < 18 ? 'Pediatric' : activePatient.age > 65 ? 'Geriatric' : 'Adult'}</strong></span>
+                            </div>
+
+                            {draftPrescription.length === 0 ? (
+                                <div style={{ color: 'var(--color-text-muted)', fontSize: '12px', textAlign: 'center', padding: '12px' }}>
+                                    No medications added to the draft. Select medications to audit.
+                                </div>
+                            ) : (
+                                (() => {
+                                    const audit = MedicationService.runSafetyAudit(activePatient.age, activePatient.gender, draftPrescription);
+                                    return (
+                                        <div>
+                                            {audit.alerts.length === 0 ? (
+                                                <div className="hipaa-alert-box success" style={{ display: 'flex', gap: '8px', padding: '10px', margin: '8px 0', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-success)', borderRadius: '6px' }}>
+                                                    <i className="fa-solid fa-circle-check" style={{ marginTop: '3px' }}></i>
+                                                    <span style={{ fontSize: '11.5px' }}>No age-based alerts or contraindications detected for this selection. (Clinician must verify all factors).</span>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'grid', gap: '8px' }}>
+                                                    {audit.alerts.map((alert, idx) => (
+                                                        <div key={idx} className={`hipaa-alert-box ${alert.level === 'Critical' ? 'danger' : 'warning'}`} style={{ padding: '10px', display: 'flex', gap: '8px', margin: '0', borderRadius: '6px', background: alert.level === 'Critical' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)', borderLeft: alert.level === 'Critical' ? '3px solid rgb(239, 68, 68)' : '3px solid rgb(245, 158, 11)' }}>
+                                                            <i className="fa-solid fa-triangle-exclamation" style={{ marginTop: '3px', color: alert.level === 'Critical' ? 'rgb(239, 68, 68)' : 'rgb(245, 158, 11)' }}></i>
+                                                            <div>
+                                                                <strong style={{ fontSize: '12px', display: 'block', color: '#fff' }}>{alert.drugName} - {alert.type} ({alert.level})</strong>
+                                                                <span style={{ fontSize: '11.5px', lineHeight: '1.4', display: 'block', marginTop: '3px', color: 'var(--color-text-secondary)' }}>{alert.message}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Column: Draft Prescription Workspace & ABDM Sync */}
+                    <div style={{ display: 'grid', gap: '20px', position: 'sticky', top: '10px' }}>
+                        <div className="workspace-card" style={{ border: '1px solid rgba(var(--color-primary-rgb), 0.3)' }}>
+                            <h3 className="radio-group-title" style={{ fontSize: '15px', color: '#fff', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px', marginBottom: '14px' }}>
+                                <i className="fa-solid fa-file-prescription" style={{ marginRight: '6px' }}></i>
+                                Active Prescription Draft
+                            </h3>
+
+                            {draftPrescription.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--color-text-muted)', fontSize: '12.5px' }}>
+                                    Draft is currently empty. Use the recommendations panel to add medications.
+                                </div>
+                            ) : (
+                                <div style={{ display: 'grid', gap: '14px' }}>
+                                    <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'grid', gap: '8px' }}>
+                                        {draftPrescription.map(drug => (
+                                            <div key={drug.id} style={{ padding: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--color-border)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div>
+                                                    <strong style={{ color: '#fff', fontSize: '13px' }}>{drug.name} ({drug.usBrand})</strong>
+                                                    <span style={{ fontSize: '11px', display: 'block', color: 'var(--color-text-secondary)' }}>Dose: {drug.dosage}</span>
+                                                </div>
+                                                <button
+                                                    className="rail-btn"
+                                                    onClick={() => handleTogglePrescribe(drug)}
+                                                    style={{ border: 'none', background: 'none', color: 'var(--color-error)', cursor: 'pointer' }}
+                                                    title="Remove"
+                                                >
+                                                    <i className="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Clinical Justification Input */}
+                                    <div className="radio-options-card-group" style={{ padding: '12px', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--color-border)', borderRadius: '6px' }}>
+                                        <div className="radio-group-title" style={{ fontSize: '12px', marginBottom: '6px' }}>Clinical Justification Note:</div>
+                                        <textarea
+                                            className="textarea-input-field"
+                                            rows={3}
+                                            style={{ width: '100%', fontSize: '12px', resize: 'none', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--color-border)', borderRadius: '4px', padding: '8px', color: '#fff' }}
+                                            placeholder="Provide clinical rationale for this pharmacological course..."
+                                            value={rxJustificationNote}
+                                            onChange={(e) => setRxJustificationNote(e.target.value)}
+                                        />
+                                        <button
+                                            className="action-button-btn secondary"
+                                            onClick={generateAiRxJustification}
+                                            disabled={isRxJustificationLoading}
+                                            style={{ width: '100%', marginTop: '8px', fontSize: '11px', padding: '8px', cursor: 'pointer' }}
+                                        >
+                                            {isRxJustificationLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <><i className="fa-solid fa-wand-magic-sparkles"></i> Autocomplete with AI Copilot</>}
+                                        </button>
+                                    </div>
+
+                                    {/* Sync to ABDM Section */}
+                                    <div style={{ background: 'rgba(6, 182, 212, 0.05)', border: '1px solid rgba(6, 182, 212, 0.2)', padding: '14px', borderRadius: '8px', marginTop: '10px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 'bold' }}><i className="fa-solid fa-link" style={{ color: 'var(--color-primary)', marginRight: '6px' }}></i> ABHA Registry Sync</span>
+                                            {activePatient.abhaNumber ? (
+                                                <span className="badge-text-tag recruiting" style={{ fontSize: '9px', padding: '1px 6px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success)', borderRadius: '4px' }}>Linked</span>
+                                            ) : (
+                                                <span className="badge-text-tag trial" style={{ fontSize: '9px', padding: '1px 6px', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--color-warning)', borderRadius: '4px' }}>No ABHA Found</span>
+                                            )}
+                                        </div>
+                                        {activePatient.abhaNumber && (
+                                            <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '10px' }}>
+                                                ABHA ID: <strong>{activePatient.abhaNumber}</strong> ({activePatient.abhaAddress})
+                                            </div>
+                                        )}
+                                        <button
+                                            className="action-button-btn"
+                                            onClick={submitToAbdm}
+                                            disabled={isSyncingToAbdm}
+                                            style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                        >
+                                            {isSyncingToAbdm ? <i className="fa-solid fa-spinner fa-spin"></i> : <><i className="fa-solid fa-cloud-arrow-up"></i> Sign & Submit to ABDM Registry</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ABDM Registry Receipt */}
+                        {abdmReceipt && (
+                            <div className="workspace-card animate-fadeIn" style={{ border: '1px solid var(--color-success)', background: 'rgba(16, 185, 129, 0.03)', borderRadius: '8px' }}>
+                                <h4 style={{ margin: '0 0 8px 0', color: 'var(--color-success)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <i className="fa-solid fa-circle-check"></i>
+                                    ABDM Gateway Submission Receipt
+                                </h4>
+                                <div style={{ fontSize: '11px', display: 'grid', gap: '4px', color: 'var(--color-text-secondary)' }}>
+                                    <div>Transaction ID: <strong style={{ color: '#fff' }}>{abdmReceipt.transactionId}</strong></div>
+                                    <div>Registry Status: <strong style={{ color: 'var(--color-success)' }}>{abdmReceipt.registryStatus}</strong></div>
+                                    <div>Link Token: <strong style={{ color: '#fff' }}>{abdmReceipt.linkToken}</strong></div>
+                                    <div>Timestamp: <strong>{new Date(abdmReceipt.timestamp).toLocaleString()}</strong></div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Drug Details Slide-down drawer (if selected) */}
+            {selectedDrugDetails && (
+                <div 
+                    style={{
+                        position: 'fixed',
+                        bottom: 0, right: 0, left: 0,
+                        background: 'var(--color-surface)',
+                        borderTop: '2px solid var(--color-primary)',
+                        padding: '24px',
+                        zIndex: 1000,
+                        maxHeight: '60%',
+                        overflowY: 'auto',
+                        boxShadow: '0 -8px 24px rgba(0,0,0,0.5)',
+                        animation: 'slideUp 0.3s ease-out'
+                    }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: '16px' }}>
+                        <div>
+                            <span className="badge-text-tag video" style={{ fontSize: '10px', borderRadius: '4px' }}>Drug Information Monograph</span>
+                            <h3 style={{ margin: '6px 0 0 0', color: '#fff' }}>{selectedDrugDetails.name} ({selectedDrugDetails.usBrand})</h3>
+                        </div>
+                        <button 
+                            className="rail-btn"
+                            onClick={() => setSelectedDrugDetails(null)}
+                            style={{ border: 'none', background: 'rgba(255,255,255,0.05)', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                            <i className="fa-solid fa-xmark" style={{ color: '#fff' }}></i>
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                        <div>
+                            <h4 style={{ fontSize: '12px', color: 'var(--color-primary)', textTransform: 'uppercase', margin: '0 0 6px 0' }}>Indian Context Brand Equivalents</h4>
+                            <p style={{ fontSize: '12.5px', color: '#fff', margin: '0 0 12px 0' }}>{selectedDrugDetails.indianBrands}</p>
+
+                            <h4 style={{ fontSize: '12px', color: 'var(--color-primary)', textTransform: 'uppercase', margin: '0 0 6px 0' }}>Estimated Price (India)</h4>
+                            <p style={{ fontSize: '12.5px', color: '#fff', margin: '0 0 12px 0' }}>{selectedDrugDetails.indianPrice}</p>
+
+                            <h4 style={{ fontSize: '12px', color: 'var(--color-primary)', textTransform: 'uppercase', margin: '0 0 6px 0' }}>Typical Dosage</h4>
+                            <p style={{ fontSize: '12.5px', color: '#fff', margin: '0' }}>{selectedDrugDetails.dosage}</p>
+                        </div>
+
+                        <div>
+                            <h4 style={{ fontSize: '12px', color: 'var(--color-primary)', textTransform: 'uppercase', margin: '0 0 6px 0' }}>Common Side Effects</h4>
+                            <ul style={{ margin: '0 0 12px 0', paddingLeft: '16px', fontSize: '12.5px', color: '#fff' }}>
+                                {selectedDrugDetails.sideEffects.map((se, i) => <li key={i}>{se}</li>)}
+                            </ul>
+
+                            <h4 style={{ fontSize: '12px', color: 'var(--color-primary)', textTransform: 'uppercase', margin: '0 0 6px 0' }}>Precautions</h4>
+                            <p style={{ fontSize: '12.5px', color: '#fff', margin: '0', lineHeight: '1.4' }}>{selectedDrugDetails.precautions}</p>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

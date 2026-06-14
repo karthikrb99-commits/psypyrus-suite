@@ -1,6 +1,6 @@
 # Document 03 — App Flow (Navigation & User Journey Map)
 
-This document maps the standardized application screens, navigation triggers, and interactive user journeys across all clients in the **PsyPyrus Suite**.
+This document maps the standardized application screens, navigation triggers, and interactive user journeys across all clients in the **PsyPyrus Suite** operating within the **Papyrus Ecosystem**.
 
 ---
 
@@ -26,13 +26,13 @@ Regardless of client runtime (React SPA routes or native mobile screen states), 
 | **MindShop Storefront** | `/patient/mindshop` | `MindShopScreen` | `MindShopView` |
 | **Telehealth Session** | `/telehealth` | `TeletherapyScreen` | `TeletherapyView` |
 | **Marketplace / Plugins**| `/marketplace` | `MarketplaceScreen` | `MarketplaceView` |
-| **HIPAA Security Logs** | `/security` | `SecurityScreen` | `HipaSecurityShieldView` |
+| **Security & Compliance Logs** | `/security` | `SecurityScreen` | `HipaSecurityShieldView` |
 
 ---
 
 ## 2. Universal Navigation Patterns
 
-1. **Sidebar Navigation (Web/Desktop)**: Collabsible left-hand command drawer providing immediate access to clinician modules, security logs, and theme settings.
+1. **Sidebar Navigation (Web/Desktop)**: Collapsible left-hand command drawer providing immediate access to clinician modules, security/compliance logs, and theme settings.
 2. **Bottom Tab Bar (Mobile Android/iOS)**: Persistent tab bar containing 4 slots:
    *   Clinician Mode: `Dashboard`, `Diagnostics`, `SOAP Copilot`, `Settings`
    *   Patient Mode: `Home`, `Lounge`, `MindShop`, `Security`
@@ -47,6 +47,7 @@ Journey 1 (Clinician):
 Enter Biometrics -> Clinician Dashboard -> Open Patient Intake -> Draw Family Genogram
     -> Complete MSE checklist -> Run 13-Disorder Diagnostic Engine -> View Ontology Graph
     -> Call Gemini API SOAP Note Compiler -> Save EHR file -> Sync to Cloud Database
+    -> Export openEHR Archetypes / ABDM Consent Records (Integration Hub)
 
 Journey 2 (Patient):
 Enter Biometrics -> Patient Dashboard -> Check Daily Quests -> Open Wellness Lounge
@@ -58,12 +59,13 @@ Enter Biometrics -> Patient Dashboard -> Check Daily Quests -> Open Wellness Lou
 1. The practitioner launches the app and touches the fingerprint sensor / starts FaceID scan.
 2. Upon successful authentication, they access the Clinician Dashboard.
 3. They select an active patient or click "Add Patient" inside the Command Palette.
-4. On the Intake panel, they fill out demographics, verbatim complaints, and childhood history.
-5. They use the **Genogram Drawing Canvas** to draw familial patterns, saving the base64 output.
-6. The clinician progresses to the **Digital MSE** tab, checking options for speech, motor behavior, and cognition.
-7. Under the **Diagnostics Suite**, they check matching symptom profiles. The local engine evaluates all 13 conditions, generating candidate diagnoses and comorbidity Weights on the ontology graph.
-8. They run search queries on WHO ICD-11 fallback parameters.
-9. They generate the SOAP notes using Gemini 3.5 and compile the treatment goals. The clinician reviews, edits, signs, and triggers cloud synchronization.
+4. On the Intake panel, they fill out demographics, verbatim complaints, somatic symptoms, and pre-morbid parameters.
+5. They use the **Genogram Drawing Canvas** to draw familial relationships and save the sketch.
+6. The clinician progresses to the **Digital MSE** tab, checking options for speech, motor behavior, mood, thought, and cognition.
+7. Under the **Diagnostics Suite**, they check matching symptom profiles. The local engine evaluates all 13 conditions, generating candidate diagnoses and comorbidity weights on the SVG ontology graph.
+8. They query WHO ICD-11 fallback parameters or retrieve tokens via official APIs.
+9. They generate the SOAP notes using Gemini 3.5, formulate treatment plans, check compliance with telemedicine guidelines, and save the patient's record.
+10. If practicing in India, they utilize the ABDM Sandbox to verify Aadhaar and link the patient's ABHA Health Card, or export openEHR-compliant FHIR documents.
 
 ### 3.2 Patient Wellness & Gamification Rewards Journey
 1. The patient unlocks the app via biometric scan.
@@ -78,6 +80,6 @@ Enter Biometrics -> Patient Dashboard -> Check Daily Quests -> Open Wellness Lou
 
 ## 4. Operational Fallbacks & Errors
 
-*   **Offline Mode**: Warning banner indicates "Local Database Active. Cloud Sync Deferred." Local calculations (13-disorder engine, mock AI engines, 23-class ICD dictionary) run without interruption.
-*   **Conflict Resolution**: If the Cloud Gateway detects a record mismatch, a popup shows local vs. cloud edit timestamps, allowing the practitioner to click "Merge" or "Overwrite".
+*   **Offline Mode**: Warning banner indicates "Local Database Active. Cloud Sync Deferred." Local calculations (13-disorder engine, mock AI engines, 23-class ICD dictionary) run without interruption to support low-resource setups.
+*   **Conflict Resolution**: If the Cloud Gateway detects a record mismatch, a popup shows local vs. cloud edit timestamps, allowing the practitioner to merge or overwrite.
 *   **Biometrics Fail**: If native biometrics fail 3 times, the client falls back to requesting the 4-digit security PIN.

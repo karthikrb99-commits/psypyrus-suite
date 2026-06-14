@@ -1,6 +1,6 @@
 # Document 06 — Implementation Plan (Step-by-Step Build Sequence)
 
-This document maps the implementation sequence of the **PsyPyrus Suite** from setup to multi-platform deployment and database synchronization.
+This document maps the implementation sequence of the **PsyPyrus Suite** from setup to multi-platform deployment and database synchronization within the **Papyrus Ecosystem**.
 
 ---
 
@@ -71,7 +71,7 @@ This document maps the implementation sequence of the **PsyPyrus Suite** from se
 *   **Tasks**:
     *   Package Electron static files into Windows `.exe` installers.
     *   Compile native APKs (SDK 36, Kotlin) and Xcode projects (`xcodebuild`).
-*   **Verification**: Installers launch and load security logs.
+*   **Verification**: Installers launch and load compliance logs.
 
 ### Phase 9: Cloud Gateway Synchronization
 *   **Tasks**:

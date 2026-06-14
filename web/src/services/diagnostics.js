@@ -156,6 +156,7 @@ export class DiagnosticEngine {
             candidates.push({
                 disorderName: disorder.name,
                 code: `DSM-5 ${disorder.dsmCode} / ICD-10 ${disorder.icd10Code}`,
+                snomedCode: disorder.snomedCode || "",
                 category: disorder.category,
                 confidenceScore: Math.round(score),
                 severity: severity,

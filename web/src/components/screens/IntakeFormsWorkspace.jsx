@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Database } from '../../services/db';
 import { INTAKE_FORMS_SCHEMAS } from '../../services/intakeFormsSchema';
+import { useToast } from '../ToastProvider';
 
 export function IntakeFormsWorkspace({
     patients = [],
@@ -16,6 +17,131 @@ export function IntakeFormsWorkspace({
     const [selectedCompletedForm, setSelectedCompletedForm] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [validationError, setValidationError] = useState('');
+
+    const { showToast } = useToast();
+
+    // ABHA / ABDM Integration State
+    const [abhaModalType, setAbhaModalType] = useState(null); // 'link', 'generate', or null
+    const [abhaInput, setAbhaInput] = useState('');
+    const [abhaAddressInput, setAbhaAddressInput] = useState('');
+    const [aadhaarInput, setAadhaarInput] = useState('');
+    const [mobileInput, setMobileInput] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpInput, setOtpInput] = useState('');
+    const [showAbhaCard, setShowAbhaCard] = useState(false);
+    const [abhaCardData, setAbhaCardData] = useState(null);
+
+    // ABHA Handlers
+    const handleOpenLinkAbha = () => {
+        setAbhaInput('');
+        setAbhaAddressInput('');
+        setOtpSent(false);
+        setOtpInput('');
+        setValidationError('');
+        setAbhaModalType('link');
+    };
+
+    const handleOpenGenerateAbha = () => {
+        setAadhaarInput('');
+        setMobileInput('');
+        setOtpSent(false);
+        setOtpInput('');
+        setValidationError('');
+        setAbhaModalType('generate');
+    };
+
+    const handleSendAbhaOtp = () => {
+        if (abhaModalType === 'link') {
+            if (!abhaInput && !abhaAddressInput) {
+                showToast("Please enter either an ABHA Number or ABHA Address.", "error");
+                return;
+            }
+            if (abhaInput && !/^\d{2}-\d{4}-\d{4}-\d{4}$/.test(abhaInput) && !/^\d{14}$/.test(abhaInput)) {
+                showToast("Please enter a valid 14-digit ABHA Number (e.g. 91-2345-6789-0123).", "error");
+                return;
+            }
+            if (abhaAddressInput && !abhaAddressInput.includes('@')) {
+                showToast("ABHA Address must contain '@' (e.g., username@abdm).", "error");
+                return;
+            }
+        } else {
+            if (!aadhaarInput && !mobileInput) {
+                showToast("Please enter Aadhaar or Mobile Number.", "error");
+                return;
+            }
+            if (aadhaarInput && !/^\d{12}$/.test(aadhaarInput.replace(/\s/g, ''))) {
+                showToast("Please enter a valid 12-digit Aadhaar Number.", "error");
+                return;
+            }
+            if (mobileInput && !/^\d{10}$/.test(mobileInput.trim())) {
+                showToast("Please enter a valid 10-digit Mobile Number.", "error");
+                return;
+            }
+        }
+        setOtpSent(true);
+        setOtpInput('');
+        showToast("Mock OTP successfully dispatched to Aadhaar-linked mobile xxxxx-xxx72.", "success");
+    };
+
+    const handleVerifyAbhaOtp = () => {
+        if (!otpInput || otpInput.trim().length !== 6) {
+            showToast("Please enter a valid 6-digit verification OTP.", "error");
+            return;
+        }
+
+        // Format ABHA number
+        let rawAbhaNo = abhaInput.replace(/\D/g, '');
+        if (rawAbhaNo.length !== 14) {
+            // Generate a random one if registering
+            rawAbhaNo = "91" + Math.floor(100000000000 + Math.random() * 900000000000);
+        }
+        const formattedAbhaNo = `${rawAbhaNo.substring(0,2)}-${rawAbhaNo.substring(2,6)}-${rawAbhaNo.substring(6,10)}-${rawAbhaNo.substring(10,14)}`;
+        
+        // Format ABHA Address
+        const cleanName = activePatient.name.toLowerCase().replace(/\s+/g, '.');
+        const formattedAbhaAddr = abhaAddressInput || `${cleanName}@abdm`;
+
+        // Update database patient record
+        Database.updatePatient(activePatient.id, {
+            abhaNumber: formattedAbhaNo,
+            abhaAddress: formattedAbhaAddr
+        });
+
+        // Fill form fields
+        setFormData(prev => ({
+            ...prev,
+            abha_number: formattedAbhaNo,
+            abha_address: formattedAbhaAddr,
+            name: activePatient.name,
+            birth_date: prev.birth_date || "1997-05-12",
+            age: activePatient.age,
+            gender: activePatient.gender,
+            email: activePatient.email,
+            home_phone: activePatient.phone
+        }));
+
+        // Log audit
+        Database.logAudit("ABHA ID Verification", `Successfully verified and linked ABHA ID ${formattedAbhaNo} to patient ${activePatient.name}`);
+
+        // Show ABHA Card if newly generated
+        if (abhaModalType === 'generate') {
+            setAbhaCardData({
+                name: activePatient.name,
+                abhaNumber: formattedAbhaNo,
+                abhaAddress: formattedAbhaAddr,
+                gender: activePatient.gender,
+                dob: "12/05/1997",
+                mobile: activePatient.phone
+            });
+            setShowAbhaCard(true);
+        }
+
+        setAbhaModalType(null);
+        setOtpSent(false);
+        setOtpInput('');
+        showToast("ABHA ID verified and linked successfully!", "success");
+        window.dispatchEvent(new CustomEvent('psypyrus_db_change', { detail: { key: 'psypyrus_patients' } }));
+    };
 
     // Active patient helper
     const activePatient = patients.find(p => p.id === Number(activePatientId)) || patients[0];
@@ -705,6 +831,107 @@ export function IntakeFormsWorkspace({
                                                 </div>
                                             )}
 
+                                            {/* ABDM ABHA Integration Panel */}
+                                            {currentPageIndex === 0 && (
+                                                <div className="abha-integration-panel" style={{
+                                                    background: 'rgba(16, 185, 129, 0.04)',
+                                                    border: '1px dashed rgba(16, 185, 129, 0.3)',
+                                                    borderRadius: '8px',
+                                                    padding: '16px',
+                                                    marginBottom: '20px'
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <i className="fa-solid fa-address-card" style={{ color: '#10b981', fontSize: '18px' }}></i>
+                                                            <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--color-text-primary)' }}>ABDM - Ayushman Bharat Health Account</h4>
+                                                        </div>
+                                                        {activePatient.abhaNumber ? (
+                                                            <span className="badge success" style={{
+                                                                background: 'rgba(16, 185, 129, 0.1)',
+                                                                color: '#10b981',
+                                                                fontSize: '11px',
+                                                                padding: '3px 8px',
+                                                                borderRadius: '12px',
+                                                                fontWeight: 600,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px'
+                                                            }}>
+                                                                <i className="fa-solid fa-circle-check"></i> ABHA Linked
+                                                            </span>
+                                                        ) : (
+                                                            <span className="badge warning" style={{
+                                                                background: 'rgba(245, 158, 11, 0.1)',
+                                                                color: '#f59e0b',
+                                                                fontSize: '11px',
+                                                                padding: '3px 8px',
+                                                                borderRadius: '12px',
+                                                                fontWeight: 600
+                                                            }}>
+                                                                Not Linked
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {activePatient.abhaNumber ? (
+                                                        <div>
+                                                            <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '0 0 12px 0' }}>
+                                                                This client profile is linked to the national registry. Demographics are synced with the ABDM network.
+                                                            </p>
+                                                            <div style={{ display: 'flex', gap: '16px', fontSize: '11.5px', background: 'rgba(0,0,0,0.15)', padding: '10px', borderRadius: '6px', marginBottom: '12px' }}>
+                                                                <div>
+                                                                    <span style={{ color: 'var(--color-text-muted)', display: 'block' }}>ABHA Number:</span>
+                                                                    <strong style={{ color: 'var(--color-text-primary)' }}>{activePatient.abhaNumber}</strong>
+                                                                </div>
+                                                                <div>
+                                                                    <span style={{ color: 'var(--color-text-muted)', display: 'block' }}>ABHA Address:</span>
+                                                                    <strong style={{ color: 'var(--color-text-primary)' }}>{activePatient.abhaAddress}</strong>
+                                                                </div>
+                                                            </div>
+                                                            <button 
+                                                                className="preset-duration-btn" 
+                                                                onClick={() => {
+                                                                    setAbhaCardData({
+                                                                        name: activePatient.name,
+                                                                        abhaNumber: activePatient.abhaNumber,
+                                                                        abhaAddress: activePatient.abhaAddress,
+                                                                        gender: activePatient.gender,
+                                                                        dob: "12/05/1997",
+                                                                        mobile: activePatient.phone
+                                                                    });
+                                                                    setShowAbhaCard(true);
+                                                                }}
+                                                                style={{ fontSize: '11px', padding: '4px 8px' }}
+                                                            >
+                                                                <i className="fa-solid fa-id-card"></i> View ABHA Health Card
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div>
+                                                            <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '0 0 12px 0' }}>
+                                                                Instantly retrieve verified patient demographics and allow secure clinical record sharing via the official ABDM gateway.
+                                                            </p>
+                                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                                <button 
+                                                                    className="action-button-btn secondary-btn"
+                                                                    onClick={handleOpenLinkAbha}
+                                                                    style={{ fontSize: '11px', padding: '6px 12px', margin: 0 }}
+                                                                >
+                                                                    <i className="fa-solid fa-link"></i> Link Existing ABHA
+                                                                </button>
+                                                                <button 
+                                                                    className="action-button-btn"
+                                                                    onClick={handleOpenGenerateAbha}
+                                                                    style={{ fontSize: '11px', padding: '6px 12px', margin: 0, background: 'var(--color-primary)' }}
+                                                                >
+                                                                    <i className="fa-solid fa-user-plus"></i> Generate ABHA
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
                                             {/* Form Fields Generator Grid */}
                                             <div className="form-field-grid">
                                                 {currentPage.fields.map((field) => {
@@ -921,6 +1148,346 @@ export function IntakeFormsWorkspace({
                                 })()}
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* ABHA Link/Generate Modal Dialog */}
+            {abhaModalType && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.75)',
+                    backdropFilter: 'blur(5px)',
+                    zIndex: 9999,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}>
+                    <div className="workspace-card" style={{
+                        width: '100%',
+                        maxWidth: '450px',
+                        background: 'rgba(23, 28, 41, 0.95)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '12px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                        padding: '24px',
+                        margin: 0
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h3 style={{ margin: 0, fontSize: '16px', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <i className="fa-solid fa-passport" style={{ color: 'var(--color-primary)' }}></i>
+                                {abhaModalType === 'link' ? "Link National ABHA Account" : "Generate ABHA Health Account"}
+                            </h3>
+                            <button 
+                                onClick={() => setAbhaModalType(null)}
+                                style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', fontSize: '16px' }}
+                            >
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        {!otpSent ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                                    {abhaModalType === 'link' 
+                                        ? "Enter your existing 14-digit ABHA Number or your virtual ABHA Address (e.g. username@abdm)." 
+                                        : "Register for a national ABHA using your 12-digit Aadhaar Card number or registered Mobile number."}
+                                </p>
+                                
+                                {abhaModalType === 'link' ? (
+                                    <>
+                                        <div className="form-field-group">
+                                            <label className="form-label" style={{ fontSize: '11px' }}>ABHA Number (XX-XXXX-XXXX-XXXX)</label>
+                                            <input 
+                                                type="text" 
+                                                className="input-text-field" 
+                                                placeholder="e.g., 91-2345-6789-0123"
+                                                value={abhaInput}
+                                                onChange={(e) => setAbhaInput(e.target.value)}
+                                            />
+                                        </div>
+                                        <div style={{ textAlign: 'center', margin: '4px 0', fontSize: '11px', color: 'var(--color-text-muted)' }}>— OR —</div>
+                                        <div className="form-field-group">
+                                            <label className="form-label" style={{ fontSize: '11px' }}>ABHA Address (e.g., name@abdm)</label>
+                                            <input 
+                                                type="text" 
+                                                className="input-text-field" 
+                                                placeholder="e.g., sophia.patel@abdm"
+                                                value={abhaAddressInput}
+                                                onChange={(e) => setAbhaAddressInput(e.target.value)}
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="form-field-group">
+                                            <label className="form-label" style={{ fontSize: '11px' }}>Aadhaar Number (12 digits)</label>
+                                            <input 
+                                                type="text" 
+                                                className="input-text-field" 
+                                                placeholder="e.g., 5544-3322-1100"
+                                                value={aadhaarInput}
+                                                onChange={(e) => setAadhaarInput(e.target.value)}
+                                            />
+                                        </div>
+                                        <div style={{ textAlign: 'center', margin: '4px 0', fontSize: '11px', color: 'var(--color-text-muted)' }}>— OR —</div>
+                                        <div className="form-field-group">
+                                            <label className="form-label" style={{ fontSize: '11px' }}>Mobile Number (10 digits)</label>
+                                            <input 
+                                                type="text" 
+                                                className="input-text-field" 
+                                                placeholder="e.g., 9876543210"
+                                                value={mobileInput}
+                                                onChange={(e) => setMobileInput(e.target.value)}
+                                            />
+                                        </div>
+                                    </>
+                                )}
+
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                    <button 
+                                        className="action-button-btn secondary" 
+                                        onClick={() => setAbhaModalType(null)}
+                                        style={{ flex: 1, margin: 0 }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        className="action-button-btn" 
+                                        onClick={handleSendAbhaOtp}
+                                        style={{ flex: 1, margin: 0, background: 'var(--color-primary)' }}
+                                    >
+                                        Request OTP
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '12px', borderRadius: '6px', textAlign: 'center' }}>
+                                    <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>
+                                        <i className="fa-solid fa-shield-halved"></i> Verification OTP Dispatched
+                                    </span>
+                                    <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: '4px 0 0 0' }}>
+                                        Please enter the 6-digit OTP code sent to your Aadhaar-registered phone.
+                                    </p>
+                                </div>
+
+                                <div className="form-field-group">
+                                    <label className="form-label" style={{ fontSize: '11px' }}>One-Time Password (OTP)</label>
+                                    <input 
+                                        type="text" 
+                                        className="input-text-field" 
+                                        style={{ letterSpacing: '8px', textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}
+                                        maxLength={6}
+                                        placeholder="••••••"
+                                        value={otpInput}
+                                        onChange={(e) => setOtpInput(e.target.value)}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                    <button 
+                                        className="action-button-btn secondary" 
+                                        onClick={() => setOtpSent(false)}
+                                        style={{ flex: 1, margin: 0 }}
+                                    >
+                                        Change Details
+                                    </button>
+                                    <button 
+                                        className="action-button-btn" 
+                                        onClick={handleVerifyAbhaOtp}
+                                        style={{ flex: 1, margin: 0, background: '#10b981' }}
+                                    >
+                                        Verify & Link
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ABHA Health Card Display Overlay */}
+            {showAbhaCard && abhaCardData && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.85)',
+                    backdropFilter: 'blur(8px)',
+                    zIndex: 10000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
+                        {/* Beautiful ABHA Card UI */}
+                        <div style={{
+                            width: '430px',
+                            height: '260px',
+                            background: 'linear-gradient(135deg, rgba(23, 28, 41, 0.95) 0%, rgba(13, 16, 26, 0.98) 100%)',
+                            border: '2px solid rgba(16, 185, 129, 0.4)',
+                            borderRadius: '16px',
+                            boxShadow: '0 25px 50px rgba(0,0,0,0.8), 0 0 30px rgba(16, 185, 129, 0.1)',
+                            position: 'relative',
+                            padding: '20px',
+                            color: '#fff',
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            overflow: 'hidden'
+                        }}>
+                            {/* Card Background Overlay Decor */}
+                            <div style={{
+                                position: 'absolute',
+                                top: '-50px',
+                                right: '-50px',
+                                width: '200px',
+                                height: '200px',
+                                background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)',
+                                pointerEvents: 'none'
+                            }} />
+
+                            {/* Top Brand Header */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px', marginBottom: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{
+                                        width: '26px',
+                                        height: '26px',
+                                        background: 'rgba(16, 185, 129, 0.2)',
+                                        borderRadius: '50%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#10b981',
+                                        fontSize: '13px',
+                                        fontWeight: 'bold'
+                                    }}>A</div>
+                                    <div>
+                                        <h5 style={{ margin: 0, fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px' }}>ABHA HEALTH CARD</h5>
+                                        <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', display: 'block' }}>Ayushman Bharat Digital Mission</span>
+                                    </div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <span style={{ fontSize: '9px', color: '#10b981', fontWeight: 600, border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 6px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.05)' }}>
+                                        GOVERNMENT OF INDIA
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Card Content body */}
+                            <div style={{ display: 'flex', gap: '18px', marginTop: '12px' }}>
+                                {/* Left Avatar Column */}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{
+                                        width: '90px',
+                                        height: '110px',
+                                        background: 'rgba(255,255,255,0.03)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '8px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '32px',
+                                        color: 'rgba(255,255,255,0.3)',
+                                        boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)'
+                                    }}>
+                                        <i className="fa-solid fa-user"></i>
+                                    </div>
+                                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>Verified Beneficiary</span>
+                                </div>
+
+                                {/* Right Demographics Column */}
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <div>
+                                        <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', display: 'block', textTransform: 'uppercase' }}>Name</span>
+                                        <strong style={{ fontSize: '14px', color: '#fff', letterSpacing: '0.2px' }}>{abhaCardData.name}</strong>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '20px' }}>
+                                        <div>
+                                            <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', display: 'block', textTransform: 'uppercase' }}>Gender</span>
+                                            <span style={{ fontSize: '11px', color: '#f3f4f6' }}>{abhaCardData.gender}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', display: 'block', textTransform: 'uppercase' }}>Date of Birth</span>
+                                            <span style={{ fontSize: '11px', color: '#f3f4f6' }}>{abhaCardData.dob}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', display: 'block', textTransform: 'uppercase' }}>ABHA Number</span>
+                                        <strong style={{ fontSize: '14px', color: '#10b981', letterSpacing: '0.5px' }}>{abhaCardData.abhaNumber}</strong>
+                                    </div>
+                                    <div>
+                                        <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', display: 'block', textTransform: 'uppercase' }}>ABHA Address</span>
+                                        <span style={{ fontSize: '11px', color: '#f3f4f6', fontFamily: 'monospace' }}>{abhaCardData.abhaAddress}</span>
+                                    </div>
+                                </div>
+
+                                {/* QR Code Column */}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{
+                                        width: '64px',
+                                        height: '64px',
+                                        background: '#fff',
+                                        borderRadius: '4px',
+                                        padding: '4px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+                                    }}>
+                                        <i className="fa-solid fa-qrcode" style={{ color: '#000', fontSize: '56px' }}></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Bottom Card Footer */}
+                            <div style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                background: 'rgba(16, 185, 129, 0.12)',
+                                borderTop: '1px solid rgba(16, 185, 129, 0.2)',
+                                padding: '6px 20px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}>
+                                <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.3px' }}>
+                                    <i className="fa-solid fa-circle-check" style={{ color: '#10b981', marginRight: '4px' }}></i> Verified Demographics Linked
+                                </span>
+                                <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
+                                    NHA / ABDM Gateway
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Download and Close Buttons */}
+                        <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                            <button 
+                                className="action-button-btn secondary"
+                                onClick={() => {
+                                    showToast("ABHA Health Card PDF download triggered.", "success");
+                                }}
+                                style={{ flex: 1, margin: 0 }}
+                            >
+                                <i className="fa-solid fa-download" style={{ marginRight: '6px' }}></i> Download PDF
+                            </button>
+                            <button 
+                                className="action-button-btn"
+                                onClick={() => setShowAbhaCard(false)}
+                                style={{ flex: 1, margin: 0, background: 'var(--color-primary)' }}
+                            >
+                                Close Card
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

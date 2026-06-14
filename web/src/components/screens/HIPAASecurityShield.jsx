@@ -175,7 +175,7 @@ export function HIPAASecurityShield() {
 
             <div className="section-header-block">
                 <i className="fa-solid fa-user-shield"></i>
-                <h2>HIPAA Shield & Secure Cryptography</h2>
+                <h2>Security, HIPAA & DISHA Compliance Shield</h2>
             </div>
 
             {/* Compliance Status Cards */}
@@ -211,6 +211,16 @@ export function HIPAASecurityShield() {
                 </div>
 
                 <div className="shield-status-card">
+                    <div className="shield-icon-wrapper">
+                        <i className="fa-solid fa-address-card" style={{ color: '#10b981' }}></i>
+                    </div>
+                    <div>
+                        <h4 style={{ margin: 0, fontSize: '13px', color: 'var(--text-light)' }}>DISHA Compliance</h4>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Consent Verification Passed</span>
+                    </div>
+                </div>
+
+                <div className="shield-status-card">
                     <div className="shield-icon-wrapper warn">
                         <i className="fa-solid fa-scale-balanced"></i>
                     </div>
@@ -221,10 +231,44 @@ export function HIPAASecurityShield() {
                 </div>
             </div>
 
+            {/* DISHA & ABDM Compliance Section */}
+            <div className="workspace-card" style={{ padding: '20px', marginBottom: '24px' }}>
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '14px', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <i className="fa-solid fa-shield-halved" style={{ color: '#10b981' }}></i>
+                    DISHA (Digital Information Security in Healthcare Act) Compliance Framework
+                </h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
+                    India's proposed health data protection framework mandates rigorous patient consent controls and audit logging. Below is the active verification status for PsyPyrus's local engine.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.03)', border: '1px solid rgba(16, 185, 129, 0.15)', padding: '12px', borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            <i className="fa-solid fa-circle-check" style={{ color: '#10b981' }}></i>
+                            <strong style={{ fontSize: '11.5px', color: 'var(--text-light)' }}>Consent-based Access</strong>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Mandatory consent tokens verified before any record pull.</span>
+                    </div>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.03)', border: '1px solid rgba(16, 185, 129, 0.15)', padding: '12px', borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            <i className="fa-solid fa-circle-check" style={{ color: '#10b981' }}></i>
+                            <strong style={{ fontSize: '11.5px', color: 'var(--text-light)' }}>Data Anonymization</strong>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Personally Identifiable Information (PII) masked during research.</span>
+                    </div>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.03)', border: '1px solid rgba(16, 185, 129, 0.15)', padding: '12px', borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            <i className="fa-solid fa-circle-check" style={{ color: '#10b981' }}></i>
+                            <strong style={{ fontSize: '11.5px', color: 'var(--text-light)' }}>Audit Ledger Integrity</strong>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>All access requests are logged with cryptographically hashed timestamps.</span>
+                    </div>
+                </div>
+            </div>
+
             {/* Audit Log Table Container */}
             <div className="workspace-card">
                 <div className="card-title-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                    <h3>HIPAA Compliance access Ledger</h3>
+                    <h3>HIPAA & DISHA Compliance Access Ledger</h3>
                     
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <input 

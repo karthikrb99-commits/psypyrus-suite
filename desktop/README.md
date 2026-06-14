@@ -1,6 +1,8 @@
 # 💻 PsyPyrus Desktop Wrapper — Developer Guide
 
-This directory contains the **Electron Desktop Wrapper** for the **PsyPyrus Suite**. It packages the compiled static production build of the **Web client** into a standalone desktop application, providing native operating system integration (system tray, file logging, toast notifications, and secure biometrics validation simulation).
+This directory contains the **Electron Desktop Wrapper** for the **PsyPyrus Suite**, running within the **Papyrus Open Mental Health Intelligence Ecosystem**. 
+
+It packages the compiled static production build of the **Web client** into a standalone desktop application, providing native operating system integration (system tray, file logging, toast notifications, and secure biometrics validation simulation).
 
 ---
 

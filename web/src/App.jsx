@@ -65,6 +65,20 @@ import { CareRequests } from './components/screens/CareRequests';
 function MainAppContent() {
     const { showToast } = useToast();
 
+    const [showLanding, setShowLanding] = useState(true);
+    const [isLocked, setIsLocked] = useState(true);
+    const [activeRole, setActiveRole] = useState('Professional'); // 'Professional' or 'Patient'
+    const [activeScreen, setActiveScreen] = useState('Dashboard');
+    const [activePatientId, setActivePatientId] = useState(1);
+    const [theme, setTheme] = useState(() => localStorage.getItem('psypyrus_theme') || 'dark-onyx');
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [apptModalOpen, setApptModalOpen] = useState(false);
+    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+    // Database arrays
+    const [patients, setPatients] = useState([]);
+    const [appointments, setAppointments] = useState([]);
+
     // Initialize WebSockets and SSE subscriptions on mount
     useEffect(() => {
         WebSocketConn.connect();
@@ -303,20 +317,6 @@ function MainAppContent() {
         });
     };
 
-    const [showLanding, setShowLanding] = useState(true);
-    const [isLocked, setIsLocked] = useState(true);
-    const [activeRole, setActiveRole] = useState('Professional'); // 'Professional' or 'Patient'
-    const [activeScreen, setActiveScreen] = useState('Dashboard');
-    const [activePatientId, setActivePatientId] = useState(1);
-    const [theme, setTheme] = useState(() => localStorage.getItem('psypyrus_theme') || 'dark-onyx');
-    const [settingsOpen, setSettingsOpen] = useState(false);
-    const [apptModalOpen, setApptModalOpen] = useState(false);
-    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-
-    // Database arrays
-    const [patients, setPatients] = useState([]);
-    const [appointments, setAppointments] = useState([]);
-
     const refreshData = useCallback(() => {
         setPatients(Database.getPatients());
         setAppointments(Database.getAppointments());
@@ -327,6 +327,23 @@ function MainAppContent() {
         Database.logAudit("Biometric Session Locked", "EHR cryptographic session locked by user.");
         showToast("Cryptographic session locked. Tap scanner to re-authenticate.", "warning");
     }, [showToast]);
+
+    // Dynamic SEO Metadata Engine
+    useEffect(() => {
+        const displayRole = activeRole === 'Professional' ? 'Clinician' : 'Patient';
+        document.title = `PsyPyrus AI - ${activeScreen} (${displayRole} Mode)`;
+
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+            let desc = `PsyPyrus AI secure portal - ${activeScreen} screen. `;
+            if (activeRole === 'Professional') {
+                desc += `Clinician tools for DSM-5 diagnostics, SOAP notes copilot, and EHR patient records.`;
+            } else {
+                desc += `Patient workspace for wellness lounge exercises, self-assessments, and gamification rewards.`;
+            }
+            metaDescription.setAttribute('content', desc);
+        }
+    }, [activeScreen, activeRole]);
 
     useEffect(() => {
         refreshData();

@@ -135,7 +135,7 @@ export function TelehealthSession({
         setSoapResult('');
 
         try {
-            const prompt = `Compile the following session conversation transcript into a structured, formal healthcare SOAP note.\nInclude SUBJECTIVE, OBJECTIVE, ASSESSMENT, and PLAN. Keep and suggest matching diagnoses (such as DSM-5/ICD-10 codes) based on indicators.\n\nTranscript:\n"${transcript}"`;
+            const prompt = `Compile the following session conversation transcript into a structured, formal healthcare SOAP note. Include SUBJECTIVE, OBJECTIVE, ASSESSMENT, and PLAN. Suggest matching diagnoses with DSM-5, ICD-11, and SNOMED CT Concept IDs as recommended by NRCeS India. Also format a standard prescription following the MoHFW Telemedicine Practice Guidelines (2020), detailing the RMP Registration Number (e.g. RMP-91024), patient details, and generic drug names with dosages.\n\nTranscript:\n"${transcript}"`;
             const result = await GeminiService.callGemini(prompt, "You are a clinical psychologist assistant compiling telehealth SOAP summaries.");
             setSoapResult(result);
 
@@ -391,6 +391,35 @@ export function TelehealthSession({
                                 </div>
                             </div>
                         )}
+
+                        {/* MoHFW Telemedicine Guidelines Compliance Checklist */}
+                        <div className="workspace-card" style={{ border: '1px solid rgba(0, 242, 254, 0.15)', background: 'rgba(0, 242, 254, 0.02)' }}>
+                            <span style={{ fontSize: '12.5px', fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <i className="fa-solid fa-circle-check" style={{ color: '#10b981' }}></i>
+                                Telemedicine Compliance Tracker
+                            </span>
+                            <p style={{ fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '4px', marginBlockEnd: '10px' }}>
+                                Compliant with India Telemedicine Practice Guidelines (MoHFW)
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label className="checkbox-option-row" style={{ padding: '2px 0', cursor: 'pointer' }}>
+                                    <input type="checkbox" className="checkbox-control" defaultChecked={true} style={{ accentColor: 'var(--color-primary)' }} />
+                                    <span className="checkbox-label" style={{ fontSize: '11px', color: '#fff', marginLeft: '6px' }}>Verify RMP Registration Number</span>
+                                </label>
+                                <label className="checkbox-option-row" style={{ padding: '2px 0', cursor: 'pointer' }}>
+                                    <input type="checkbox" className="checkbox-control" defaultChecked={true} style={{ accentColor: 'var(--color-primary)' }} />
+                                    <span className="checkbox-label" style={{ fontSize: '11px', color: '#fff', marginLeft: '6px' }}>Confirm Patient Identity & Age</span>
+                                </label>
+                                <label className="checkbox-option-row" style={{ padding: '2px 0', cursor: 'pointer' }}>
+                                    <input type="checkbox" className="checkbox-control" defaultChecked={true} style={{ accentColor: 'var(--color-primary)' }} />
+                                    <span className="checkbox-label" style={{ fontSize: '11px', color: '#fff', marginLeft: '6px' }}>Obtain Explicit Telehealth Consent</span>
+                                </label>
+                                <label className="checkbox-option-row" style={{ padding: '2px 0', cursor: 'pointer' }}>
+                                    <input type="checkbox" className="checkbox-control" style={{ accentColor: 'var(--color-primary)' }} />
+                                    <span className="checkbox-label" style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginLeft: '6px' }}>Prescribe Generic Drug Names Only</span>
+                                </label>
+                            </div>
+                        </div>
 
                         {/* Real-time AI Suggestions */}
                         <div className="ai-suggestions-box">

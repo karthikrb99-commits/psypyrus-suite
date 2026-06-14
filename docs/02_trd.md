@@ -1,6 +1,6 @@
 # Document 02 — TRD (Technical Requirements Document)
 
-This document establishes the unified technical architecture, library dependencies, platform wrappers, security layers, and API models for the **PsyPyrus Suite** across all platforms.
+This document establishes the unified technical architecture, library dependencies, platform wrappers, security layers, and API models for the **PsyPyrus Suite** operating as part of the **Papyrus Ecosystem** across all platforms.
 
 ---
 
@@ -8,7 +8,7 @@ This document establishes the unified technical architecture, library dependenci
 
 ### 1.1 Web Client
 *   **Framework**: React (ES6, Vite, JSX) using a single-page app layout.
-*   **Styling**: Custom vanilla CSS variables and utility tokens.
+*   **Styling**: Tailwind CSS (with predefined design system tokens).
 *   **Target Compilation**: Static bundle optimized for Vercel, Netlify, or AWS Amplify.
 
 ### 1.2 Android Native Client
@@ -32,12 +32,13 @@ This document establishes the unified technical architecture, library dependenci
 
 ## 2. Shared Cloud & API Interfaces
 
-All clients share standard network gateways to perform remote AI analysis, diagnostic classifications, clinical trial queries, and database sync.
+All clients share standard network gateways to perform remote AI analysis, diagnostic classifications, clinical trial queries, and database sync within the Papyrus network.
 
 ```
 +-------------------------------------------------------------+
 |                     PsyPyrus Clients                        |
 |   (React Web  |  Android Compose  |  iOS/macOS SwiftUI)     |
+|             (Operating on top of Papyrus Ecosystem)         |
 +------------------------------+------------------------------+
                                |
             +------------------+------------------+
@@ -60,8 +61,8 @@ All clients share standard network gateways to perform remote AI analysis, diagn
 ### 2.1 Google Gemini AI API
 *   **Model**: `gemini-3.5-flash`
 *   **Protocol**: REST HTTPS POST with bearer token.
-*   **Integration**: Mobile clients use native OkHttp/Retrofit HTTP calls (or URLConnection bridges) sending JSON payloads; Web/Electron uses browser Fetch requests.
-*   **De-identification**: Client-side filters anonymize patient names and DOBs before sending payloads.
+*   **Integration**: Mobile clients use native OkHttp/Retrofit HTTP calls sending JSON payloads; Web/Electron uses browser Fetch requests.
+*   **De-identification**: Client-side filters anonymize patient names and DOBs before sending payloads to preserve privacy by design.
 
 ### 2.2 WHO ICDAPI Registry
 *   **Endpoint**: `https://id.who.int/icd/release/11`
@@ -95,7 +96,7 @@ A standardized REST endpoint setup to replicate and sync local SQLite / IndexedD
 
 ---
 
-## 4. Security & HIPAA Compliance Specifications
+## 4. Security & Compliance Specifications
 
 1. **At-Rest Encryption**:
    *   Android: Room DB is encrypted using SQLCipher if active.
@@ -104,3 +105,6 @@ A standardized REST endpoint setup to replicate and sync local SQLite / IndexedD
 2. **In-Transit Encryption**: All network traffic runs over TLS 1.3 (HTTPS/WSS).
 3. **Audit Log Database**: Persistent, read-only local structures writing every encounter view, diagnostic engine invocation, and security toggle.
 4. **Biometric Validation**: Successful FaceID/Fingerprint validation is mandatory on application launch or when unlocking from an idle timeout state.
+5. **Global Compliance Parity**:
+   *   **HIPAA & GDPR**: Strict compliance for data storage, de-identification filters, and security locks.
+   *   **DISHA & ABDM**: Supports India's Digital Information Security in Healthcare Act (DISHA) and Ayushman Bharat Digital Mission (ABDM) guidelines, incorporating SNOMED CT clinical terms, LOINC codes, and Aadhaar-verified ABHA health cards.

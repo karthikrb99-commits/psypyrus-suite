@@ -1,0 +1,23 @@
+# robots.txt for PsyPyrus AI
+# Allow search engines to index public landing and resource pages, but restrict private clinical/EHR subfolders.
+
+User-agent: *
+Allow: /$
+Allow: /index.html
+Allow: /assets/
+Allow: /favicon.svg
+Allow: /README.md
+
+# Restrict crawlers from indexing private SPA clinical route pages or mock credential workspaces
+Disallow: /dashboard
+Disallow: /intake
+Disallow: /analytics
+Disallow: /secure/
+Disallow: /diagnostics
+Disallow: /copilot
+Disallow: /teletherapy
+Disallow: /marketplace
+
+# Host and Sitemap
+Host: https://psypyrus.health
+Sitemap: https://psypyrus.health/sitemap.xml

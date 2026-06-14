@@ -31,6 +31,9 @@
 		21BCA3AE4C5158DBAC02829C /* TeletherapyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0414024EC4FC5D55BB17C8F8 /* TeletherapyView.swift */; };
 		DAB71BE0B4805EE99B1F321F /* HipaSecurityShieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E49CFFEBB445256B4E0C822 /* HipaSecurityShieldView.swift */; };
 		EE3A367501395A41865DFB7E /* MarketplaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90A1A299246562E920E235E /* MarketplaceView.swift */; };
+		9EA6D936511A52A7A58D9762 /* HomeworkTrackerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3911CFE4974D5DEE9C81EACD /* HomeworkTrackerView.swift */; };
+		BCE2BAD922195CBA91E94C50 /* MatchAndBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A31152762A053DAAB945EE6 /* MatchAndBookView.swift */; };
+		C44D9763727B58779A642966 /* PeerSupportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96D92A81CE3154DD85C8C489 /* PeerSupportView.swift */; };
 		E7FB07EAD6025BA9BBEAC555 /* PatientDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A58683E9A55FBCAF111C8E /* PatientDashboardView.swift */; };
 		4A778B2A04465EDC82CA1577 /* WellnessLoungeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A561BFFE9E5CDEBDFD8252 /* WellnessLoungeView.swift */; };
 		86F9ED544A7F5323AC0E5F2B /* MindShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DDCA4C205D259610E935 /* MindShopView.swift */; };
@@ -62,6 +65,9 @@
 		0414024EC4FC5D55BB17C8F8 /* TeletherapyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TeletherapyView.swift; path = ../ios/PsyPyrus/Views/Shared/TeletherapyView.swift; sourceTree = SOURCE_ROOT; };
 		8E49CFFEBB445256B4E0C822 /* HipaSecurityShieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HipaSecurityShieldView.swift; path = ../ios/PsyPyrus/Views/Shared/HipaSecurityShieldView.swift; sourceTree = SOURCE_ROOT; };
 		B90A1A299246562E920E235E /* MarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MarketplaceView.swift; path = ../ios/PsyPyrus/Views/Shared/MarketplaceView.swift; sourceTree = SOURCE_ROOT; };
+		3911CFE4974D5DEE9C81EACD /* HomeworkTrackerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HomeworkTrackerView.swift; path = ../ios/PsyPyrus/Views/Shared/HomeworkTrackerView.swift; sourceTree = SOURCE_ROOT; };
+		3A31152762A053DAAB945EE6 /* MatchAndBookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MatchAndBookView.swift; path = ../ios/PsyPyrus/Views/Shared/MatchAndBookView.swift; sourceTree = SOURCE_ROOT; };
+		96D92A81CE3154DD85C8C489 /* PeerSupportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PeerSupportView.swift; path = ../ios/PsyPyrus/Views/Shared/PeerSupportView.swift; sourceTree = SOURCE_ROOT; };
 		02A58683E9A55FBCAF111C8E /* PatientDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PatientDashboardView.swift; path = ../ios/PsyPyrus/Views/Patient/PatientDashboardView.swift; sourceTree = SOURCE_ROOT; };
 		F3A561BFFE9E5CDEBDFD8252 /* WellnessLoungeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WellnessLoungeView.swift; path = ../ios/PsyPyrus/Views/Patient/WellnessLoungeView.swift; sourceTree = SOURCE_ROOT; };
 		9FC4DDCA4C205D259610E935 /* MindShopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MindShopView.swift; path = ../ios/PsyPyrus/Views/Patient/MindShopView.swift; sourceTree = SOURCE_ROOT; };
@@ -168,6 +174,9 @@
 				0414024EC4FC5D55BB17C8F8 /* TeletherapyView.swift */,
 				8E49CFFEBB445256B4E0C822 /* HipaSecurityShieldView.swift */,
 				B90A1A299246562E920E235E /* MarketplaceView.swift */,
+				3911CFE4974D5DEE9C81EACD /* HomeworkTrackerView.swift */,
+				3A31152762A053DAAB945EE6 /* MatchAndBookView.swift */,
+				96D92A81CE3154DD85C8C489 /* PeerSupportView.swift */,
 			);
 			name = Shared;
 			sourceTree = "<group>";
@@ -245,6 +254,9 @@
 				21BCA3AE4C5158DBAC02829C /* TeletherapyView.swift in Sources */,
 				DAB71BE0B4805EE99B1F321F /* HipaSecurityShieldView.swift in Sources */,
 				EE3A367501395A41865DFB7E /* MarketplaceView.swift in Sources */,
+				9EA6D936511A52A7A58D9762 /* HomeworkTrackerView.swift in Sources */,
+				BCE2BAD922195CBA91E94C50 /* MatchAndBookView.swift in Sources */,
+				C44D9763727B58779A642966 /* PeerSupportView.swift in Sources */,
 				E7FB07EAD6025BA9BBEAC555 /* PatientDashboardView.swift in Sources */,
 				4A778B2A04465EDC82CA1577 /* WellnessLoungeView.swift in Sources */,
 				86F9ED544A7F5323AC0E5F2B /* MindShopView.swift in Sources */,

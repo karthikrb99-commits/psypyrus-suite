@@ -38,6 +38,9 @@ files_and_groups = {
     "Views/Shared/TeletherapyView.swift": "Views/Shared",
     "Views/Shared/HipaSecurityShieldView.swift": "Views/Shared",
     "Views/Shared/MarketplaceView.swift": "Views/Shared",
+    "Views/Shared/HomeworkTrackerView.swift": "Views/Shared",
+    "Views/Shared/MatchAndBookView.swift": "Views/Shared",
+    "Views/Shared/PeerSupportView.swift": "Views/Shared",
     "Views/Patient/PatientDashboardView.swift": "Views/Patient",
     "Views/Patient/WellnessLoungeView.swift": "Views/Patient",
     "Views/Patient/MindShopView.swift": "Views/Patient"

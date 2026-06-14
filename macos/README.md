@@ -1,6 +1,8 @@
 # 🍏 PsyPyrus macOS Client — Developer Guide
 
-This directory contains the native macOS target for the **PsyPyrus Suite**. To maximize code reuse, the macOS client is compiled using **SwiftUI** and is designed to dynamically import and reference the shared source files from the `/ios` client module.
+This directory contains the native macOS target for the **PsyPyrus Suite**, running as part of the **Papyrus Open Mental Health Intelligence Ecosystem**. 
+
+To maximize code reuse, the macOS client is compiled using **SwiftUI** and is designed to dynamically import and reference the shared source files from the `/ios` client module.
 
 ---
 

@@ -122,7 +122,7 @@ export function SOAPNotesCopilot({
             icon: "fa-file-waveform",
             placeholder: "Paste session transcript, clinical notes draft, or voice dictate to compile a formal medical SOAP note...",
             system: "You are a psychiatric clinical assistant. Convert conversational session transcripts into a formal medical SOAP note. Maintain full clinical clarity and use professional medical vocabularies.",
-            prompt: (text) => `Compile the following transcript/draft into a structured, formal healthcare SOAP note. Include SUBJECTIVE, OBJECTIVE, ASSESSMENT, and PLAN. Suggest matching DSM-5 or ICD-10 diagnostic codes based on symptoms:\n\nTranscript/Notes:\n"${text}"`
+            prompt: (text) => `Compile the following transcript/draft into a structured, formal healthcare SOAP note. Include SUBJECTIVE, OBJECTIVE, ASSESSMENT, and PLAN. Suggest matching DSM-5, ICD-10/11, and SNOMED CT clinical terminology codes based on symptoms, as recommended by NRCeS India. Also map any assessment scores to standard LOINC codes (e.g. PHQ-9 as LOINC 44261-6, GAD-7 as LOINC 70274-6):\n\nTranscript/Notes:\n"${text}"`
         },
         mse: {
             label: "MSE Synthesizer",

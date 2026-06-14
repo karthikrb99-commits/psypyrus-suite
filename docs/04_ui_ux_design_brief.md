@@ -1,6 +1,6 @@
 # Document 04 — UI/UX Design Brief (Visual & Interaction Design Guide)
 
-This document provides visual guidelines, design tokens, responsive breakpoints, and styling specifications to ensure absolute aesthetic consistency across all platforms in the **PsyPyrus Suite**.
+This document provides visual guidelines, design tokens, responsive breakpoints, and styling specifications to ensure absolute aesthetic consistency across all platforms in the **PsyPyrus Suite** operating within the **Papyrus Ecosystem**.
 
 ---
 
@@ -60,7 +60,7 @@ Patients can spend earned MindCoins in the **MindShop** to unlock global styling
 
 *   **System UI & Interface Copy**: **Inter** (sans-serif) or Apple's system font, ensuring readability in small sizes.
 *   **Headers & Section Titles**: **Outfit** or **Geist** to deliver a sleek visual imprint.
-*   **Technical Metrics & Codes**: **Geist Mono** or **JetBrains Mono** (used in HIPAA audit logs, command palettes, and ICD code blocks).
+*   **Technical Metrics & Codes**: **Geist Mono** or **JetBrains Mono** (used in compliance audit logs, command palettes, and ICD code blocks).
 
 ---
 

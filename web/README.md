@@ -1,6 +1,8 @@
 # 💻 PsyPyrus Web Client — Developer Guide
 
-This directory contains the React Web companion application for the **PsyPyrus Suite**, built using **Vite**, **React 18**, and custom **Vanilla CSS** styles. It serves as the primary browser portal for clinicians (practice management EHR, genogram canvas, AI notes compiling) and patients (wellness lounge, daily quests, MindShop rewards).
+This directory contains the React Web companion application for the **PsyPyrus Suite**, operating as part of the **Papyrus Open Mental Health Intelligence Ecosystem**. 
+
+Built using **Vite**, **React 19**, and **Tailwind CSS**, it serves as the primary browser portal for clinicians (practice management EHR, genogram canvas, AI notes compiling) and patients (wellness lounge, daily quests, MindShop rewards).
 
 ---
 
@@ -17,7 +19,7 @@ web/
 └── src/
     ├── main.jsx       # Mounts App component to HTML root DOM
     ├── App.jsx        # Root Layout Router (manages biometric authentication state)
-    ├── style.css      # Core Design System (CSS custom properties, themes, layouts)
+    ├── index.css      # Core Design System (Tailwind definitions, variables, and layouts)
     │
     ├── components/    # Reusable layout and modal components
     │   ├── Header.jsx           # Global status bar (switches persona modes, displays XP/coins)
@@ -35,7 +37,7 @@ web/
     │       └── Marketplace.jsx         # Shop to unlock CRT themes, custom companions
     │
     └── services/      # Service integration modules
-        ├── db.js                # IndexedDB database wrapper and HIPAA logger
+        ├── db.js                # IndexedDB database wrapper and HIPAA/DISHA logger
         ├── dsmDatabase.js       # Structured data arrays for 13 disorders
         ├── diagnostics.js       # Rule-based diagnostic calculation engine
         ├── icdService.js        # WHO ICD-11 search registry API connector
@@ -63,4 +65,4 @@ Open `http://localhost:5173` in your browser.
 
 ## 🎨 Theme Customization
 *   Global themes are dynamically toggled by applying CSS classes to the document body (e.g. `.light-theme`, `.crt-theme`, `.glassmorphic-theme`).
-*   All styles inherit custom properties defined in `src/style.css` (e.g. `--primary`, `--bg-main`).
+*   All styles inherit custom properties defined in `src/index.css` (e.g. `--primary`, `--bg-main`).

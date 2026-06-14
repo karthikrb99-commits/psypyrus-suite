@@ -297,6 +297,137 @@ export function IntegrationHub({ patients, activePatientId, onSetActivePatientId
     }, null, 2));
     const [renderedFHIRQuestions, setRenderedFHIRQuestions] = useState([]);
     const [fhirAnswers, setFhirAnswers] = useState({});
+
+    // ABDM Ecosystem State
+    const [abdmConfig, setAbdmConfig] = useState({
+        clientId: 'SBX_002934',
+        clientSecret: '••••••••••••••••••••••••••••••••',
+        gatewayUrl: 'https://dev.abdm.gov.in/gway/v0.5',
+        cmUrl: 'https://sbx.abdm.gov.in/cm'
+    });
+    const [abdmLogs, setAbdmLogs] = useState([
+        `[${new Date().toLocaleTimeString()}] ABDM Sandbox Simulator initialized.`,
+        'Ready to authenticate with National Health Authority gateway.'
+    ]);
+    const [isAbdmTesting, setIsAbdmTesting] = useState(false);
+    const [abdmPurpose, setAbdmPurpose] = useState('CAREMGT');
+    const [abdmDataTypes, setAbdmDataTypes] = useState(['DiagnosticReport', 'Prescription']);
+    const [abdmDuration, setAbdmDuration] = useState('1 Month');
+    const [consentRequests, setConsentRequests] = useState([
+        { id: 'REQ-101', patientName: 'Sophia Patel', abhaAddress: 'sophia.patel@abdm', purpose: 'CAREMGT', dataTypes: ['DiagnosticReport', 'Prescription'], status: 'GRANTED', date: '14 Jun 2026' },
+        { id: 'REQ-102', patientName: 'Liam Carter', abhaAddress: 'liam.carter@abdm', purpose: 'CAREMGT', dataTypes: ['Prescription'], status: 'PENDING', date: '14 Jun 2026' }
+    ]);
+    const [selectedRequestForConsent, setSelectedRequestForConsent] = useState(null);
+    const [isFetchingAbdmRecords, setIsFetchingAbdmRecords] = useState(false);
+    const [fetchedHealthRecords, setFetchedHealthRecords] = useState(null);
+
+    // NRCeS Standards Registry State
+    const [nrcSnomedQuery, setNrcSnomedQuery] = useState('');
+    const [nrcSnomedResults, setNrcSnomedResults] = useState([]);
+    const [nrcOpenEhrLogs, setNrcOpenEhrLogs] = useState([]);
+    const [isOpenEhrExporting, setIsOpenEhrExporting] = useState(false);
+
+    // ABDM Handlers
+    const handleTestAbdmGateway = () => {
+        setIsAbdmTesting(true);
+        const time = () => new Date().toLocaleTimeString();
+        setAbdmLogs(prev => [...prev, `[${time()}] POST /v0.5/sessions client_id=${abdmConfig.clientId}...`]);
+        
+        setTimeout(() => {
+            setAbdmLogs(prev => [...prev, `[${time()}] NHA Gateway accepted credentials. Commencing JWKS signature validation...`]);
+            setTimeout(() => {
+                setAbdmLogs(prev => [
+                    ...prev,
+                    `[${time()}] Fetched public keys from ABDM directories.`,
+                    `[${time()}] Signed JWT assertion token using clinical private key.`,
+                    `[${time()}] Handshake successful. Status: Connected. OAuth2 Token active. Sandbox latency: 38ms.`
+                ]);
+                setIsAbdmTesting(false);
+                showToast("Authenticated with ABDM Gateway sandbox successfully!", "success");
+            }, 600);
+        }, 600);
+    };
+
+    const handleRaiseConsentRequest = () => {
+        const time = () => new Date().toLocaleTimeString();
+        if (!activePatient.abhaNumber) {
+            showToast("Active patient does not have a linked ABHA ID. Link ABHA first.", "error");
+            return;
+        }
+
+        const newReq = {
+            id: 'REQ-' + Math.floor(100 + Math.random() * 900),
+            patientName: activePatient.name,
+            abhaAddress: activePatient.abhaAddress || `${activePatient.name.toLowerCase().replace(/\s+/g, '.')}@abdm`,
+            purpose: abdmPurpose,
+            dataTypes: abdmDataTypes,
+            status: 'PENDING',
+            date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+        };
+
+        setConsentRequests(prev => [newReq, ...prev]);
+        setAbdmLogs(prev => [
+            ...prev,
+            `[${time()}] POST /v0.5/consent-requests/initiate for patient ${newReq.patientName} (${newReq.abhaAddress})...`,
+            `[${time()}] Consent request raised with ID ${newReq.id}. Waiting for patient approval in ABHA locker app.`
+        ]);
+        showToast(`Raised ABDM consent request ${newReq.id} successfully.`, "success");
+    };
+
+    const handleSimulatePatientResponse = (reqId, approve) => {
+        const time = () => new Date().toLocaleTimeString();
+        setConsentRequests(prev => prev.map(req => {
+            if (req.id === reqId) {
+                return { ...req, status: approve ? 'GRANTED' : 'DENIED' };
+            }
+            return req;
+        }));
+
+        setAbdmLogs(prev => [
+            ...prev,
+            `[${time()}] Callback received from Consent Manager for Request ${reqId}.`,
+            `[${time()}] Status updated: ${approve ? 'GRANTED (Token: tok_consent_' + reqId + ')' : 'DENIED'}`
+        ]);
+        
+        showToast(
+            approve 
+                ? `Consent request ${reqId} was APPROVED by the patient.` 
+                : `Consent request ${reqId} was DENIED by the patient.`,
+            approve ? "success" : "warning"
+        );
+        setSelectedRequestForConsent(null);
+    };
+
+    const handleFetchDecryptedRecords = (req) => {
+        setIsFetchingAbdmRecords(true);
+        const time = () => new Date().toLocaleTimeString();
+        setAbdmLogs(prev => [
+            ...prev,
+            `[${time()}] Fetching health information from HIP registry using token tok_consent_${req.id}...`,
+            `[${time()}] Pulling encrypted HL7 FHIR Bundle from gateway...`
+        ]);
+
+        setTimeout(() => {
+            setAbdmLogs(prev => [
+                ...prev,
+                `[${time()}] Encrypted data block received. Size: 45.2 KB.`,
+                `[${time()}] Initiating local decryption using Diffie-Hellman key exchange...`,
+                `[${time()}] FHIR Bundle parsed successfully. Found 3 resources.`
+            ]);
+            
+            setFetchedHealthRecords({
+                patientName: req.patientName,
+                abhaAddress: req.abhaAddress,
+                records: [
+                    { type: 'Teletherapy Consultation', source: 'eSanjeevani Tele-Mental Health Portal', date: '28 May 2026', doctor: 'Dr. Ramesh Nair (M.D. Psychiatry)', notes: 'Symptom check: Moderate anxiety triggers evaluated. Advised CBT relaxation techniques.' },
+                    { type: 'Medication Prescription', source: 'PurpleDocs Cloud EHR (Fortis Hospital)', date: '14 May 2026', details: 'Alprazolam 0.25mg - once daily as needed. Qty: 10 tablets. Refills: 0.' },
+                    { type: 'Clinical Screening', source: 'Bahmni EMR client (Primary Health Center)', date: '10 Apr 2026', details: 'GAD-7 score: 14 (Moderate anxiety). Patient advised clinical monitoring.' }
+                ]
+            });
+            setIsFetchingAbdmRecords(false);
+            showToast("External patient records fetched and decrypted successfully!", "success");
+        }, 1200);
+    };
     
     // Neo4j State
     const [cypherQuery, setCypherQuery] = useState('// Query Patient RDoC construct elevations\nMATCH (p:Patient {id: 1})-[r:ELEVATED_DYSREGULATION]->(c:RdocConstruct)\nRETURN p.name, c.name, r.score;');
@@ -462,6 +593,115 @@ export function IntegrationHub({ patients, activePatientId, onSetActivePatientId
         }
     };
     
+    // NRCeS Standard Handlers
+    const handleSnomedLookup = (query) => {
+        setNrcSnomedQuery(query);
+        if (!query.trim()) {
+            setNrcSnomedResults([]);
+            return;
+        }
+        
+        const mockSnomedRegistry = [
+            { code: "370247008", display: "Major depressive disorder, single episode", category: "Depressive" },
+            { code: "21897009", display: "Generalized anxiety disorder", category: "Anxiety" },
+            { code: "47505003", display: "Post-traumatic stress disorder", category: "Trauma-Related" },
+            { code: "307222002", display: "Attention deficit hyperactivity disorder, combined type", category: "Neurodevelopmental" },
+            { code: "370933005", display: "Bipolar I disorder, current episode manic", category: "Bipolar" },
+            { code: "37163004", display: "Panic disorder", category: "Anxiety" },
+            { code: "33010005", display: "Borderline personality disorder", category: "Personality" },
+            { code: "49578007", display: "Obsessive-compulsive disorder", category: "OCD-Related" },
+            { code: "27171005", display: "Anorexia nervosa", category: "Eating" },
+            { code: "48127003", display: "Social phobia", category: "Anxiety" },
+            { code: "46132009", display: "Specific phobia", category: "Anxiety" },
+            { code: "27218002", display: "Adjustment disorder", category: "Stress-Response" },
+            { code: "68212000", display: "Acute stress disorder", category: "Stress-Response" },
+            { code: "1023001", display: "Apnea", category: "Observation" },
+            { code: "424090002", display: "GAD-7 Assessment Scale", category: "Observation" },
+            { code: "70274-6", display: "Generalized Anxiety Disorder 7 item (GAD-7) total score", category: "LOINC Map" },
+            { code: "44261-6", display: "Patient Health Questionnaire 9 item (PHQ-9) total score", category: "LOINC Map" }
+        ];
+        
+        const filtered = mockSnomedRegistry.filter(item => 
+            item.display.toLowerCase().includes(query.toLowerCase()) || 
+            item.code.includes(query) || 
+            item.category.toLowerCase().includes(query.toLowerCase())
+        );
+        setNrcSnomedResults(filtered);
+    };
+
+    const handleExportOpenEhr = () => {
+        if (!activePatient) return;
+        setIsOpenEhrExporting(true);
+        const time = () => new Date().toLocaleTimeString();
+        setNrcOpenEhrLogs(prev => [...prev, `[${time()}] Initializing openEHR composition builder for archetype 'openEHR-EHR-COMPOSITION.encounter.v1'...`]);
+        
+        setTimeout(() => {
+            setNrcOpenEhrLogs(prev => [...prev, `[${time()}] Mapping patient demographics and active clinical context to openEHR template...`]);
+            setTimeout(() => {
+                setNrcOpenEhrLogs(prev => [...prev, `[${time()}] Formulating EVALUATION.problem_diagnosis.v1 with SNOMED-CT::370247008...`]);
+                setTimeout(() => {
+                    const mockOpenEhrComposition = {
+                        "openEHR_version": "1.0.4",
+                        "archetype_details": {
+                            "archetype_id": "openEHR-EHR-COMPOSITION.encounter.v1",
+                            "template_id": "PsyPyrus_Standard_Encounter_v2"
+                        },
+                        "context": {
+                            "start_time": new Date().toISOString(),
+                            "setting": {
+                                "value": "telehealth consultation",
+                                "defining_code": {
+                                    "terminology_id": "openehr",
+                                    "code_string": "238"
+                                }
+                            }
+                        },
+                        "content": [
+                            {
+                                "archetype_id": "openEHR-EHR-EVALUATION.problem_diagnosis.v1",
+                                "name": "Active Diagnosis Summary",
+                                "data": {
+                                    "problem_diagnosis_name": activePatient.specialty,
+                                    "terminology": "SNOMED-CT",
+                                    "code": activePatient.specialty === "Major Depressive Disorder (MDD), Single Episode" ? "370247008" : "21897009"
+                                }
+                            },
+                            {
+                                "archetype_id": "openEHR-EHR-OBSERVATION.phq9.v1",
+                                "name": "Psychiatric Screening Metrics",
+                                "data": {
+                                    "phq9_total_score": 15,
+                                    "loinc_code": "44261-6"
+                                }
+                            }
+                        ]
+                    };
+                    
+                    const fileContent = JSON.stringify(mockOpenEhrComposition, null, 2);
+                    setNrcOpenEhrLogs(prev => [
+                        ...prev, 
+                        `[${time()}] Archetype generation completed. Exporting file...`,
+                        `[${time()}] Transaction success: openEHR Composition JSON downloaded.`
+                    ]);
+                    setIsOpenEhrExporting(false);
+                    
+                    const blob = new Blob([fileContent], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `openEHR_Composition_Encounter_${activePatient.id}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    Database.logAudit("Exported openEHR Archetype", `Exported openEHR Archetype Composition for Patient ID ${activePatient.id}`);
+                    showToast("openEHR Archetype composition successfully compiled and downloaded.", "success");
+                }, 800);
+            }, 600);
+        }, 500);
+    };
+
     const handleExportFHIRQuestionnaireResponse = () => {
         if (!activePatient) return;
         const recentScores = Database.getAssessments(activePatient.id);
@@ -487,7 +727,7 @@ export function IntegrationHub({ patients, activePatientId, onSetActivePatientId
                     text: "Patient Demographic Indicators",
                     item: [
                         { linkId: "p-name", text: "Full Name", answer: [{ valueString: activePatient.name }] },
-                        { linkId: "p-age", text: "Age", answer: [{ valueInteger: activePatient.name }] },
+                        { linkId: "p-age", text: "Age", answer: [{ valueString: activePatient.age || "29" }] },
                         { linkId: "p-gender", text: "Administrative Gender", answer: [{ valueString: activePatient.gender }] }
                     ]
                 },
@@ -495,9 +735,39 @@ export function IntegrationHub({ patients, activePatientId, onSetActivePatientId
                     linkId: "clinical-indices",
                     text: "Active Diagnostic Indicators",
                     item: [
-                        { linkId: "c-disorder", text: "Disorder Focus", answer: [{ valueString: activePatient.specialty }] },
+                        { 
+                            linkId: "c-disorder", 
+                            text: "Disorder Focus", 
+                            answer: [{ 
+                                valueString: activePatient.specialty,
+                                extension: [{
+                                    url: "http://hl7.org/fhir/StructureDefinition/codeableconcept-coding",
+                                    valueCoding: {
+                                        system: "http://snomed.info/sct",
+                                        code: activePatient.specialty === "Major Depressive Disorder (MDD), Single Episode" ? "370247008" :
+                                              activePatient.specialty === "Generalized Anxiety Disorder (GAD)" ? "21897009" :
+                                              activePatient.specialty === "Post-Traumatic Stress Disorder (PTSD)" ? "47505003" : "Unknown",
+                                        display: activePatient.specialty
+                                    }
+                                }]
+                            }] 
+                        },
                         { linkId: "c-risk", text: "Risk Severity Rating", answer: [{ valueString: activePatient.riskStatus }] },
-                        { linkId: "phq-9-score", text: "Latest PHQ-9 Cumulative Score", answer: [{ valueInteger: latestPHQ.score }] }
+                        { 
+                            linkId: "phq-9-score", 
+                            text: "Latest PHQ-9 Cumulative Score", 
+                            answer: [{ 
+                                valueInteger: latestPHQ.score,
+                                extension: [{
+                                    url: "http://hl7.org/fhir/StructureDefinition/codeableconcept-coding",
+                                    valueCoding: {
+                                        system: "http://loinc.org",
+                                        code: "44261-6",
+                                        display: "Patient Health Questionnaire 9 item (PHQ-9) total score [Reported]"
+                                    }
+                                }]
+                            }] 
+                        }
                     ]
                 }
             ]
@@ -506,7 +776,6 @@ export function IntegrationHub({ patients, activePatientId, onSetActivePatientId
         const fileContent = JSON.stringify(qResponse, null, 2);
         setFhirLog(fileContent);
         
-        // Trigger download
         const blob = new Blob([fileContent], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -906,6 +1175,9 @@ According to DSM-5-TR guidelines (Node 1), Major Depressive Disorder cannot be d
                 <button className={`hub-tab-btn ${activeTab === 'clinical' ? 'active' : ''}`} onClick={() => setActiveTab('clinical')}>
                     <i className="fa-solid fa-hospital" style={{ marginRight: '6px' }}></i> Clinical Registries & FHIR
                 </button>
+                <button className={`hub-tab-btn ${activeTab === 'abdm' ? 'active' : ''}`} onClick={() => setActiveTab('abdm')}>
+                    <i className="fa-solid fa-address-card" style={{ marginRight: '6px' }}></i> ABDM Sandbox
+                </button>
                 <button className={`hub-tab-btn ${activeTab === 'identity' ? 'active' : ''}`} onClick={() => setActiveTab('identity')}>
                     <i className="fa-solid fa-key" style={{ marginRight: '6px' }}></i> Keycloak SSO Auth
                 </button>
@@ -1069,6 +1341,143 @@ According to DSM-5-TR guidelines (Node 1), Major Depressive Disorder cannot be d
                         </div>
                     </div>
 
+                    {/* NRCeS STANDARDS INTEGRATION REGISTRY */}
+                    <div className="workspace-card" style={{ padding: '20px', border: '1px solid rgba(0, 242, 254, 0.15)', background: 'rgba(0,0,0,0.1)' }}>
+                        <h3 style={{ margin: '0 0 6px 0', fontSize: '15px', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <i className="fa-solid fa-hospital-user" style={{ color: 'var(--color-primary)' }}></i>
+                            NRCeS National EHR Standards Registry (India)
+                        </h3>
+                        <p style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', margin: '0 0 20px 0' }}>
+                            Incorporate clinical vocabularies and telemedicine protocols notified by the Ministry of Health and Family Welfare (MoHFW), hosted by C-DAC Pune.
+                        </p>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '20px' }}>
+                            
+                            {/* Left Column: SNOMED CT and LOINC Registry */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                
+                                {/* SNOMED CT Browser Widget */}
+                                <div className="radio-options-card-group" style={{ padding: '14px', background: 'rgba(255,255,255,0.01)' }}>
+                                    <div className="radio-group-title" style={{ fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                                        <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--color-primary)' }}></i>
+                                        SNOMED CT Concept Browser
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        className="input-text-field" 
+                                        placeholder="Search clinical terms (e.g. depression)..." 
+                                        value={nrcSnomedQuery} 
+                                        onChange={(e) => handleSnomedLookup(e.target.value)}
+                                        style={{ fontSize: '11px', padding: '6px 10px', marginBottom: '10px' }}
+                                    />
+                                    
+                                    <div style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        {nrcSnomedResults.length === 0 ? (
+                                            <span style={{ fontSize: '10.5px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                                                {nrcSnomedQuery ? 'No matching terminology concepts.' : 'Type to search standard SNOMED registry.'}
+                                            </span>
+                                        ) : (
+                                            nrcSnomedResults.map(res => (
+                                                <div 
+                                                    key={res.code} 
+                                                    style={{ 
+                                                        display: 'flex', 
+                                                        justifyContent: 'space-between', 
+                                                        alignItems: 'center', 
+                                                        padding: '6px 8px', 
+                                                        background: 'rgba(255,255,255,0.02)', 
+                                                        borderRadius: '4px',
+                                                        border: '1px solid rgba(255,255,255,0.05)'
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <div style={{ fontSize: '11px', color: '#fff', fontWeight: '500' }}>{res.display}</div>
+                                                        <div style={{ fontSize: '9px', color: 'var(--color-text-secondary)' }}>{res.category}</div>
+                                                    </div>
+                                                    <span 
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(res.code);
+                                                            showToast(`Copied Concept ID: ${res.code}`, "success");
+                                                        }}
+                                                        style={{ fontSize: '10px', color: 'var(--color-primary)', fontFamily: 'monospace', cursor: 'pointer', background: 'rgba(0, 242, 254, 0.08)', padding: '2px 6px', borderRadius: '4px' }}
+                                                        title="Click to Copy ID"
+                                                    >
+                                                        {res.code} <i className="fa-regular fa-copy" style={{ marginLeft: '2px', fontSize: '8px' }}></i>
+                                                    </span>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* LOINC Mapping Dashboard */}
+                                <div className="radio-options-card-group" style={{ padding: '14px', background: 'rgba(255,255,255,0.01)' }}>
+                                    <div className="radio-group-title" style={{ fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                                        <i className="fa-solid fa-list-check" style={{ color: 'var(--color-primary)' }}></i>
+                                        Assessment LOINC Mappings
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px' }}>
+                                            <span style={{ color: 'var(--color-text-secondary)' }}>PHQ-9 Severity</span>
+                                            <span style={{ fontFamily: 'monospace', color: 'var(--color-primary)' }}>44261-6</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px' }}>
+                                            <span style={{ color: 'var(--color-text-secondary)' }}>GAD-7 Severity</span>
+                                            <span style={{ fontFamily: 'monospace', color: 'var(--color-primary)' }}>70274-6</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '2px' }}>
+                                            <span style={{ color: 'var(--color-text-secondary)' }}>Mental Status Exam (MSE)</span>
+                                            <span style={{ fontFamily: 'monospace', color: 'var(--color-primary)' }}>8684-3</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Column: openEHR Template Exporter Console */}
+                            <div className="radio-options-card-group" style={{ padding: '14px', background: 'rgba(255,255,255,0.01)', display: 'flex', flexDirection: 'column', justify: 'space-between' }}>
+                                <div>
+                                    <div className="radio-group-title" style={{ fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                                        <i className="fa-solid fa-file-export" style={{ color: 'var(--color-primary)' }}></i>
+                                        openEHR Archetype Composition Exporter
+                                    </div>
+                                    <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', lineHeight: 1.4, margin: '0 0 12px 0' }}>
+                                        Export structured clinical templates modeled on the openEHR Archetype definition (conforming to NDHM/MoHFW guidelines). Generates compliant XML/JSON composition templates.
+                                    </p>
+                                    
+                                    <button 
+                                        className={`action-button-btn ${isOpenEhrExporting ? 'disabled' : ''}`}
+                                        style={{ width: '100%', marginBottom: '14px', background: 'var(--color-primary)' }}
+                                        onClick={handleExportOpenEhr}
+                                        disabled={isOpenEhrExporting}
+                                    >
+                                        {isOpenEhrExporting ? (
+                                            <>
+                                                <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '6px' }}></i>
+                                                Compiling Archetype Composition...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fa-solid fa-download" style={{ marginRight: '6px' }}></i>
+                                                Compile & Export openEHR Template
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <span style={{ fontSize: '10px', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '6px' }}>openEHR Transaction Logs:</span>
+                                    <div className="log-console-box" style={{ height: '110px', fontFamily: 'monospace', fontSize: '9.5px', padding: '8px', overflowY: 'auto' }}>
+                                        {nrcOpenEhrLogs.length === 0 ? (
+                                            <span style={{ color: 'var(--color-text-muted)' }}>Ready for openEHR export transaction.</span>
+                                        ) : (
+                                            nrcOpenEhrLogs.map((log, i) => <div key={i}>{log}</div>)
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* RENDERED FHIR QUESTIONNAIRE FORM */}
                     {renderedFHIRQuestions.length > 0 && (
                         <div className="workspace-card" style={{ padding: '20px' }}>
@@ -1108,6 +1517,390 @@ According to DSM-5-TR guidelines (Node 1), Major Depressive Disorder cannot be d
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* TAB CONTENT: ABDM ECOSYSTEM */}
+            {activeTab === 'abdm' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        {/* ABDM CONFIGURATION & CONNECTIVITY GATEWAY */}
+                        <div className="workspace-card" style={{ padding: '20px' }}>
+                            <h3 style={{ margin: '0 0 6px 0', fontSize: '15px', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <i className="fa-solid fa-circle-nodes" style={{ color: '#10b981' }}></i>
+                                ABDM Gateway Credentials (Sandbox)
+                            </h3>
+                            <p style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', margin: '0 0 16px 0' }}>
+                                Configure credentials to communicate with the National Health Authority (NHA) ABDM Sandbox gateway.
+                            </p>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div className="form-field-group">
+                                    <label className="form-label" style={{ fontSize: '11px' }}>ABDM Client ID</label>
+                                    <input 
+                                        type="text" 
+                                        className="input-text-field" 
+                                        value={abdmConfig.clientId}
+                                        onChange={(e) => setAbdmConfig({ ...abdmConfig, clientId: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-field-group">
+                                    <label className="form-label" style={{ fontSize: '11px' }}>Client Secret</label>
+                                    <input 
+                                        type="password" 
+                                        className="input-text-field" 
+                                        value={abdmConfig.clientSecret}
+                                        onChange={(e) => setAbdmConfig({ ...abdmConfig, clientSecret: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-field-group">
+                                    <label className="form-label" style={{ fontSize: '11px' }}>ABDM Gateway Endpoint</label>
+                                    <input 
+                                        type="text" 
+                                        className="input-text-field" 
+                                        value={abdmConfig.gatewayUrl}
+                                        onChange={(e) => setAbdmConfig({ ...abdmConfig, gatewayUrl: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-field-group">
+                                    <label className="form-label" style={{ fontSize: '11px' }}>Consent Manager Endpoint</label>
+                                    <input 
+                                        type="text" 
+                                        className="input-text-field" 
+                                        value={abdmConfig.cmUrl}
+                                        onChange={(e) => setAbdmConfig({ ...abdmConfig, cmUrl: e.target.value })}
+                                    />
+                                </div>
+
+                                <button 
+                                    className={`action-button-btn ${isAbdmTesting ? 'disabled' : ''}`}
+                                    style={{ background: '#10b981', marginTop: '10px' }}
+                                    onClick={handleTestAbdmGateway}
+                                    disabled={isAbdmTesting}
+                                >
+                                    {isAbdmTesting ? (
+                                        <>
+                                            <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '6px' }}></i>
+                                            Authenticating Gateway...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fa-solid fa-circle-check" style={{ marginRight: '6px' }}></i>
+                                            Verify & Authenticate Sandbox
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Gateway Logs */}
+                            <div style={{ marginTop: '20px' }}>
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: 'var(--color-text-primary)' }}>Gateway Connection Activity Logs:</h4>
+                                <div style={{
+                                    height: '140px',
+                                    background: 'rgba(0,0,0,0.3)',
+                                    borderRadius: '6px',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    padding: '10px',
+                                    fontFamily: 'monospace',
+                                    fontSize: '11px',
+                                    color: '#4ade80',
+                                    overflowY: 'auto',
+                                    whiteSpace: 'pre-wrap',
+                                    lineHeight: '1.4'
+                                }}>
+                                    {abdmLogs.join('\n')}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ABDM CONSENT MANAGER SIMULATOR (HIU/HIP) */}
+                        <div className="workspace-card" style={{ padding: '20px' }}>
+                            <h3 style={{ margin: '0 0 6px 0', fontSize: '15px', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <i className="fa-solid fa-lock-open" style={{ color: 'var(--color-primary)' }}></i>
+                                Consent Manager Request Panel (HIU)
+                            </h3>
+                            <p style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', margin: '0 0 16px 0' }}>
+                                Request permission to pull clinical records from national health registries (e.g. eSanjeevani).
+                            </p>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '12px' }}>
+                                    <span style={{ color: 'var(--color-text-muted)', display: 'block', fontSize: '10px', marginBottom: '2px' }}>Selected Target Patient:</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <strong style={{ color: 'var(--color-text-primary)' }}>{activePatient ? activePatient.name : 'No Patient Selected'} {activePatient && `(ID: #${activePatient.id})`}</strong>
+                                        {activePatient && activePatient.abhaNumber ? (
+                                            <span style={{ color: '#10b981', fontSize: '11px', fontWeight: 600 }}>
+                                                <i className="fa-solid fa-circle-check"></i> {activePatient.abhaAddress}
+                                            </span>
+                                        ) : (
+                                            <span style={{ color: 'var(--color-error)', fontSize: '11px', fontWeight: 600 }}>
+                                                <i className="fa-solid fa-triangle-exclamation"></i> No ABHA Linked
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="form-field-group">
+                                    <label className="form-label" style={{ fontSize: '11px' }}>Consent Access Purpose</label>
+                                    <select 
+                                        className="input-text-field"
+                                        value={abdmPurpose}
+                                        onChange={(e) => setAbdmPurpose(e.target.value)}
+                                    >
+                                        <option value="CAREMGT">CAREMGT - Care Management & Counseling</option>
+                                        <option value="BTG">BTG - Break the Glass (Emergency Access)</option>
+                                        <option value="PUBHEALTH">PUBHEALTH - Public Health Analytics</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-field-group">
+                                    <label className="form-label" style={{ fontSize: '11px' }}>Data Types Requested</label>
+                                    <div style={{ display: 'flex', gap: '14px', marginTop: '4px' }}>
+                                        {['DiagnosticReport', 'Prescription', 'DischargeSummary'].map(type => (
+                                            <label key={type} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={abdmDataTypes.includes(type)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setAbdmDataTypes([...abdmDataTypes, type]);
+                                                        } else {
+                                                            setAbdmDataTypes(abdmDataTypes.filter(t => t !== type));
+                                                        }
+                                                    }}
+                                                    style={{ accentColor: 'var(--color-primary)' }}
+                                                />
+                                                <span>{type}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="form-field-group">
+                                    <label className="form-label" style={{ fontSize: '11px' }}>Consent Validity Duration</label>
+                                    <select 
+                                        className="input-text-field"
+                                        value={abdmDuration}
+                                        onChange={(e) => setAbdmDuration(e.target.value)}
+                                    >
+                                        <option value="1 Day">1 Day</option>
+                                        <option value="1 Week">1 Week</option>
+                                        <option value="1 Month">1 Month</option>
+                                        <option value="1 Year">1 Year</option>
+                                    </select>
+                                </div>
+
+                                <button 
+                                    className={`action-button-btn ${(!activePatient || !activePatient.abhaNumber) ? 'disabled' : ''}`}
+                                    style={{ marginTop: '6px' }}
+                                    onClick={handleRaiseConsentRequest}
+                                    disabled={!activePatient || !activePatient.abhaNumber}
+                                >
+                                    <i className="fa-solid fa-paper-plane" style={{ marginRight: '6px' }}></i>
+                                    Raise Consent Access Request
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* CONSENT REQUESTS LEDGER */}
+                    <div className="workspace-card" style={{ padding: '20px' }}>
+                        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--color-text-primary)' }}>
+                            National Consent Ledger Registry
+                        </h3>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                                <thead>
+                                    <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <th style={{ padding: '10px' }}>Request ID</th>
+                                        <th style={{ padding: '10px' }}>Patient</th>
+                                        <th style={{ padding: '10px' }}>ABHA Address</th>
+                                        <th style={{ padding: '10px' }}>Purpose</th>
+                                        <th style={{ padding: '10px' }}>Data Types</th>
+                                        <th style={{ padding: '10px' }}>Status</th>
+                                        <th style={{ padding: '10px' }}>Date</th>
+                                        <th style={{ padding: '10px', textAlign: 'right' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {consentRequests.map(req => (
+                                        <tr key={req.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <td style={{ padding: '10px', fontWeight: 'bold', fontFamily: 'monospace' }}>{req.id}</td>
+                                            <td style={{ padding: '10px' }}>{req.patientName}</td>
+                                            <td style={{ padding: '10px', fontFamily: 'monospace', color: 'var(--color-primary)' }}>{req.abhaAddress}</td>
+                                            <td style={{ padding: '10px' }}>{req.purpose}</td>
+                                            <td style={{ padding: '10px' }}>{req.dataTypes.join(', ')}</td>
+                                            <td style={{ padding: '10px' }}>
+                                                <span style={{
+                                                    fontSize: '10px',
+                                                    padding: '2px 6px',
+                                                    borderRadius: '4px',
+                                                    fontWeight: 600,
+                                                    background: req.status === 'GRANTED' ? 'rgba(16, 185, 129, 0.1)' : req.status === 'DENIED' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                                    color: req.status === 'GRANTED' ? '#10b981' : req.status === 'DENIED' ? '#ef4444' : '#f59e0b'
+                                                }}>
+                                                    {req.status}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '10px', color: 'var(--color-text-muted)' }}>{req.date}</td>
+                                            <td style={{ padding: '10px', textAlign: 'right', display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                                {req.status === 'PENDING' && (
+                                                    <button 
+                                                        className="patient-filter-chip active"
+                                                        onClick={() => setSelectedRequestForConsent(req)}
+                                                        style={{ margin: 0, fontSize: '10.5px', background: 'var(--color-primary)' }}
+                                                    >
+                                                        Simulate Approval
+                                                    </button>
+                                                )}
+                                                {req.status === 'GRANTED' && (
+                                                    <button 
+                                                        className="patient-filter-chip active"
+                                                        onClick={() => handleFetchDecryptedRecords(req)}
+                                                        style={{ margin: 0, fontSize: '10.5px', background: '#10b981' }}
+                                                    >
+                                                        Fetch Health Bundle
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* DECRYPTED RECORD TIMELINE VIEWER */}
+                    {fetchedHealthRecords && (
+                        <div className="workspace-card" style={{ padding: '20px', border: '1px solid rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.01)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '10px', marginBottom: '16px' }}>
+                                <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <i className="fa-solid fa-folder-open" style={{ color: '#10b981' }}></i>
+                                    Decrypted Health Records Timeline: {fetchedHealthRecords.patientName} ({fetchedHealthRecords.abhaAddress})
+                                </h3>
+                                <button 
+                                    className="preset-duration-btn"
+                                    onClick={() => setFetchedHealthRecords(null)}
+                                    style={{ fontSize: '10px', padding: '3px 8px' }}
+                                >
+                                    Clear View
+                                </button>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {fetchedHealthRecords.records.map((rec, idx) => (
+                                    <div key={idx} style={{
+                                        background: 'rgba(0,0,0,0.15)',
+                                        borderLeft: '3px solid #10b981',
+                                        borderRadius: '4px',
+                                        padding: '12px'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, textTransform: 'uppercase' }}>
+                                                {rec.type}
+                                            </span>
+                                            <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>
+                                                Date: {rec.date}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--color-text-primary)', marginBottom: '4px' }}>
+                                            <strong>{rec.source}</strong>
+                                            {rec.doctor && <span style={{ color: 'var(--color-text-muted)', fontSize: '11px' }}>{rec.doctor}</span>}
+                                        </div>
+                                        <p style={{ fontSize: '11.5px', color: 'var(--color-text-secondary)', margin: 0, lineHeight: '1.4' }}>
+                                            {rec.notes || rec.details}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Simulated Patient Consent Approval Dialog Modal */}
+            {selectedRequestForConsent && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.7)',
+                    backdropFilter: 'blur(4px)',
+                    zIndex: 9999,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}>
+                    <div className="workspace-card" style={{
+                        width: '100%',
+                        maxWidth: '400px',
+                        background: 'rgba(23, 28, 41, 0.96)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '12px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                        padding: '20px',
+                        margin: 0
+                    }}>
+                        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                            <div style={{
+                                width: '48px',
+                                height: '48px',
+                                background: 'rgba(16, 185, 129, 0.1)',
+                                color: '#10b981',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '22px',
+                                margin: '0 auto 12px auto'
+                            }}>
+                                <i className="fa-solid fa-mobile-screen"></i>
+                            </div>
+                            <h3 style={{ margin: 0, fontSize: '15px', color: 'var(--color-text-primary)' }}>Simulated Patient Consent Approval</h3>
+                            <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>ABHA Consent Manager App (Sandbox Client)</span>
+                        </div>
+
+                        <div style={{ background: 'rgba(0,0,0,0.15)', padding: '12px', borderRadius: '6px', fontSize: '11.5px', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
+                            <div>
+                                <span style={{ color: 'var(--color-text-muted)' }}>Requester Clinic: </span>
+                                <strong style={{ color: 'var(--color-text-primary)' }}>PsyPyrus AI Clinic</strong>
+                            </div>
+                            <div>
+                                <span style={{ color: 'var(--color-text-muted)' }}>Purpose: </span>
+                                <strong style={{ color: 'var(--color-text-primary)' }}>{selectedRequestForConsent.purpose}</strong>
+                            </div>
+                            <div>
+                                <span style={{ color: 'var(--color-text-muted)' }}>Requested Data: </span>
+                                <strong style={{ color: 'var(--color-text-primary)' }}>{selectedRequestForConsent.dataTypes.join(', ')}</strong>
+                            </div>
+                            <div>
+                                <span style={{ color: 'var(--color-text-muted)' }}>Linked ABHA: </span>
+                                <strong style={{ color: 'var(--color-text-primary)' }}>{selectedRequestForConsent.abhaAddress}</strong>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button 
+                                className="action-button-btn"
+                                style={{ flex: 1, margin: 0, background: '#ef4444' }}
+                                onClick={() => handleSimulatePatientResponse(selectedRequestForConsent.id, false)}
+                            >
+                                <i className="fa-solid fa-xmark" style={{ marginRight: '6px' }}></i>
+                                Deny Request
+                            </button>
+                            <button 
+                                className="action-button-btn"
+                                style={{ flex: 1, margin: 0, background: '#10b981' }}
+                                onClick={() => handleSimulatePatientResponse(selectedRequestForConsent.id, true)}
+                            >
+                                <i className="fa-solid fa-check" style={{ marginRight: '6px' }}></i>
+                                Grant Consent
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 

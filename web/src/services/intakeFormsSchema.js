@@ -16,6 +16,8 @@ export const INTAKE_FORMS_SCHEMAS = {
                 title: "Personal Demographics",
                 fields: [
                     { id: "name", label: "Full Name (Last, First, Middle Initial)", type: "text", required: true, prefill: "name" },
+                    { id: "abha_number", label: "ABHA Number", type: "text", placeholder: "e.g., 91-1234-5678-9012" },
+                    { id: "abha_address", label: "ABHA Address", type: "text", placeholder: "e.g., name@abdm" },
                     { id: "parent_guardian", label: "Name of parent or guardian (if minor)", type: "text" },
                     { id: "birth_date", label: "Birth Date", type: "date", required: true },
                     { id: "age", label: "Age", type: "number", required: true, prefill: "age" },
