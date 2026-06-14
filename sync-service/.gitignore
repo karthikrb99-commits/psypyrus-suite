@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+firebase-service-account.json
+*.pem
+*.key
+prisma/migrations/
+coverage/

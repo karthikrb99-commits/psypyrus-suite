@@ -1382,8 +1382,84 @@ export class Database {
         this._cache.clear();
         this.init();
     }
+
+    // --- Cloud Sync (Offline-First → Server) ---
+
+    /**
+     * Syncs all local data to the PsyPyrus Sync Service.
+     * Implements the delta payload format from docs/05_backend_schema.md.
+     *
+     * @param {string} idToken - Firebase Auth ID token for the current user
+     * @param {string} [syncApiUrl] - Sync service base URL (defaults to env or localhost)
+     * @returns {Promise<{ accepted, created, conflicts, errors, server_timestamp }>}
+     */
+    static async syncToServer(idToken, syncApiUrl = null) {
+        const SYNC_URL = syncApiUrl
+            || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SYNC_API_URL)
+            || 'http://localhost:3001';
+
+        // Collect all local data as deltas
+        const patients = this._readRaw(STORAGE_KEYS.PATIENTS);
+        const appointments = this._readRaw(STORAGE_KEYS.APPOINTMENTS);
+        const clinicalNotes = this._readRaw(STORAGE_KEYS.CLINICAL_NOTES);
+        const assessments = this._readRaw(STORAGE_KEYS.ASSESSMENTS);
+        const moodLogs = this._readRaw(STORAGE_KEYS.MOOD_LOGS);
+        const homework = this._readRaw(STORAGE_KEYS.HOMEWORK);
+
+        // Add last_modified field required by LWW protocol
+        const toDeltas = (items) =>
+            items.map((item) => ({
+                ...item,
+                last_modified: Math.floor((item.registrationDate || item.date || item.timestamp || Date.now()) / 1000),
+            }));
+
+        const payload = {
+            sync_timestamp: Math.floor(Date.now() / 1000),
+            client_device: `Web_${navigator?.userAgent?.split(' ').pop() || 'Browser'}`,
+            deltas: {
+                patients: toDeltas(patients),
+                appointments: toDeltas(appointments),
+                clinical_notes: toDeltas(clinicalNotes),
+                assessments: toDeltas(assessments),
+                mood_logs: toDeltas(moodLogs),
+                homework_tasks: toDeltas(homework),
+            },
+        };
+
+        Logger.info('Database', `Syncing ${patients.length} patients and ${appointments.length} appointments to server...`);
+
+        try {
+            const response = await fetch(`${SYNC_URL}/sync`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(`Sync failed: ${response.status} ${errorBody.error || response.statusText}`);
+            }
+
+            const result = await response.json();
+
+            Logger.info('Database', `Sync complete. Accepted: ${JSON.stringify(result.accepted)}`);
+
+            if (result.conflicts && Object.keys(result.conflicts).length > 0) {
+                Logger.warn('Database', `Sync conflicts detected: ${JSON.stringify(result.conflicts)}`);
+            }
+
+            return result;
+        } catch (err) {
+            Logger.error('Database', `Sync error: ${err.message}`);
+            throw err;
+        }
+    }
 }
 
 // Initialize database on import
 Database.init();
 window.PsyPyrusDatabase = Database;
+
