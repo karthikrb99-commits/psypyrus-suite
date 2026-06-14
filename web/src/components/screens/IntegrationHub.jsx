@@ -1,13 +1,262 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Database } from '../../services/db';
 import { useToast } from '../ToastProvider';
 import { HitopService } from '../../services/hitopService';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function IntegrationHub({ patients, activePatientId, onSetActivePatientId }) {
     const { showToast } = useToast();
     
     // Active Tab state
-    const [activeTab, setActiveTab] = useState('clinical'); // 'clinical', 'identity', 'graphs', 'telehealth', 'forms', 'analytics', 'ai'
+    const [activeTab, setActiveTab] = useState('clinical'); // 'clinical', 'identity', 'graphs', 'telehealth', 'forms', 'analytics', 'ai', 'registry', 'architecture'
+
+    // --- Distributed Systems & DB State ---
+    const [dbCacheStats, setDbCacheStats] = useState({ hits: 0, misses: 0, evictions: 0 });
+    const [dbQueryPlan, setDbQueryPlan] = useState({ query: '', strategy: 'No queries run', durationMs: 0 });
+    const [dbRateLimitTokens, setDbRateLimitTokens] = useState(15);
+    const [dbTxLogs, setDbTxLogs] = useState([]);
+    const [dbQueue, setDbQueue] = useState([]);
+    const [dbDLQ, setDbDLQ] = useState([]);
+    const [dbForceSyncFail, setDbForceSyncFail] = useState(localStorage.getItem('psypyrus_force_sync_fail') === 'true');
+    const [activeArchitectureSubTab, setActiveArchitectureSubTab] = useState('db-ops'); // 'db-ops', 'acid', 'messaging'
+    const [idempotencyKeyInput, setIdempotencyKeyInput] = useState('pay-consultation-' + Math.random().toString(36).substr(2, 9));
+    const [isSimulatingPool, setIsSimulatingPool] = useState(false);
+    const [activeConnections, setActiveConnections] = useState(0);
+    const [queuedPoolQueries, setQueuedPoolQueries] = useState([]);
+    const [patientLedger, setPatientLedger] = useState({
+        p1: 500,
+        p2: 100
+    });
+
+    const syncDbMetrics = useCallback(() => {
+        setDbCacheStats({ ...Database.cacheStats });
+        setDbQueryPlan({ ...Database.lastQueryPlan });
+        setDbRateLimitTokens(Math.floor(Database.rateLimit.tokens));
+        setDbTxLogs([...Database.transactionLogs]);
+        setDbQueue(Database.getQueue());
+        setDbDLQ(Database.getDLQ());
+    }, []);
+
+    useEffect(() => {
+        syncDbMetrics();
+        window.addEventListener('psypyrus_db_change', syncDbMetrics);
+        window.addEventListener('psypyrus_mq_change', syncDbMetrics);
+        
+        const interval = setInterval(() => {
+            setDbRateLimitTokens(Math.floor(Database.rateLimit.tokens));
+            setActiveConnections(Database.connectionPool.activeConnections);
+            setQueuedPoolQueries(Database.connectionPool.waitingQueue.map((_, i) => `Query ${i + 1}`));
+        }, 150);
+
+        return () => {
+            window.removeEventListener('psypyrus_db_change', syncDbMetrics);
+            window.removeEventListener('psypyrus_mq_change', syncDbMetrics);
+            clearInterval(interval);
+        };
+    }, [syncDbMetrics]);
+
+    // Helper to simulate connection pool query queue
+    const simulateParallelQueries = async () => {
+        setIsSimulatingPool(true);
+        const promises = Array.from({ length: 6 }).map(async (_, idx) => {
+            await Database.connectionPool.acquire();
+            try {
+                await new Promise(resolve => setTimeout(resolve, 800 + idx * 100));
+            } finally {
+                Database.connectionPool.release();
+            }
+        });
+        await Promise.all(promises);
+        setIsSimulatingPool(false);
+        showToast("Completed concurrent pooled database query batch.", "success");
+    };
+
+    // Helper to execute ACID transaction
+    const executeAcidTransaction = () => {
+        try {
+            Database.runInTransaction(() => {
+                if (patientLedger.p1 < 100) throw new Error("Insufficient funds.");
+                const updatedP1 = patientLedger.p1 - 100;
+                const updatedP2 = patientLedger.p2 + 100;
+                setPatientLedger({ p1: updatedP1, p2: updatedP2 });
+                Database.insertAppointment({
+                    patientId: 1,
+                    patientName: "Liam Carter",
+                    dateTime: "Today, 4:00 PM",
+                    notes: "ACID Transaction enrollment fee transfer.",
+                    fee: 100.0,
+                    isVideo: true
+                });
+                Database.logAudit("Transfer Completed", "ACID Multi-table patient balance transfer completed successfully.");
+            }, ['psypyrus_appointments', 'psypyrus_audit_logs']);
+            showToast("Transaction Committed Successfully!", "success");
+        } catch (e) {
+            showToast("Transaction Failed: " + e.message, "error");
+        }
+    };
+
+    // Helper to execute ACID transaction with rollback
+    const executeTransactionRollback = () => {
+        const originalP1 = patientLedger.p1;
+        const originalP2 = patientLedger.p2;
+        try {
+            Database.runInTransaction(() => {
+                setPatientLedger({ p1: patientLedger.p1 - 100, p2: patientLedger.p2 + 100 });
+                throw new Error("ValidationException: Appointment time cannot be in the past.");
+            }, ['psypyrus_appointments']);
+        } catch (e) {
+            setPatientLedger({ p1: originalP1, p2: originalP2 });
+            showToast("Transaction Aborted & Rolled Back: " + e.message, "warning");
+        }
+    };
+
+    // Helper to simulate payment with or without idempotency key
+    const simulateIdempotentPayment = (useKey) => {
+        const key = useKey ? idempotencyKeyInput : null;
+        try {
+            if (key) {
+                const cachedResult = Database.getIdempotentResult(key);
+                if (cachedResult !== null) {
+                    showToast("Payment Deduplicated! Received Cached Response (No charge).", "info");
+                    return;
+                }
+            }
+            if (patientLedger.p1 < 150) throw new Error("Insufficient funds.");
+            const newBalance = patientLedger.p1 - 150;
+            setPatientLedger(prev => ({ ...prev, p1: newBalance }));
+            Database.insertAppointment({
+                patientId: 1,
+                patientName: "Liam Carter",
+                dateTime: "Today, 5:00 PM",
+                notes: "Consultation Payment Charge.",
+                fee: 150.0,
+                isVideo: true
+            }, key);
+            showToast("Payment successful! Charged $150.", "success");
+        } catch (e) {
+            showToast("Payment error: " + e.message, "error");
+        }
+    };
+
+    // Design System Registry State
+    const [selectedComp, setSelectedComp] = useState('glass-card');
+    const [registryViewTab, setRegistryViewTab] = useState('preview');
+    const [cliInput, setCliInput] = useState('');
+    const [cliLogs, setCliLogs] = useState([
+        '$ npx psypyrus-ui --help',
+        'Available components in registry:',
+        ' - glass-card',
+        ' - action-btn',
+        ' - search-input',
+        ' - stepper',
+        '',
+        'Try: npx psypyrus-ui add [component-name]'
+    ]);
+    const [installedComponents, setInstalledComponents] = useState([]);
+    const [btnClickCount, setBtnClickCount] = useState(0);
+    const [activeStep, setActiveStep] = useState(1);
+    const cliConsoleRef = useRef(null);
+
+    useEffect(() => {
+        if (cliConsoleRef.current) {
+            cliConsoleRef.current.scrollTop = cliConsoleRef.current.scrollHeight;
+        }
+    }, [cliLogs]);
+
+    const handleCliSubmit = (e) => {
+        e.preventDefault();
+        const cmd = cliInput.trim();
+        if (!cmd) return;
+
+        setCliLogs(prev => [...prev, `$ ${cmd}`]);
+        setCliInput('');
+
+        // Parse command
+        if (cmd.startsWith('npx psypyrus-ui add ')) {
+            const componentName = cmd.substring('npx psypyrus-ui add '.length).trim();
+            const validComponents = ['glass-card', 'action-btn', 'search-input', 'stepper'];
+
+            if (validComponents.includes(componentName)) {
+                if (installedComponents.includes(componentName)) {
+                    setCliLogs(prev => [
+                        ...prev,
+                        `[INFO] Component "${componentName}" is already installed. Use --force to reinstall.`
+                    ]);
+                    return;
+                }
+
+                // Simulate installation logs
+                let logsSequence = [
+                    `⠋ Fetching "${componentName}" from registry...`,
+                    `✔ Found component "${componentName}" matching shadcn/ui specs.`,
+                    `⠙ Resolving dependencies (framer-motion)...`,
+                    `✔ Dependencies verified.`,
+                    `⠹ Creating src/components/ui/${componentName}.jsx...`,
+                    `✔ Component written to disk successfully.`,
+                    `✔ Done! Installed "${componentName}".`
+                ];
+
+                // We can output logs one by one
+                logsSequence.forEach((log, idx) => {
+                    setTimeout(() => {
+                        setCliLogs(prev => [...prev, log]);
+                        if (idx === logsSequence.length - 1) {
+                            setInstalledComponents(prev => [...prev, componentName]);
+                            showToast(`Successfully installed ${componentName}!`, "success");
+                        }
+                    }, (idx + 1) * 350);
+                });
+
+            } else if (componentName === 'all') {
+                let logsSequence = [
+                    `⠋ Fetching all components from registry...`,
+                    `✔ Found 4 components in registry.`,
+                    `⠙ Resolving dependencies...`,
+                    `⠹ Installing: glass-card, action-btn, search-input, stepper...`,
+                    `✔ Created 4 components in src/components/ui/`,
+                    `✔ Done! All components installed.`
+                ];
+                logsSequence.forEach((log, idx) => {
+                    setTimeout(() => {
+                        setCliLogs(prev => [...prev, log]);
+                        if (idx === logsSequence.length - 1) {
+                            setInstalledComponents(['glass-card', 'action-btn', 'search-input', 'stepper']);
+                            showToast("All components installed!", "success");
+                        }
+                    }, (idx + 1) * 350);
+                });
+            } else {
+                setCliLogs(prev => [
+                    ...prev,
+                    `Error: Component "${componentName}" not found in registry.`,
+                    `Available: glass-card, action-btn, search-input, stepper`
+                ]);
+            }
+        } else if (cmd === 'npx psypyrus-ui list') {
+            setCliLogs(prev => [
+                ...prev,
+                `Available components in registry:`,
+                ` - glass-card [Ready]`,
+                ` - action-btn [Ready]`,
+                ` - search-input [Ready]`,
+                ` - stepper [Ready]`,
+                `Installed: ${installedComponents.join(', ') || 'none'}`
+            ]);
+        } else if (cmd === 'npx psypyrus-ui help' || cmd === 'npx psypyrus-ui' || cmd === 'help') {
+            setCliLogs(prev => [
+                ...prev,
+                `Available commands:`,
+                `  npx psypyrus-ui add [component-name]`,
+                `  npx psypyrus-ui list`,
+                `  npx psypyrus-ui help`
+            ]);
+        } else {
+            setCliLogs(prev => [
+                ...prev,
+                `command not found: ${cmd}. Try "npx psypyrus-ui help"`
+            ]);
+        }
+    };
     
     // Active patient details
     const activePatient = patients.find(p => p.id === Number(activePatientId)) || patients[0];
@@ -674,6 +923,12 @@ According to DSM-5-TR guidelines (Node 1), Major Depressive Disorder cannot be d
                 </button>
                 <button className={`hub-tab-btn ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => setActiveTab('ai')}>
                     <i className="fa-solid fa-robot" style={{ marginRight: '6px' }}></i> AI & RAG Orchestration
+                </button>
+                <button className={`hub-tab-btn ${activeTab === 'registry' ? 'active' : ''}`} onClick={() => setActiveTab('registry')}>
+                    <i className="fa-solid fa-cubes" style={{ marginRight: '6px' }}></i> Design System Registry
+                </button>
+                <button className={`hub-tab-btn ${activeTab === 'architecture' ? 'active' : ''}`} onClick={() => setActiveTab('architecture')}>
+                    <i className="fa-solid fa-network-wired" style={{ marginRight: '6px' }}></i> Distributed Systems & DB
                 </button>
             </div>
 
@@ -1519,6 +1774,909 @@ According to DSM-5-TR guidelines (Node 1), Major Depressive Disorder cannot be d
                                 </pre>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* TAB CONTENT: DESIGN SYSTEM REGISTRY */}
+            {activeTab === 'registry' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '20px' }}>
+                        {/* Component Showcase Card */}
+                        <div className="workspace-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 style={{ margin: 0, fontSize: '14px' }}>
+                                    <i className="fa-solid fa-swatchbook" style={{ color: 'var(--color-primary)', marginRight: '6px' }}></i> Component Showcase
+                                </h3>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    {['glass-card', 'action-btn', 'search-input', 'stepper'].map(comp => (
+                                        <button
+                                            key={comp}
+                                            onClick={() => setSelectedComp(comp)}
+                                            style={{
+                                                padding: '4px 10px',
+                                                fontSize: '11px',
+                                                borderRadius: '6px',
+                                                border: '1px solid',
+                                                borderColor: selectedComp === comp ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)',
+                                                background: selectedComp === comp ? 'var(--color-primary-glow)' : 'transparent',
+                                                color: selectedComp === comp ? 'var(--color-primary)' : 'var(--text-normal)',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {comp} {installedComponents.includes(comp) && '✓'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* View tabs: Preview or Source Code */}
+                            <div style={{ display: 'flex', gap: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
+                                <button
+                                    onClick={() => setRegistryViewTab('preview')}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: registryViewTab === 'preview' ? 'var(--color-primary)' : 'var(--text-muted)',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        borderBottom: registryViewTab === 'preview' ? '2px solid var(--color-primary)' : 'none',
+                                        paddingBottom: '4px'
+                                    }}
+                                >
+                                    Interactive Preview
+                                </button>
+                                <button
+                                    onClick={() => setRegistryViewTab('code')}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: registryViewTab === 'code' ? 'var(--color-primary)' : 'var(--text-muted)',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        borderBottom: registryViewTab === 'code' ? '2px solid var(--color-primary)' : 'none',
+                                        paddingBottom: '4px'
+                                    }}
+                                >
+                                    React + Tailwind Code
+                                </button>
+                            </div>
+
+                            {/* View Content area */}
+                            {registryViewTab === 'preview' ? (
+                                <div style={{
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    borderRadius: '8px',
+                                    background: 'radial-gradient(circle, #18181b 0%, #09090b 100%)',
+                                    padding: '40px 20px',
+                                    minHeight: '220px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    position: 'relative'
+                                }}>
+                                    {selectedComp === 'glass-card' && (
+                                        <div style={{
+                                            background: 'rgba(255, 255, 255, 0.03)',
+                                            backdropFilter: 'blur(12px)',
+                                            WebkitBackdropFilter: 'blur(12px)',
+                                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                                            borderRadius: '16px',
+                                            padding: '24px',
+                                            width: '100%',
+                                            maxWidth: '320px',
+                                            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                                                <div style={{
+                                                    background: 'var(--color-primary-glow)',
+                                                    color: 'var(--color-primary)',
+                                                    width: '36px',
+                                                    height: '36px',
+                                                    borderRadius: '50%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}>
+                                                    <i className="fa-solid fa-shield-halved"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 style={{ margin: 0, fontSize: '13px', color: '#fff' }}>Watermelon Glass</h4>
+                                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Premium Registry Block</span>
+                                                </div>
+                                            </div>
+                                            <p style={{ fontSize: '11px', color: 'var(--text-normal)', margin: '0 0 16px 0', lineHeight: 1.4 }}>
+                                                A modern card featuring smooth glassmorphism with high-fidelity border glow. Fully responsive and customizable.
+                                            </p>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '10px', color: 'var(--color-primary)' }}>Status: Active</span>
+                                                <button style={{
+                                                    background: 'var(--color-primary)',
+                                                    color: '#000',
+                                                    border: 'none',
+                                                    padding: '4px 10px',
+                                                    borderRadius: '4px',
+                                                    fontSize: '10px',
+                                                    fontWeight: 'bold',
+                                                    cursor: 'pointer'
+                                                }}>Explore</button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedComp === 'action-btn' && (
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => {
+                                                showToast("Action Button clicked! Micro-interaction animated.", "success");
+                                                setBtnClickCount(prev => prev + 1);
+                                            }}
+                                            style={{
+                                                background: 'linear-gradient(135deg, var(--color-primary) 0%, #a855f7 100%)',
+                                                color: '#000',
+                                                border: 'none',
+                                                padding: '12px 24px',
+                                                borderRadius: '8px',
+                                                fontSize: '12px',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                boxShadow: '0 4px 14px 0 rgba(168, 85, 247, 0.4)'
+                                            }}
+                                        >
+                                            <i className="fa-solid fa-wand-magic-sparkles"></i>
+                                            <span>Animate Tap ({btnClickCount})</span>
+                                        </motion.button>
+                                    )}
+
+                                    {selectedComp === 'search-input' && (
+                                        <div style={{ width: '100%', maxWidth: '300px' }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                borderRadius: '8px',
+                                                padding: '8px 12px',
+                                                background: 'rgba(0,0,0,0.2)'
+                                            }}>
+                                                <i className="fa-solid fa-magnifying-glass text-slate-400"></i>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search components..."
+                                                    style={{
+                                                        background: 'transparent',
+                                                        border: 'none',
+                                                        outline: 'none',
+                                                        color: '#fff',
+                                                        fontSize: '11px',
+                                                        width: '100%'
+                                                    }}
+                                                    readOnly
+                                                />
+                                                <span style={{ fontSize: '9px', background: 'rgba(255,255,255,0.08)', padding: '2px 4px', borderRadius: '4px', color: 'var(--text-muted)' }}>⌘K</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedComp === 'stepper' && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            {[1, 2, 3].map(step => (
+                                                <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <motion.div
+                                                        initial={{ scale: 0.8 }}
+                                                        animate={{ scale: 1 }}
+                                                        style={{
+                                                            width: '28px',
+                                                            height: '28px',
+                                                            borderRadius: '50%',
+                                                            background: step <= activeStep ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
+                                                            color: step <= activeStep ? '#000' : 'var(--text-muted)',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            fontSize: '10px',
+                                                            fontWeight: 'bold',
+                                                            border: step <= activeStep ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        onClick={() => setActiveStep(step)}
+                                                    >
+                                                        {step}
+                                                    </motion.div>
+                                                    {step < 3 && (
+                                                        <div style={{
+                                                            width: '40px',
+                                                            height: '2px',
+                                                            background: step < activeStep ? 'var(--color-primary)' : 'rgba(255,255,255,0.08)'
+                                                        }}></div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div style={{ position: 'relative' }}>
+                                    <pre style={{
+                                        fontFamily: 'monospace',
+                                        fontSize: '10px',
+                                        background: '#000',
+                                        padding: '16px',
+                                        borderRadius: '8px',
+                                        maxHeight: '240px',
+                                        overflow: 'auto',
+                                        border: '1px solid rgba(255,255,255,0.06)',
+                                        color: '#38bdf8',
+                                        whiteSpace: 'pre-wrap'
+                                    }}>
+                                        {selectedComp === 'glass-card' && (
+`// Glassmorphic Card inspired by Watermelon UI & 21st.dev
+import React from 'react';
+
+export function GlassCard({ title, subtitle, content }) {
+  return (
+    <div className="bg-white/3 backdrop-blur-md border border-white/8 rounded-2xl p-6 shadow-2xl transition-all duration-300 hover:border-primary/45 hover:shadow-primary/10">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="bg-primary/20 text-primary w-9 h-9 rounded-full flex items-center justify-center">
+          <ShieldIcon className="w-5 h-5" />
+        </div>
+        <div>
+          <h4 className="text-white text-sm font-semibold m-0">{title}</h4>
+          <span className="text-slate-400 text-xs">{subtitle}</span>
+        </div>
+      </div>
+      <p className="text-slate-300 text-xs mb-4 leading-relaxed">{content}</p>
+    </div>
+  );
+}`
+                                        )}
+                                        {selectedComp === 'action-btn' && (
+`// Animated Action Button inspired by Cult UI
+import React from 'react';
+import { motion } from 'framer-motion';
+
+export function ActionButton({ label, onClick }) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(var(--primary-glow))' }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      className="bg-gradient-to-r from-primary to-purple-500 text-black border-none px-6 py-3 rounded-lg text-sm font-bold shadow-lg transition-colors flex items-center gap-2"
+    >
+      <span>{label}</span>
+    </motion.button>
+  );
+}`
+                                        )}
+                                        {selectedComp === 'search-input' && (
+`// Sleek Search Input inspired by shadcn/ui
+import React from 'react';
+
+export function SearchInput({ value, onChange }) {
+  return (
+    <div className="relative flex items-center border border-white/10 rounded-lg px-3 py-2 bg-black/20 focus-within:border-primary/50 transition-all">
+      <SearchIcon className="text-slate-400 w-4 h-4 mr-2" />
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        placeholder="Search components..."
+        className="bg-transparent border-none outline-none text-white text-xs w-full"
+      />
+      <kbd className="text-[10px] bg-white/8 text-slate-400 px-1 rounded font-mono">⌘K</kbd>
+    </div>
+  );
+}`
+                                        )}
+                                        {selectedComp === 'stepper' && (
+`// Framer Motion Stepper inspired by 21st.dev
+import React from 'react';
+import { motion } from 'framer-motion';
+
+export function Stepper({ steps, activeStep }) {
+  return (
+    <div className="flex items-center gap-2">
+      {steps.map((step, idx) => (
+        <div key={idx} className="flex items-center gap-2">
+          <motion.div
+            animate={{ scale: idx <= activeStep ? 1 : 0.8 }}
+            className={\`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold \${
+              idx <= activeStep ? 'bg-primary text-black' : 'bg-white/5 text-slate-400 border border-white/10'
+            }\`}
+          >
+            {step}
+          </motion.div>
+          {idx < steps.length - 1 && (
+            <div className={\`w-10 h-0.5 \${idx < activeStep ? 'bg-primary' : 'bg-white/10'}\`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}`
+                                        )}
+                                    </pre>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* CLI Simulated Terminal */}
+                        <div className="workspace-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <h3 style={{ margin: 0, fontSize: '14px' }}>
+                                <i className="fa-solid fa-terminal" style={{ color: 'var(--color-primary)', marginRight: '6px' }}></i> Simulated CLI Installer
+                            </h3>
+                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                                Install components directly using our mock CLI. Type `npx psypyrus-ui add [component-name]` to add components to your workspace.
+                            </p>
+
+                            <div style={{
+                                flex: 1,
+                                minHeight: '180px',
+                                background: '#09090b',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                fontFamily: 'monospace',
+                                fontSize: '10px',
+                                color: '#22c55e',
+                                overflowY: 'auto',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '4px'
+                            }} ref={cliConsoleRef}>
+                                {cliLogs.map((log, idx) => (
+                                    <div key={idx} style={{
+                                        color: log.startsWith('Error') ? 'var(--color-error)' : (log.startsWith('✔') ? '#22c55e' : (log.startsWith('$') ? '#38bdf8' : '#e2e8f0'))
+                                    }}>{log}</div>
+                                ))}
+                            </div>
+
+                            <form onSubmit={handleCliSubmit} style={{ display: 'flex', gap: '8px', margin: 0 }}>
+                                <input
+                                    type="text"
+                                    className="input-text-field"
+                                    value={cliInput}
+                                    onChange={(e) => setCliInput(e.target.value)}
+                                    placeholder="npx psypyrus-ui add glass-card..."
+                                    style={{
+                                        fontFamily: 'monospace',
+                                        fontSize: '11px',
+                                        margin: 0,
+                                        flex: 1
+                                    }}
+                                />
+                                <button type="submit" className="action-button-btn" style={{ margin: 0, padding: '0 16px' }}>
+                                    Run
+                                </button>
+                            </form>
+
+                            {/* Installed components manifest list */}
+                            <div style={{ marginTop: '10px' }}>
+                                <h4 style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 6px 0' }}>Installed Components Manifest:</h4>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                    {installedComponents.length === 0 ? (
+                                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>No registry components installed in workspace.</span>
+                                    ) : (
+                                        installedComponents.map(comp => (
+                                            <span
+                                                key={comp}
+                                                className="marketplace-tag"
+                                                style={{
+                                                    background: 'rgba(34, 197, 94, 0.1)',
+                                                    color: '#22c55e',
+                                                    border: '1px solid rgba(34, 197, 94, 0.2)',
+                                                    fontSize: '9px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                            >
+                                                <i className="fa-solid fa-circle-check"></i> {comp}
+                                            </span>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* TAB CONTENT: DISTRIBUTED SYSTEMS & DATABASE OPERATIONS */}
+            {activeTab === 'architecture' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <style>{`
+                        .arch-sub-nav {
+                            display: flex;
+                            gap: 10px;
+                            margin-bottom: 10px;
+                            border-bottom: 1px solid rgba(255,255,255,0.06);
+                            padding-bottom: 10px;
+                        }
+                        .arch-sub-btn {
+                            background: rgba(255, 255, 255, 0.02);
+                            border: 1px solid rgba(255, 255, 255, 0.08);
+                            color: var(--text-muted);
+                            padding: 6px 12px;
+                            border-radius: 6px;
+                            font-size: 11px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        }
+                        .arch-sub-btn:hover {
+                            color: var(--text-light);
+                            background: rgba(255, 255, 255, 0.04);
+                        }
+                        .arch-sub-btn.active {
+                            background: var(--color-primary-glow);
+                            border-color: var(--color-primary);
+                            color: var(--color-primary);
+                        }
+                        .metric-card {
+                            background: rgba(255, 255, 255, 0.01);
+                            border: 1px solid rgba(255,255,255,0.05);
+                            border-radius: 8px;
+                            padding: 12px;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 6px;
+                        }
+                        .metric-val {
+                            font-size: 20px;
+                            font-weight: 700;
+                            color: #fff;
+                        }
+                        .metric-label {
+                            font-size: 10px;
+                            color: var(--text-muted);
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        }
+                        .query-plan-box {
+                            background: #09090b;
+                            border: 1px solid rgba(255, 255, 255, 0.08);
+                            border-radius: 6px;
+                            padding: 10px;
+                            font-family: 'Geist Mono', monospace;
+                            font-size: 10px;
+                            color: #38bdf8;
+                            margin-top: 6px;
+                        }
+                        .con-slot {
+                            width: 14px;
+                            height: 14px;
+                            border-radius: 50%;
+                            display: inline-block;
+                        }
+                        .con-slot.active {
+                            background: #10b981;
+                            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+                        }
+                        .con-slot.idle {
+                            background: rgba(255,255,255,0.1);
+                        }
+                    `}</style>
+
+                    <div className="workspace-card" style={{ padding: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                            <h3 style={{ margin: 0, fontSize: '15px' }}>
+                                <i className="fa-solid fa-network-wired" style={{ color: 'var(--color-primary)', marginRight: '8px' }}></i>
+                                Distributed Systems & Database Architecture Control Panel
+                            </h3>
+                            <div className="arch-sub-nav" style={{ margin: 0, padding: 0, border: 0 }}>
+                                <button className={`arch-sub-btn ${activeArchitectureSubTab === 'db-ops' ? 'active' : ''}`} onClick={() => setActiveArchitectureSubTab('db-ops')}>
+                                    <i className="fa-solid fa-database" style={{ marginRight: '6px' }}></i> DB Performance & Caching
+                                </button>
+                                <button className={`arch-sub-btn ${activeArchitectureSubTab === 'acid' ? 'active' : ''}`} onClick={() => setActiveArchitectureSubTab('acid')}>
+                                    <i className="fa-solid fa-vault" style={{ marginRight: '6px' }}></i> ACID Transactions & Locks
+                                </button>
+                                <button className={`arch-sub-btn ${activeArchitectureSubTab === 'messaging' ? 'active' : ''}`} onClick={() => setActiveArchitectureSubTab('messaging')}>
+                                    <i className="fa-solid fa-envelope-open-text" style={{ marginRight: '6px' }}></i> Message Queue & DLQ
+                                </button>
+                            </div>
+                        </div>
+
+                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4, margin: '0 0 16px 0' }}>
+                            Monitor and manage ACID database compliance, caching, rate limiting, and event queues integrated directly into the core patient and clinical charts services of the application.
+                        </p>
+
+                        {/* SUB-TAB: DB PERFORMANCE & CACHING */}
+                        {activeArchitectureSubTab === 'db-ops' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '20px' }}>
+                                    
+                                    {/* Caching Panel */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '12px', color: '#fff' }}>Cache-Aside Caching (Redis Emulation)</h4>
+                                            <button className="action-button-btn secondary mini-action-btn" style={{ padding: '2px 8px', fontSize: '9px' }} onClick={() => {
+                                                Database.clearCache();
+                                                syncDbMetrics();
+                                                showToast("In-memory cache evacuated.", "info");
+                                            }}>
+                                                Evict Cache
+                                            </button>
+                                        </div>
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+                                                <div className="metric-val" style={{ color: '#10b981' }}>{dbCacheStats.hits}</div>
+                                                <div className="metric-label">Hits</div>
+                                            </div>
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+                                                <div className="metric-val" style={{ color: '#f59e0b' }}>{dbCacheStats.misses}</div>
+                                                <div className="metric-label">Misses</div>
+                                            </div>
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+                                                <div className="metric-val" style={{ color: '#ef4444' }}>{dbCacheStats.evictions}</div>
+                                                <div className="metric-label">Evictions</div>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                                            Hit Ratio: <strong>{((dbCacheStats.hits / (dbCacheStats.hits + dbCacheStats.misses || 1)) * 100).toFixed(1)}%</strong>
+                                        </div>
+                                        <div style={{ height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                height: '100%',
+                                                background: 'var(--color-primary)',
+                                                width: `${(dbCacheStats.hits / (dbCacheStats.hits + dbCacheStats.misses || 1)) * 100}%`,
+                                                transition: 'width 0.3s ease'
+                                            }}></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Indexing and Explain Query Plan */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#fff' }}>Database Query Plan Explainer</h4>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 12px 0', lineHeight: 1.4 }}>
+                                            Indices provide O(1) lookups instead of scanning the full collection.
+                                        </p>
+                                        
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                                            <button className="action-button-btn" style={{ flex: 1, fontSize: '11px' }} onClick={() => {
+                                                Database.getClinicalNotes(1);
+                                                syncDbMetrics();
+                                            }}>
+                                                Run Indexed Query (O(1))
+                                            </button>
+                                            <button className="action-button-btn secondary" style={{ flex: 1, fontSize: '11px' }} onClick={() => {
+                                                Database.getClinicalNotes();
+                                                syncDbMetrics();
+                                            }}>
+                                                Run Table Scan Query (O(N))
+                                            </button>
+                                        </div>
+
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Query Execution Strategy & Explain Plan:</div>
+                                        <div className="query-plan-box">
+                                            <div>EXPLAIN ANALYZE SELECT * FROM clinical_notes WHERE patientId = {dbQueryPlan.query.includes('patientId') ? '1' : 'ALL'};</div>
+                                            <div style={{ color: dbQueryPlan.strategy.includes('Table Scan') ? 'var(--color-warning)' : '#10b981', fontWeight: 'bold', marginTop: '6px' }}>
+                                                ➔ Strategy: {dbQueryPlan.strategy}
+                                            </div>
+                                            <div style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
+                                                ➔ Query: {dbQueryPlan.query || 'none'} | Cost/Latency: {dbQueryPlan.durationMs.toFixed(3)} ms
+                                            </div>
+                                        </div>
+
+                                        {dbQueryPlan.strategy.includes('Table Scan') && (
+                                            <div style={{
+                                                marginTop: '10px',
+                                                padding: '8px 12px',
+                                                background: 'rgba(245, 158, 11, 0.05)',
+                                                border: '1px solid rgba(245, 158, 11, 0.15)',
+                                                borderRadius: '6px',
+                                                fontSize: '10px',
+                                                color: 'var(--color-warning)',
+                                                display: 'flex',
+                                                gap: '6px',
+                                                alignItems: 'center'
+                                            }}>
+                                                <i className="fa-solid fa-triangle-exclamation"></i>
+                                                <span><strong>Warning (N+1 Query Risk)</strong>: Table Scan scans every row! Add database indexes to avoid bottlenecks.</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '20px' }}>
+                                    {/* Connection Pooling */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '12px', color: '#fff' }}>Database Connection Pool Monitor (HikariCP Emulation)</h4>
+                                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Max Connections: 3</span>
+                                        </div>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 12px 0', lineHeight: 1.4 }}>
+                                            Limits concurrent database slots to protect system resources. Excess queries queue up and wait.
+                                        </p>
+
+                                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '14px' }}>
+                                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                {[1, 2, 3].map(slot => (
+                                                    <span 
+                                                        key={slot} 
+                                                        className={`con-slot ${slot <= activeConnections ? 'active' : 'idle'}`}
+                                                    ></span>
+                                                ))}
+                                                <span style={{ fontSize: '11px', color: '#fff', marginLeft: '6px' }}>
+                                                    {activeConnections} / 3 Connections Active
+                                                </span>
+                                            </div>
+
+                                            <button 
+                                                className="action-button-btn" 
+                                                onClick={simulateParallelQueries} 
+                                                disabled={isSimulatingPool}
+                                                style={{ padding: '6px 12px', fontSize: '11px', margin: 0 }}
+                                            >
+                                                {isSimulatingPool ? 'Simulating...' : 'Simulate 6 Parallel Queries'}
+                                            </button>
+                                        </div>
+
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Connection Queue State:</div>
+                                        <div style={{
+                                            background: '#09090b',
+                                            padding: '8px 12px',
+                                            borderRadius: '6px',
+                                            border: '1px solid rgba(255,255,255,0.06)',
+                                            fontSize: '10px',
+                                            fontFamily: 'monospace',
+                                            minHeight: '40px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            color: queuedPoolQueries.length > 0 ? 'var(--color-warning)' : 'var(--text-muted)'
+                                        }}>
+                                            {queuedPoolQueries.length > 0 ? (
+                                                <span>Waiting Queries Queue: [{queuedPoolQueries.join(', ')}] (Blocked waiting for connection slot)</span>
+                                            ) : (
+                                                <span>Connection Pool Queue Empty. All queries executed immediately.</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Rate Limiting */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#fff' }}>Token Bucket Write Rate Limiter</h4>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 12px 0', lineHeight: 1.4 }}>
+                                            Prevents database mutation floods. Consumes 1 token per write.
+                                        </p>
+
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                            <div>
+                                                <div className="metric-label">Write Tokens Remaining</div>
+                                                <div className="metric-val" style={{ color: dbRateLimitTokens > 3 ? '#10b981' : 'var(--color-error)' }}>
+                                                    {dbRateLimitTokens} / 15
+                                                </div>
+                                            </div>
+                                            <button className="action-button-btn" style={{ margin: 0, padding: '6px 12px', fontSize: '11px' }} onClick={() => {
+                                                try {
+                                                    Database.insertHomework({
+                                                        patientId: 1,
+                                                        description: "Spammed write task."
+                                                    });
+                                                    syncDbMetrics();
+                                                } catch (e) {
+                                                    showToast("Write Rejected: " + e.message, "error");
+                                                }
+                                            }}>
+                                                Trigger Write
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SUB-TAB: ACID TRANSACTIONS & LOCKS */}
+                        {activeArchitectureSubTab === 'acid' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '20px' }}>
+                                    {/* Ledger Balances */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#fff' }}>Atomic Ledger Balance States</h4>
+                                        
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px' }}>
+                                                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Patient 1 Balance:</span>
+                                                <strong style={{ fontSize: '12px', color: '#fff' }}>${patientLedger.p1}</strong>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '6px' }}>
+                                                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Patient 2 Balance:</span>
+                                                <strong style={{ fontSize: '12px', color: '#fff' }}>${patientLedger.p2}</strong>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <button className="action-button-btn" style={{ fontSize: '11px' }} onClick={executeAcidTransaction}>
+                                                Process Consultation Transfer ($100)
+                                            </button>
+                                            <button className="action-button-btn danger" style={{ background: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.2)', color: 'var(--color-error)', fontSize: '11px' }} onClick={executeTransactionRollback}>
+                                                Process with Outage (Force Rollback)
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Idempotency playground */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#fff' }}>Idempotency & Deduplication Playground</h4>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                                            Verify request deduplication on consultation payments.
+                                        </p>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                                            <div>
+                                                <label style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Transaction Idempotency Key:</label>
+                                                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                                                    <input 
+                                                        type="text" 
+                                                        className="input-text-field" 
+                                                        value={idempotencyKeyInput} 
+                                                        onChange={(e) => setIdempotencyKeyInput(e.target.value)}
+                                                        style={{ fontSize: '10px', padding: '6px', margin: 0, fontFamily: 'monospace' }}
+                                                    />
+                                                    <button className="action-button-btn secondary" style={{ margin: 0, padding: '0 10px', fontSize: '10px' }} onClick={() => {
+                                                        setIdempotencyKeyInput('pay-consultation-' + Math.random().toString(36).substr(2, 9));
+                                                    }}>
+                                                        Regen
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                            <button className="action-button-btn" style={{ fontSize: '11px' }} onClick={() => simulateIdempotentPayment(true)}>
+                                                Submit Payment (Deduplicated)
+                                            </button>
+                                            <button className="action-button-btn secondary" style={{ fontSize: '11px' }} onClick={() => simulateIdempotentPayment(false)}>
+                                                Submit (No Idempotency Key)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Transactions Log */}
+                                <div className="metric-card" style={{ padding: '16px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                        <h4 style={{ margin: 0, fontSize: '12px', color: '#fff' }}>ACID Transactions & Locking Logs</h4>
+                                        <button className="action-button-btn secondary mini-action-btn" style={{ padding: '2px 8px', fontSize: '9px' }} onClick={() => {
+                                            Database.transactionLogs = [];
+                                            syncDbMetrics();
+                                        }}>
+                                            Clear Logs
+                                        </button>
+                                    </div>
+                                    <div className="log-console-box" style={{ height: '120px' }}>
+                                        {dbTxLogs.length === 0 ? (
+                                            <span style={{ color: 'var(--text-muted)' }}>Ready for transaction blocks.</span>
+                                        ) : (
+                                            dbTxLogs.map((log, idx) => (
+                                                <div key={idx} style={{
+                                                    color: log.includes('FAILED') ? 'var(--color-error)' : (log.includes('Deduplicated') ? 'var(--color-warning)' : '#10b981')
+                                                }}>
+                                                    {log}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SUB-TAB: MESSAGE QUEUE & DLQ */}
+                        {activeArchitectureSubTab === 'messaging' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr', gap: '20px' }}>
+                                    
+                                    {/* Active queue monitor */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '12px', color: '#fff' }}>Message Broker Tasks Queue</h4>
+                                            <button className="action-button-btn mini-action-btn" style={{ margin: 0, fontSize: '10px' }} onClick={() => {
+                                                Database.enqueueTask('SYNC_EHR', { patientId: activePatientId || 1 });
+                                            }}>
+                                                Queue Sync Task
+                                            </button>
+                                        </div>
+                                        
+                                        <div className="log-console-box" style={{ height: '140px', background: '#09090b', color: '#38bdf8' }}>
+                                            {dbQueue.length === 0 ? (
+                                                <span style={{ color: 'var(--text-muted)' }}>Message Broker idle. No pending tasks.</span>
+                                            ) : (
+                                                dbQueue.map((task, idx) => (
+                                                    <div key={task.id} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '4px', marginBottom: '4px' }}>
+                                                        <span>{idx + 1}. [{task.type}] Id: {task.id.substr(0, 12)}...</span>
+                                                        <span style={{
+                                                            color: task.status === 'processing' ? '#10b981' : 'var(--text-muted)'
+                                                        }}>
+                                                            {task.status} (Retries: {task.retries}/3)
+                                                        </span>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* DLQ Manager */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '12px', color: 'var(--color-error)' }}>
+                                                <i className="fa-solid fa-skull-crossbones" style={{ marginRight: '6px' }}></i>
+                                                Dead Letter Queue (DLQ)
+                                            </h4>
+                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                                <button className="action-button-btn secondary mini-action-btn" style={{ fontSize: '9px', padding: '2px 8px' }} onClick={() => {
+                                                    Database.retryDLQ();
+                                                }} disabled={dbDLQ.length === 0}>
+                                                    Republish DLQ
+                                                </button>
+                                                <button className="action-button-btn secondary mini-action-btn" style={{ fontSize: '9px', padding: '2px 8px', borderColor: 'var(--color-error)', color: 'var(--color-error)' }} onClick={() => {
+                                                    Database.purgeDLQ();
+                                                }} disabled={dbDLQ.length === 0}>
+                                                    Purge
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="log-console-box" style={{ height: '140px', background: '#0c0202', border: '1px solid rgba(239,68,68,0.15)', color: 'var(--color-error)' }}>
+                                            {dbDLQ.length === 0 ? (
+                                                <span style={{ color: 'var(--text-muted)' }}>Dead Letter Queue empty. All sync events processed.</span>
+                                            ) : (
+                                                dbDLQ.map((task, idx) => (
+                                                    <div key={task.id} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid rgba(239,68,68,0.1)', paddingBottom: '6px', marginBottom: '6px', fontSize: '9px' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
+                                                            <span>{idx + 1}. [{task.type}] Id: {task.id.substr(0,12)}</span>
+                                                            <span>STATUS: DEAD</span>
+                                                        </div>
+                                                        <div style={{ color: 'var(--text-muted)', marginTop: '2px', fontStyle: 'italic' }}>
+                                                            Error: {task.error}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Sync Failure Simulator Option */}
+                                <div style={{
+                                    padding: '12px 20px',
+                                    background: 'rgba(255,255,255,0.02)',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <div>
+                                        <strong style={{ fontSize: '12px', color: '#fff' }}>Simulate Network Failure on EHR Servers</strong>
+                                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                                            When enabled, background sync tasks will fail validation and fall back to the Dead Letter Queue.
+                                        </p>
+                                    </div>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={dbForceSyncFail}
+                                            onChange={(e) => {
+                                                const checked = e.target.checked;
+                                                setDbForceSyncFail(checked);
+                                                localStorage.setItem('psypyrus_force_sync_fail', checked ? 'true' : 'false');
+                                                showToast(checked ? "EHR network outage simulated." : "EHR connection restored.", "info");
+                                            }}
+                                            style={{ accentColor: 'var(--color-primary)' }}
+                                        />
+                                        <span style={{ fontSize: '11px', color: '#fff' }}>Simulate Network Outage</span>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

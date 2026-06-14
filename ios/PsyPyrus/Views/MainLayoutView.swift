@@ -236,6 +236,12 @@ public struct MainLayoutView: View {
                 HitopMatrixExplorerView(viewModel: viewModel)
             case "RDoC":
                 RdocMatrixExplorerView(viewModel: viewModel)
+            case "Peer Support":
+                PeerSupportView(viewModel: viewModel)
+            case "Match & Book":
+                MatchAndBookView(viewModel: viewModel)
+            case "Homework":
+                HomeworkTrackerView(viewModel: viewModel)
             default:
                 Text("Dashboard Panel")
             }
@@ -256,6 +262,12 @@ public struct MainLayoutView: View {
                 HipaSecurityShieldView(viewModel: viewModel)
             case "MindShop":
                 MindShopView(viewModel: viewModel)
+            case "Peer Support":
+                PeerSupportView(viewModel: viewModel)
+            case "Match & Book":
+                MatchAndBookView(viewModel: viewModel)
+            case "Homework":
+                HomeworkTrackerView(viewModel: viewModel)
             default:
                 Text("Dashboard Panel")
             }

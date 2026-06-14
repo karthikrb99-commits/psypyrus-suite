@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Containerized PsyPyrus React Web Application
+  psypyrus-web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: psypyrus-web-service
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    restart: always
+    networks:
+      - psypyrus-network
+
+  # Centralized Prometheus Service for Metrics Observability
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-metrics-scraper
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - psypyrus-network
+
+  # Grafana Dashboard Visualizer
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-metrics-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    networks:
+      - psypyrus-network
+
+networks:
+  psypyrus-network:
+    driver: bridge

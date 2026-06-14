@@ -1,3 +1,5 @@
+import * as Dialog from '@radix-ui/react-dialog';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Database } from '../services/db';
 
@@ -99,141 +101,152 @@ export function AddApptModal({ isOpen, onClose, onSubmit }) {
         onClose();
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="modal-overlay-block active" id="add-appt-modal-overlay">
-            <style>{`
-                .patient-typeahead-list {
-                    background: rgba(0,0,0,0.3);
-                    border: 1px solid rgba(255,255,255,0.06);
-                    border-radius: 8px;
-                    max-height: 110px;
-                    overflow-y: auto;
-                    margin-top: 6px;
-                    padding: 4px;
-                }
-                .typeahead-item {
-                    padding: 8px 12px;
-                    font-size: 12px;
-                    color: var(--text-normal);
-                    cursor: pointer;
-                    border-radius: 4px;
-                    display: flex;
-                    justify-content: space-between;
-                }
-                .typeahead-item:hover, .typeahead-item.selected {
-                    background: var(--color-primary-glow);
-                    color: var(--color-primary);
-                }
-            `}</style>
+        <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <AnimatePresence>
+                {isOpen && (
+                    <Dialog.Portal forceMount>
+                        <Dialog.Overlay asChild>
+                            <motion.div 
+                                className="modal-overlay-block active fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+                                id="add-appt-modal-overlay"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                            >
+                                <Dialog.Content asChild>
+                                    <motion.div 
+                                        className="modal-content-box bg-slate-900 border border-white/10 rounded-lg p-6 w-full max-w-[450px] shadow-2xl relative text-slate-100"
+                                        initial={{ scale: 0.95, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        exit={{ scale: 0.95, opacity: 0 }}
+                                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                                    >
+                                        <Dialog.Title asChild>
+                                            <h3 className="modal-header-row text-lg font-bold text-slate-100 border-b border-white/5 pb-3 mb-4">
+                                                Schedule EHR Session
+                                            </h3>
+                                        </Dialog.Title>
+                                        
+                                        {validationError && (
+                                            <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-md text-xs mb-4 flex items-center gap-2">
+                                                <i className="fa-solid fa-triangle-exclamation"></i>
+                                                {validationError}
+                                            </div>
+                                        )}
 
-            <div className="modal-content-box" style={{ maxWidth: '450px' }}>
-                <h3 className="modal-header-row">Schedule EHR Session</h3>
-                
-                {validationError && (
-                    <div style={{ padding: '8px 12px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid var(--color-error)', color: 'var(--color-error)', borderRadius: '6px', fontSize: '12px', marginBottom: '14px' }}>
-                        <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: '6px' }}></i>
-                        {validationError}
-                    </div>
+                                        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                                            {/* Patient search & type-ahead select */}
+                                            <div className="form-field-group flex flex-col gap-1.5">
+                                                <label className="form-label text-xs font-semibold text-slate-400">Search & Select Patient:</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 px-3 py-2 rounded-md outline-none text-sm transition-all"
+                                                    placeholder="Type name to filter..."
+                                                    value={searchQuery}
+                                                    onChange={handleSearchChange}
+                                                />
+                                                <div className="patient-typeahead-list bg-black/30 border border-white/5 rounded-lg max-h-[110px] overflow-y-auto mt-1 p-1 flex flex-col gap-0.5">
+                                                    {filteredPatients.map(pat => (
+                                                        <div 
+                                                            key={pat.id} 
+                                                            className={`typeahead-item px-3 py-2 text-xs cursor-pointer rounded flex justify-between transition-colors ${selectedPatientId === pat.id ? 'bg-primary/20 text-primary font-medium' : 'text-slate-300 hover:bg-white/5'}`}
+                                                            onClick={() => {
+                                                                setSelectedPatientId(pat.id);
+                                                                setSearchQuery(pat.name);
+                                                            }}
+                                                        >
+                                                            <span>{pat.name}</span>
+                                                            <span className="text-[10px] opacity-60">ID: #{pat.id}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Date and Time Pickers */}
+                                            <div className="grid grid-cols-[1.2fr_0.8fr] gap-3">
+                                                <div className="form-field-group flex flex-col gap-1.5">
+                                                    <label className="form-label text-xs font-semibold text-slate-400">Session Date:</label>
+                                                    <input 
+                                                        type="date" 
+                                                        className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all"
+                                                        value={dateVal}
+                                                        onChange={(e) => setDateVal(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="form-field-group flex flex-col gap-1.5">
+                                                    <label className="form-label text-xs font-semibold text-slate-400">Start Time:</label>
+                                                    <input 
+                                                        type="time" 
+                                                        className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all"
+                                                        value={timeVal}
+                                                        onChange={(e) => setTimeVal(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Agenda notes */}
+                                            <div className="form-field-group flex flex-col gap-1.5">
+                                                <label className="form-label text-xs font-semibold text-slate-400">Therapy Notes Agenda:</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 px-3 py-2 rounded-md outline-none text-sm transition-all"
+                                                    value={notes}
+                                                    onChange={(e) => setNotes(e.target.value)}
+                                                    placeholder="Primary focus of session..."
+                                                />
+                                            </div>
+
+                                            {/* Fee setting */}
+                                            <div className="form-field-group flex flex-col gap-1.5">
+                                                <label className="form-label text-xs font-semibold text-slate-400">Session Fee (USD):</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 px-3 py-2 rounded-md outline-none text-sm transition-all"
+                                                    value={fee}
+                                                    onChange={(e) => setFee(e.target.value)}
+                                                    placeholder="150.00"
+                                                />
+                                            </div>
+
+                                            {/* Video toggle */}
+                                            <div className="checkbox-option-row flex items-center gap-2 cursor-pointer py-1">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="checkbox-control cursor-pointer" 
+                                                    id="add-appt-video-checkbox" 
+                                                    checked={isVideo}
+                                                    onChange={(e) => setIsVideo(e.target.checked)}
+                                                    style={{ accentColor: 'var(--color-primary)' }}
+                                                />
+                                                <label className="checkbox-label text-xs text-slate-300 cursor-pointer select-none" htmlFor="add-appt-video-checkbox">
+                                                    Connect as Secure HIPAA Telehealth Chamber
+                                                </label>
+                                            </div>
+
+                                            <div className="modal-actions-panel flex justify-end gap-3 mt-4 pt-3 border-t border-white/5">
+                                                <button 
+                                                    type="button" 
+                                                    className="action-button-btn secondary px-4 py-2 text-sm font-semibold rounded-md border border-white/10 text-slate-300 hover:bg-white/5 transition-all" 
+                                                    onClick={onClose}
+                                                >
+                                                    Dismiss
+                                                </button>
+                                                <button 
+                                                    type="submit" 
+                                                    className="action-button-btn px-4 py-2 text-sm font-semibold rounded-md bg-primary text-black hover:bg-primary/95 transition-all"
+                                                >
+                                                    Insert Schedule
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </motion.div>
+                                </Dialog.Content>
+                            </motion.div>
+                        </Dialog.Overlay>
+                    </Dialog.Portal>
                 )}
-
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    
-                    {/* Patient search & type-ahead select */}
-                    <div className="form-field-group">
-                        <label className="form-label">Search & Select Patient:</label>
-                        <input 
-                            type="text" 
-                            className="input-text-field"
-                            placeholder="Type name to filter..."
-                            value={searchQuery}
-                            onChange={handleSearchChange}
-                        />
-                        <div className="patient-typeahead-list">
-                            {filteredPatients.map(pat => (
-                                <div 
-                                    key={pat.id} 
-                                    className={`typeahead-item ${selectedPatientId === pat.id ? 'selected' : ''}`}
-                                    onClick={() => {
-                                        setSelectedPatientId(pat.id);
-                                        setSearchQuery(pat.name);
-                                    }}
-                                >
-                                    <span>{pat.name}</span>
-                                    <span style={{ fontSize: '10px', opacity: 0.6 }}>ID: #{pat.id}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Date and Time Pickers */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '12px' }}>
-                        <div className="form-field-group">
-                            <label className="form-label">Session Date:</label>
-                            <input 
-                                type="date" 
-                                className="input-text-field"
-                                value={dateVal}
-                                onChange={(e) => setDateVal(e.target.value)}
-                            />
-                        </div>
-                        <div className="form-field-group">
-                            <label className="form-label">Start Time:</label>
-                            <input 
-                                type="time" 
-                                className="input-text-field"
-                                value={timeVal}
-                                onChange={(e) => setTimeVal(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Agenda notes */}
-                    <div className="form-field-group">
-                        <label className="form-label">Therapy Notes Agenda:</label>
-                        <input 
-                            type="text" 
-                            className="input-text-field"
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Primary focus of session..."
-                        />
-                    </div>
-
-                    {/* Fee setting */}
-                    <div className="form-field-group">
-                        <label className="form-label">Session Fee (USD):</label>
-                        <input 
-                            type="text" 
-                            className="input-text-field"
-                            value={fee}
-                            onChange={(e) => setFee(e.target.value)}
-                            placeholder="150.00"
-                        />
-                    </div>
-
-                    {/* Video toggle */}
-                    <div className="checkbox-option-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                        <input 
-                            type="checkbox" 
-                            className="checkbox-control" 
-                            id="add-appt-video-checkbox" 
-                            checked={isVideo}
-                            onChange={(e) => setIsVideo(e.target.checked)}
-                            style={{ accentColor: 'var(--color-primary)' }}
-                        />
-                        <label className="checkbox-label" htmlFor="add-appt-video-checkbox" style={{ fontSize: '12px', cursor: 'pointer' }}>
-                            Connect as Secure HIPAA Telehealth Chamber
-                        </label>
-                    </div>
-
-                    <div className="modal-actions-panel" style={{ marginTop: '10px' }}>
-                        <button type="button" className="action-button-btn secondary" onClick={onClose}>Dismiss</button>
-                        <button type="submit" className="action-button-btn">Insert Schedule</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+            </AnimatePresence>
+        </Dialog.Root>
     );
 }

@@ -1,3 +1,6 @@
+import * as Dialog from '@radix-ui/react-dialog';
+import * as ScrollArea from '@radix-ui/react-scroll-area';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export function CommandPalette({
@@ -112,60 +115,86 @@ export function CommandPalette({
         }
     }, [selectedIndex]);
 
-    if (!isOpen) return null;
-
     return (
-        <div className="command-palette-overlay" onClick={onClose}>
-            <div 
-                className="command-palette-modal" 
-                onClick={(e) => e.stopPropagation()}
-                id="app-command-palette"
-            >
-                <div className="command-input-container">
-                    <i className="fa-solid fa-magnifying-glass command-search-icon"></i>
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        placeholder="Search screens, patients, clinical actions..."
-                        value={search}
-                        onChange={(e) => {
-                            setSearch(e.target.value);
-                            setSelectedIndex(0);
-                        }}
-                        className="command-search-input"
-                    />
-                    <div className="command-kbd-hint">ESC</div>
-                </div>
+        <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <AnimatePresence>
+                {isOpen && (
+                    <Dialog.Portal forceMount>
+                        <Dialog.Overlay asChild>
+                            <motion.div 
+                                className="command-palette-overlay fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-start justify-center pt-[15vh] p-4"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                            >
+                                <Dialog.Content asChild>
+                                    <motion.div 
+                                        className="command-palette-modal bg-slate-950 border border-white/10 rounded-lg shadow-2xl w-full max-w-[550px] overflow-hidden flex flex-col"
+                                        id="app-command-palette"
+                                        initial={{ scale: 0.95, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        exit={{ scale: 0.95, opacity: 0 }}
+                                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                                    >
+                                        <div className="command-input-container flex items-center gap-3 px-4 py-3 border-b border-white/10">
+                                            <i className="fa-solid fa-magnifying-glass command-search-icon text-slate-400"></i>
+                                            <input
+                                                ref={inputRef}
+                                                type="text"
+                                                placeholder="Search screens, patients, clinical actions..."
+                                                value={search}
+                                                onChange={(e) => {
+                                                    setSearch(e.target.value);
+                                                    setSelectedIndex(0);
+                                                }}
+                                                className="command-search-input bg-transparent text-slate-100 placeholder-slate-500 outline-none flex-1 text-sm"
+                                                autoFocus
+                                            />
+                                            <div className="command-kbd-hint text-[10px] bg-white/10 text-slate-300 px-1.5 py-0.5 rounded uppercase font-mono">ESC</div>
+                                        </div>
 
-                <div className="command-results-container" ref={resultsRef}>
-                    {filteredItems.length === 0 ? (
-                        <div className="command-no-results">No matching commands or patients found.</div>
-                    ) : (
-                        filteredItems.map((item, idx) => {
-                            const isSelected = idx === selectedIndex;
-                            return (
-                                <div
-                                    key={item.id}
-                                    className={`command-item ${isSelected ? 'selected' : ''}`}
-                                    onClick={() => handleSelect(item)}
-                                >
-                                    <div className="command-item-left">
-                                        <i className={`fa-solid ${item.icon} command-item-icon`}></i>
-                                        <span className="command-item-name">{item.name}</span>
-                                    </div>
-                                    <span className="command-item-category">{item.category}</span>
-                                </div>
-                            );
-                        })
-                    )}
-                </div>
+                                        <ScrollArea.Root className="overflow-hidden flex flex-col max-h-[300px]">
+                                            <ScrollArea.Viewport className="w-full max-h-[300px]" ref={resultsRef}>
+                                                <div className="p-2 flex flex-col gap-0.5">
+                                                    {filteredItems.length === 0 ? (
+                                                        <div className="command-no-results px-4 py-6 text-center text-sm text-slate-500">No matching commands or patients found.</div>
+                                                    ) : (
+                                                        filteredItems.map((item, idx) => {
+                                                            const isSelected = idx === selectedIndex;
+                                                            return (
+                                                                <div
+                                                                    key={item.id}
+                                                                    className={`command-item flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer text-sm transition-colors ${isSelected ? 'selected bg-primary/20 text-primary font-medium' : 'text-slate-300 hover:bg-white/5'}`}
+                                                                    onClick={() => handleSelect(item)}
+                                                                >
+                                                                    <div className="command-item-left flex items-center gap-3">
+                                                                        <i className={`fa-solid ${item.icon} command-item-icon text-slate-400 ${isSelected ? 'text-primary' : ''}`}></i>
+                                                                        <span className="command-item-name">{item.name}</span>
+                                                                    </div>
+                                                                    <span className="command-item-category text-xs text-slate-500">{item.category}</span>
+                                                                </div>
+                                                            );
+                                                        })
+                                                    )}
+                                                </div>
+                                            </ScrollArea.Viewport>
+                                            <ScrollArea.Scrollbar className="flex select-none touch-none p-0.5 bg-black/10 transition-colors w-1.5" orientation="vertical">
+                                                <ScrollArea.Thumb className="flex-1 bg-white/20 rounded-full" />
+                                            </ScrollArea.Scrollbar>
+                                        </ScrollArea.Root>
 
-                <div className="command-palette-footer">
-                    <span>Use <kbd>↑</kbd> <kbd>↓</kbd> to navigate</span>
-                    <span><kbd>Enter</kbd> to select</span>
-                    <span><kbd>Esc</kbd> to close</span>
-                </div>
-            </div>
-        </div>
+                                        <div className="command-palette-footer flex justify-between items-center px-4 py-2.5 bg-slate-900/50 border-t border-white/5 text-[11px] text-slate-500">
+                                            <span>Use <kbd className="bg-white/5 px-1 py-0.5 rounded">↑</kbd> <kbd className="bg-white/5 px-1 py-0.5 rounded">↓</kbd> to navigate</span>
+                                            <span><kbd className="bg-white/5 px-1 py-0.5 rounded">Enter</kbd> to select</span>
+                                            <span><kbd className="bg-white/5 px-1 py-0.5 rounded">Esc</kbd> to close</span>
+                                        </div>
+                                    </motion.div>
+                                </Dialog.Content>
+                            </motion.div>
+                        </Dialog.Overlay>
+                    </Dialog.Portal>
+                )}
+            </AnimatePresence>
+        </Dialog.Root>
     );
 }

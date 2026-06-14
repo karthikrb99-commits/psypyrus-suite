@@ -1,7 +1,11 @@
+import * as Dialog from '@radix-ui/react-dialog';
+import * as Tabs from '@radix-ui/react-tabs';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Database } from '../services/db';
+import { GamificationService } from '../services/gamification';
 
-export function SettingsDrawer({ isOpen, onClose, onSave }) {
+export function SettingsDrawer({ isOpen, onClose, onSave, theme, setTheme }) {
     const [activeSection, setActiveSection] = useState('api'); // 'api', 'display', 'data', 'notifications'
 
     // API state
@@ -15,6 +19,7 @@ export function SettingsDrawer({ isOpen, onClose, onSave }) {
     // Display state
     const [accentColor, setAccentColor] = useState('teal');
     const [fontSize, setFontSize] = useState('medium');
+    const [unlockedThemes, setUnlockedThemes] = useState({ crt: false, glass: false });
 
     // Notifications state
     const [notifyRisk, setNotifyRisk] = useState(true);
@@ -55,6 +60,13 @@ export function SettingsDrawer({ isOpen, onClose, onSave }) {
             setNotifyRisk(localStorage.getItem('psypyrus_notify_risk') !== 'false');
             setNotifySession(localStorage.getItem('psypyrus_notify_session') !== 'false');
             setNotifySystem(localStorage.getItem('psypyrus_notify_system') === 'true');
+
+            // Check theme purchases
+            const shopItems = GamificationService.getShopItems();
+            setUnlockedThemes({
+                crt: shopItems.find(i => i.id === 'shop_theme_retro')?.purchased || false,
+                glass: shopItems.find(i => i.id === 'shop_theme_glass')?.purchased || false
+            });
 
             // System diagnostics info fetch
             if (window.electronAPI && typeof window.electronAPI.getSystemInfo === 'function') {
@@ -134,247 +146,259 @@ export function SettingsDrawer({ isOpen, onClose, onSave }) {
     };
 
     return (
-        <aside className={`settings-drawer-panel ${isOpen ? 'active' : ''}`} id="settings-slide-drawer">
-            <style>{`
-                .settings-section-tabs {
-                    display: flex;
-                    gap: 6px;
-                    border-bottom: 1px solid rgba(255,255,255,0.06);
-                    padding-bottom: 8px;
-                    margin-bottom: 16px;
-                    overflow-x: auto;
-                }
-                .settings-sec-tab {
-                    background: transparent;
-                    border: none;
-                    color: var(--text-muted);
-                    font-size: 11px;
-                    font-weight: 600;
-                    padding: 6px 10px;
-                    cursor: pointer;
-                    border-radius: 4px;
-                    transition: all 0.2s ease;
-                }
-                .settings-sec-tab:hover {
-                    color: var(--text-light);
-                    background: rgba(255,255,255,0.02);
-                }
-                .settings-sec-tab.active {
-                    color: var(--color-primary);
-                    background: var(--color-primary-glow);
-                }
-                .color-picker-grid {
-                    display: flex;
-                    gap: 8px;
-                    margin-top: 8px;
-                }
-                .color-dot {
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    border: 2px solid transparent;
-                    transition: transform 0.2s ease;
-                }
-                .color-dot:hover {
-                    transform: scale(1.15);
-                }
-                .color-dot.active {
-                    border-color: #fff;
-                    box-shadow: 0 0 10px rgba(255,255,255,0.25);
-                }
-            `}</style>
-
-            <div className="settings-drawer-header">
-                <h3>PsyPyrus System settings</h3>
-                <button className="rail-btn" onClick={onClose}><i className="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <div className="settings-drawer-body">
-                
-                {/* Section selection tabs */}
-                <div className="settings-section-tabs">
-                    <button className={`settings-sec-tab ${activeSection === 'api' ? 'active' : ''}`} onClick={() => setActiveSection('api')}>AI & APIs</button>
-                    <button className={`settings-sec-tab ${activeSection === 'display' ? 'active' : ''}`} onClick={() => setActiveSection('display')}>Display</button>
-                    <button className={`settings-sec-tab ${activeSection === 'data' ? 'active' : ''}`} onClick={() => setActiveSection('data')}>Database</button>
-                    <button className={`settings-sec-tab ${activeSection === 'notifications' ? 'active' : ''}`} onClick={() => setActiveSection('notifications')}>Alerts</button>
-                </div>
-
-                {/* 1. API SECTION */}
-                {activeSection === 'api' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div className="form-field-group">
-                            <label className="form-label">Active AI Copilot Provider:</label>
-                            <select 
-                                value={activeProvider}
-                                onChange={(e) => setActiveProvider(e.target.value)}
-                                className="input-text-field"
+        <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <AnimatePresence>
+                {isOpen && (
+                    <Dialog.Portal forceMount>
+                        <Dialog.Overlay asChild>
+                            <motion.div 
+                                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999]"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
                             >
-                                <option value="0">Google Gemini (Default)</option>
-                                <option value="1">OpenAI / Custom LLM</option>
-                            </select>
-                        </div>
+                                <Dialog.Content asChild>
+                                    <motion.div 
+                                        className="settings-slide-drawer fixed right-0 top-0 h-full w-full max-w-[400px] bg-slate-900 border-l border-white/10 p-6 shadow-2xl z-[1000] flex flex-col text-slate-100"
+                                        id="settings-slide-drawer"
+                                        initial={{ x: "100%" }}
+                                        animate={{ x: 0 }}
+                                        exit={{ x: "100%" }}
+                                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                    >
+                                        <Dialog.Title asChild>
+                                            <div className="settings-drawer-header flex items-center justify-between border-b border-white/5 pb-4 mb-4">
+                                                <h3 className="text-lg font-bold">PsyPyrus System settings</h3>
+                                                <button className="rail-btn text-slate-400 hover:text-slate-200" onClick={onClose}>
+                                                    <i className="fa-solid fa-xmark"></i>
+                                                </button>
+                                            </div>
+                                        </Dialog.Title>
 
-                        {activeProvider === '0' ? (
-                            <div className="form-field-group">
-                                <label className="form-label">Google Gemini API Key:</label>
-                                <input 
-                                    type="password" 
-                                    className="input-text-field" 
-                                    placeholder="AIzaSy..."
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                />
-                                {apiKey.trim().length > 0 ? (
-                                    <div style={{ color: 'var(--color-success)', fontSize: '11px', marginTop: '6px' }}>
-                                        <i className="fa-solid fa-circle-check"></i> Gemini cloud endpoint configured.
-                                    </div>
-                                ) : (
-                                    <div style={{ color: 'var(--color-warning)', fontSize: '11px', marginTop: '6px' }}>
-                                        <i className="fa-solid fa-triangle-exclamation"></i> Key empty. Using local mock fallbacks.
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <div className="form-field-group">
-                                    <label className="form-label">OpenAI / Custom API Key:</label>
-                                    <input 
-                                        type="password" 
-                                        className="input-text-field" 
-                                        placeholder="sk-..."
-                                        value={openaiKey}
-                                        onChange={(e) => setOpenaiKey(e.target.value)}
-                                    />
-                                </div>
-                                <div className="form-field-group">
-                                    <label className="form-label">Custom Endpoint Base URL:</label>
-                                    <input 
-                                        type="text" 
-                                        className="input-text-field" 
-                                        value={customUrl}
-                                        onChange={(e) => setCustomUrl(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                        
-                        <hr style={{ border: 'none', height: '1px', backgroundColor: 'rgba(255,255,255,0.06)', margin: '8px 0' }} />
-                        
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-primary)' }}>WHO ICD-11 Terminology API</span>
-                            <div className="form-field-group">
-                                <label className="form-label">ICD-11 Client ID:</label>
-                                <input className="input-text-field" placeholder="Client ID credentials..." value={icdClientId} onChange={(e) => setIcdClientId(e.target.value)} />
-                            </div>
-                            <div className="form-field-group">
-                                <label className="form-label">ICD-11 Client Secret:</label>
-                                <input type="password" className="input-text-field" placeholder="Client secret..." value={icdClientSecret} onChange={(e) => setIcdClientSecret(e.target.value)} />
-                            </div>
-                        </div>
-                    </div>
+                                        <Tabs.Root value={activeSection} onValueChange={setActiveSection} className="flex-1 flex flex-col min-h-0">
+                                            {/* Tabs Header */}
+                                            <Tabs.List className="settings-section-tabs flex gap-1 border-b border-white/5 pb-2 mb-4 overflow-x-auto">
+                                                <Tabs.Trigger 
+                                                    value="api" 
+                                                    className={`settings-sec-tab px-3 py-1.5 rounded text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${activeSection === 'api' ? 'bg-primary/20 text-primary font-bold' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
+                                                >
+                                                    AI & APIs
+                                                </Tabs.Trigger>
+                                                <Tabs.Trigger 
+                                                    value="display" 
+                                                    className={`settings-sec-tab px-3 py-1.5 rounded text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${activeSection === 'display' ? 'bg-primary/20 text-primary font-bold' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
+                                                >
+                                                    Display
+                                                </Tabs.Trigger>
+                                                <Tabs.Trigger 
+                                                    value="data" 
+                                                    className={`settings-sec-tab px-3 py-1.5 rounded text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${activeSection === 'data' ? 'bg-primary/20 text-primary font-bold' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
+                                                >
+                                                    Database
+                                                </Tabs.Trigger>
+                                                <Tabs.Trigger 
+                                                    value="notifications" 
+                                                    className={`settings-sec-tab px-3 py-1.5 rounded text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${activeSection === 'notifications' ? 'bg-primary/20 text-primary font-bold' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
+                                                >
+                                                    Alerts
+                                                </Tabs.Trigger>
+                                            </Tabs.List>
+
+                                            {/* Tabs Scrollable Content */}
+                                            <div className="flex-1 overflow-y-auto pr-1 min-h-0 pb-6">
+                                                {/* API SECTION */}
+                                                <Tabs.Content value="api" className="flex flex-col gap-4">
+                                                    <div className="form-field-group flex flex-col gap-1.5">
+                                                        <label className="form-label text-xs font-semibold text-slate-400">Active AI Copilot Provider:</label>
+                                                        <select 
+                                                            value={activeProvider}
+                                                            onChange={(e) => setActiveProvider(e.target.value)}
+                                                            className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all"
+                                                        >
+                                                            <option value="0">Google Gemini (Default)</option>
+                                                            <option value="1">OpenAI / Custom LLM</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {activeProvider === '0' ? (
+                                                        <div className="form-field-group flex flex-col gap-1.5">
+                                                            <label className="form-label text-xs font-semibold text-slate-400">Google Gemini API Key:</label>
+                                                            <input 
+                                                                type="password" 
+                                                                className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all" 
+                                                                placeholder="AIzaSy..."
+                                                                value={apiKey}
+                                                                onChange={(e) => setApiKey(e.target.value)}
+                                                            />
+                                                            {apiKey.trim().length > 0 ? (
+                                                                <div className="text-emerald-400 text-xs mt-1 flex items-center gap-1.5">
+                                                                    <i className="fa-solid fa-circle-check"></i> Gemini cloud endpoint configured.
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-amber-400 text-xs mt-1 flex items-center gap-1.5">
+                                                                    <i className="fa-solid fa-triangle-exclamation"></i> Key empty. Using local mock fallbacks.
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col gap-3">
+                                                            <div className="form-field-group flex flex-col gap-1.5">
+                                                                <label className="form-label text-xs font-semibold text-slate-400">OpenAI / Custom API Key:</label>
+                                                                <input 
+                                                                    type="password" 
+                                                                    className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all" 
+                                                                    placeholder="sk-..."
+                                                                    value={openaiKey}
+                                                                    onChange={(e) => setOpenaiKey(e.target.value)}
+                                                                />
+                                                            </div>
+                                                            <div className="form-field-group flex flex-col gap-1.5">
+                                                                <label className="form-label text-xs font-semibold text-slate-400">Custom Endpoint Base URL:</label>
+                                                                <input 
+                                                                    type="text" 
+                                                                    className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all" 
+                                                                    value={customUrl}
+                                                                    onChange={(e) => setCustomUrl(e.target.value)}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <hr className="border-white/5 my-2" />
+                                                    
+                                                    <div className="flex flex-col gap-3">
+                                                        <span className="text-xs font-bold text-primary">WHO ICD-11 Terminology API</span>
+                                                        <div className="form-field-group flex flex-col gap-1.5">
+                                                            <label className="form-label text-xs font-semibold text-slate-400">ICD-11 Client ID:</label>
+                                                            <input className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all" placeholder="Client ID credentials..." value={icdClientId} onChange={(e) => setIcdClientId(e.target.value)} />
+                                                        </div>
+                                                        <div className="form-field-group flex flex-col gap-1.5">
+                                                            <label className="form-label text-xs font-semibold text-slate-400">ICD-11 Client Secret:</label>
+                                                            <input type="password" className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all" placeholder="Client secret..." value={icdClientSecret} onChange={(e) => setIcdClientSecret(e.target.value)} />
+                                                        </div>
+                                                    </div>
+                                                </Tabs.Content>
+
+                                                {/* DISPLAY SECTION */}
+                                                <Tabs.Content value="display" className="flex flex-col gap-5">
+                                                    <div className="form-field-group flex flex-col gap-1.5">
+                                                        <label className="form-label text-xs font-semibold text-slate-400">System Font Sizing:</label>
+                                                        <select 
+                                                            value={fontSize}
+                                                            onChange={(e) => setFontSize(e.target.value)}
+                                                            className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all"
+                                                        >
+                                                            <option value="small">Small Sizing (13px)</option>
+                                                            <option value="medium">Medium Standard (15px)</option>
+                                                            <option value="large">Large Accessibility (17px)</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="form-field-group flex flex-col gap-1.5">
+                                                        <label className="form-label text-xs font-semibold text-slate-400">System Layout Theme:</label>
+                                                        <select 
+                                                            value={theme} 
+                                                            onChange={(e) => setTheme(e.target.value)}
+                                                            className="input-text-field w-full bg-black/40 border border-white/10 text-slate-100 px-3 py-2 rounded-md outline-none text-sm focus:border-primary/50 transition-all"
+                                                        >
+                                                            <option value="dark-onyx">Dark Onyx (Default)</option>
+                                                            <option value="light">Light Slate Mode</option>
+                                                            <option value="retro-crt" disabled={!unlockedThemes.crt}>
+                                                                Retro CRT Terminal {unlockedThemes.crt ? '(Unlocked)' : '(Locked 🪙 100 coins)'}
+                                                            </option>
+                                                            <option value="glassmorphic" disabled={!unlockedThemes.glass}>
+                                                                Glassmorphic Translucent {unlockedThemes.glass ? '(Unlocked)' : '(Locked 🪙 80 coins)'}
+                                                            </option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="form-field-group flex flex-col gap-1.5">
+                                                        <label className="form-label text-xs font-semibold text-slate-400">Active Workspace Theme Accent:</label>
+                                                        <div className="color-picker-grid flex gap-2 mt-1">
+                                                            {Object.keys(colorOptions).map((col) => (
+                                                                <div 
+                                                                    key={col}
+                                                                    className={`color-dot w-6 h-6 rounded-full cursor-pointer border-2 transition-transform hover:scale-110 ${accentColor === col ? 'border-white shadow-md' : 'border-transparent'}`}
+                                                                    style={{ backgroundColor: colorOptions[col].primary }}
+                                                                    onClick={() => setAccentColor(col)}
+                                                                    title={col}
+                                                                ></div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* System Diagnostics Info */}
+                                                    {systemInfo && (
+                                                        <div className="system-diagnostics-group mt-6 border-t border-white/5 pt-4">
+                                                            <h4 className="mb-2 text-primary font-bold text-xs">System Diagnostics</h4>
+                                                            <div className="text-[11px] text-slate-400 flex flex-col gap-1.5">
+                                                                <div><strong>OS Platform:</strong> {systemInfo.platform} ({systemInfo.arch})</div>
+                                                                <div><strong>Processor:</strong> {systemInfo.cpuModel}</div>
+                                                                <div><strong>RAM Utilized:</strong> {systemInfo.usedMemoryGB} GB / {systemInfo.totalMemoryGB} GB</div>
+                                                                <div><strong>Desktop Version:</strong> {systemInfo.appVersion}</div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </Tabs.Content>
+
+                                                {/* DATABASE SECTION */}
+                                                <Tabs.Content value="data" className="flex flex-col gap-4">
+                                                    <span className="text-xs text-slate-400">
+                                                        Perform full backup and restore operations on offline localStorage files.
+                                                    </span>
+                                                    
+                                                    <button className="action-button-btn w-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2 px-3 rounded border border-white/10 flex items-center justify-center gap-1.5 transition-colors" onClick={handleExport}>
+                                                        <i className="fa-solid fa-file-export"></i> Backup Database (JSON)
+                                                    </button>
+                                                    
+                                                    <div className="border border-dashed border-white/10 p-3 rounded-lg text-center flex flex-col gap-2">
+                                                        <span className="text-[11px] text-slate-400 block">
+                                                            Restore from JSON backup file:
+                                                        </span>
+                                                        <input type="file" accept=".json" onChange={handleImport} className="text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/20 file:text-primary file:cursor-pointer hover:file:bg-primary/30" />
+                                                    </div>
+
+                                                    <hr className="border-white/5 my-2" />
+
+                                                    <button className="action-button-btn danger w-full bg-red-950/20 hover:bg-red-950/40 text-red-400 text-xs font-semibold py-2 px-3 rounded border border-red-500/30 flex items-center justify-center gap-1.5 transition-colors" onClick={handleWipe}>
+                                                        <i className="fa-solid fa-triangle-exclamation"></i> WIPE CLINICAL DATABASE
+                                                    </button>
+                                                </Tabs.Content>
+
+                                                {/* NOTIFICATIONS */}
+                                                <Tabs.Content value="notifications" className="flex flex-col gap-4">
+                                                    <span className="text-xs text-slate-400">
+                                                        Configure alert preferences for system audit logging events.
+                                                    </span>
+                                                    
+                                                    <label className="flex items-center gap-2.5 cursor-pointer text-sm text-slate-300">
+                                                        <input type="checkbox" checked={notifyRisk} onChange={(e) => setNotifyRisk(e.target.checked)} style={{ accentColor: 'var(--color-primary)' }} className="w-4 h-4 cursor-pointer" />
+                                                        <span>Risk Flags Warnings Alerts</span>
+                                                    </label>
+
+                                                    <label className="flex items-center gap-2.5 cursor-pointer text-sm text-slate-300">
+                                                        <input type="checkbox" checked={notifySession} onChange={(e) => setNotifySession(e.target.checked)} style={{ accentColor: 'var(--color-primary)' }} className="w-4 h-4 cursor-pointer" />
+                                                        <span>Scheduled Sessions Updates</span>
+                                                    </label>
+
+                                                    <label className="flex items-center gap-2.5 cursor-pointer text-sm text-slate-300">
+                                                        <input type="checkbox" checked={notifySystem} onChange={(e) => setNotifySystem(e.target.checked)} style={{ accentColor: 'var(--color-primary)' }} className="w-4 h-4 cursor-pointer" />
+                                                        <span>System Diagnostics & Audit logs</span>
+                                                    </label>
+                                                </Tabs.Content>
+                                            </div>
+                                        </Tabs.Root>
+
+                                        <button className="action-button-btn w-full bg-primary text-black hover:bg-primary/95 text-sm font-bold py-2.5 rounded-md mt-auto shadow-md transition-colors" onClick={handleSave}>
+                                            Save Settings
+                                        </button>
+                                    </motion.div>
+                                </Dialog.Content>
+                            </motion.div>
+                        </Dialog.Overlay>
+                    </Dialog.Portal>
                 )}
-
-                {/* 2. DISPLAY SECTION */}
-                {activeSection === 'display' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div className="form-field-group">
-                            <label className="form-label">System Font Sizing:</label>
-                            <select 
-                                value={fontSize}
-                                onChange={(e) => setFontSize(e.target.value)}
-                                className="input-text-field"
-                            >
-                                <option value="small">Small Sizing (13px)</option>
-                                <option value="medium">Medium Standard (15px)</option>
-                                <option value="large">Large Accessibility (17px)</option>
-                            </select>
-                        </div>
-
-                        <div className="form-field-group">
-                            <label className="form-label">Active Workspace Theme Accent:</label>
-                            <div className="color-picker-grid">
-                                {Object.keys(colorOptions).map((col) => (
-                                    <div 
-                                        key={col}
-                                        className={`color-dot ${accentColor === col ? 'active' : ''}`}
-                                        style={{ backgroundColor: colorOptions[col].primary }}
-                                        onClick={() => setAccentColor(col)}
-                                        title={col}
-                                    ></div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 3. DATABASE SECTION */}
-                {activeSection === 'data' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            Perform full backup and restore operations on offline localStorage files.
-                        </span>
-                        
-                        <button className="action-button-btn" style={{ width: '100%' }} onClick={handleExport}>
-                            <i className="fa-solid fa-file-export"></i> Backup Database (JSON)
-                        </button>
-                        
-                        <div style={{ border: '1px dashed rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-                                Restore from JSON backup file:
-                            </span>
-                            <input type="file" accept=".json" onChange={handleImport} style={{ fontSize: '11px', color: 'var(--text-muted)' }} />
-                        </div>
-
-                        <hr style={{ border: 'none', height: '1px', backgroundColor: 'rgba(255,255,255,0.06)' }} />
-
-                        <button className="action-button-btn danger" style={{ width: '100%', background: 'rgba(239,68,68,0.1)', border: '1px solid var(--color-error)', color: 'var(--color-error)' }} onClick={handleWipe}>
-                            <i className="fa-solid fa-triangle-exclamation"></i> WIPE CLINICAL DATABASE
-                        </button>
-                    </div>
-                )}
-
-                {/* 4. NOTIFICATIONS */}
-                {activeSection === 'notifications' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            Configure alert preferences for system audit logging events.
-                        </span>
-                        
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                            <input type="checkbox" checked={notifyRisk} onChange={(e) => setNotifyRisk(e.target.checked)} style={{ accentColor: 'var(--color-primary)' }} />
-                            <span>Risk Flags Warnings Alerts</span>
-                        </label>
-
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                            <input type="checkbox" checked={notifySession} onChange={(e) => setNotifySession(e.target.checked)} style={{ accentColor: 'var(--color-primary)' }} />
-                            <span>Scheduled Sessions Updates</span>
-                        </label>
-
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
-                            <input type="checkbox" checked={notifySystem} onChange={(e) => setNotifySystem(e.target.checked)} style={{ accentColor: 'var(--color-primary)' }} />
-                            <span>System Diagnostics & Audit logs</span>
-                        </label>
-                    </div>
-                )}
-
-                {/* System Diagnostics Info */}
-                {systemInfo && activeSection === 'display' && (
-                    <div className="system-diagnostics-group" style={{ marginTop: '24px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
-                        <h4 style={{ marginBottom: '8px', color: 'var(--color-primary)', fontSize: '12px' }}>System Diagnostics</h4>
-                        <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <div><strong>OS Platform:</strong> {systemInfo.platform} ({systemInfo.arch})</div>
-                            <div><strong>Processor:</strong> {systemInfo.cpuModel}</div>
-                            <div><strong>RAM Utilized:</strong> {systemInfo.usedMemoryGB} GB / {systemInfo.totalMemoryGB} GB</div>
-                            <div><strong>Desktop Version:</strong> {systemInfo.appVersion}</div>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            <button className="action-button-btn" onClick={handleSave} style={{ width: '100%', marginTop: 'auto' }}>
-                Save Settings
-            </button>
-        </aside>
+            </AnimatePresence>
+        </Dialog.Root>
     );
 }

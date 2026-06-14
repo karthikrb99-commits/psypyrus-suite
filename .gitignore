@@ -7,6 +7,7 @@ db.db
 # IDEs and editors
 .idea/
 .vscode/
+.agents/
 *.swp
 *.swo
 *~
@@ -15,6 +16,7 @@ db.db
 .env
 .env.local
 local.properties
+web/firebase-applet-config.json
 
 # Dependencies and build outputs
 node_modules/
