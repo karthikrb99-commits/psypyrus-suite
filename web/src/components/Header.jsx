@@ -16,7 +16,10 @@ export function Header({
     onCommandPaletteOpen,
     firebaseUser = null,
     onGoogleSignIn = null,
-    onGoogleSignOut = null
+    onGoogleSignOut = null,
+    isSyncing = false,
+    lastSyncAt = null,
+    onTriggerSync = null
 }) {
     const [notifications, setNotifications] = useState([
         { id: 1, text: "Clinical risk detected for Sophia Martinez" },
@@ -73,14 +76,28 @@ export function Header({
                 <div className="toolbar-actions-group flex items-center gap-4">
                     {/* Firebase Cloud Database Sync Button */}
                     {firebaseUser ? (
-                        <button 
-                            onClick={onGoogleSignOut}
-                            className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-[11px] font-semibold hover:bg-emerald-500/20 transition-all cursor-pointer"
-                            title={`Synced as ${firebaseUser.email}. Click to sign out.`}
-                        >
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span>Cloud Synced</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={onGoogleSignOut}
+                                className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-[11px] font-semibold hover:bg-emerald-500/20 transition-all cursor-pointer"
+                                title={`Synced as ${firebaseUser.email}. Click to sign out.`}
+                            >
+                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span>Cloud Synced</span>
+                            </button>
+                            {/* Manual sync trigger button */}
+                            {onTriggerSync && (
+                                <button
+                                    onClick={onTriggerSync}
+                                    disabled={isSyncing}
+                                    className="flex items-center gap-1.5 px-2.5 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-full text-[11px] font-semibold hover:bg-teal-500/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title={lastSyncAt ? `Last synced: ${lastSyncAt.toLocaleTimeString()} — Click to sync now` : 'Sync local data to cloud now'}
+                                >
+                                    <i className={`fa-solid fa-rotate text-[10px] ${isSyncing ? 'animate-spin' : ''}`}></i>
+                                    <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
+                                </button>
+                            )}
+                        </div>
                     ) : (
                         <button 
                             onClick={onGoogleSignIn}

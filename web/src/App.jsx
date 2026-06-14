@@ -4,7 +4,9 @@ import { WebSocketConn } from './services/websocket';
 import { SSESubscriber } from './services/sse';
 import { ToastProvider, useToast } from './components/ToastProvider';
 import { CommandPalette } from './components/CommandPalette';
+import { useSyncToServer } from './hooks/useSyncToServer';
 // PsychConnect Components & Services
+
 import SocialFeed from './psychconnect/components/SocialFeed';
 import Directory from './psychconnect/components/Directory';
 import Consultations from './psychconnect/components/Consultations';
@@ -104,6 +106,22 @@ function MainAppContent() {
     const [posts, setPosts] = useState(MOCK_POSTS);
     const [pcAppointments, setPcAppointments] = useState(INITIAL_APPOINTMENTS);
     const [isCrisisSupportOpen, setIsCrisisSupportOpen] = useState(false);
+
+    // Cloud sync hook — auto-syncs local data to sync-service when signed in
+    const { isSyncing, lastSyncAt, syncError, triggerSync } = useSyncToServer(firebaseUser);
+
+    // Show toast notifications for sync events
+    useEffect(() => {
+        if (syncError) {
+            showToast(`Cloud sync warning: ${syncError}`, 'error');
+        }
+    }, [syncError, showToast]);
+
+    useEffect(() => {
+        if (lastSyncAt) {
+            showToast(`Local data synced to cloud — ${lastSyncAt.toLocaleTimeString()}`, 'success');
+        }
+    }, [lastSyncAt, showToast]);
 
     // Auth changed hook
     useEffect(() => {
@@ -820,6 +838,9 @@ function MainAppContent() {
                     firebaseUser={firebaseUser}
                     onGoogleSignIn={handleGoogleSignIn}
                     onGoogleSignOut={handleGoogleSignOut}
+                    isSyncing={isSyncing}
+                    lastSyncAt={lastSyncAt}
+                    onTriggerSync={triggerSync}
                 />
 
                 <div className="content-canvas">
