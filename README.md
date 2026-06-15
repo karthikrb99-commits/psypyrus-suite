@@ -229,7 +229,7 @@ Papyrus is intentionally interdisciplinary. We invite contributors from every re
 
 ## 🔍 GitHub Repository SEO Recommendations
 
-To maximize the discoverability of this repository, ensure that you configure the repository metadata in your GitHub repository settings with the following details:
+
 
 - **Description**: `Papyrus: The open-source, secure, HIPAA & DISHA compliant mental health operating system. Features AI SOAP notes, digital MSE, genogram canvas, HiTOP/RDoC matrix explorers, and ABDM India sandbox.`
 - **Website URL**: `https://psypyrus.health/`
