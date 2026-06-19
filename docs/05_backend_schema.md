@@ -143,3 +143,86 @@ If a record mismatch occurs:
 2. **Access Control (RLS)**:
    *   Clinicians have Read/Write permissions on all clinical tables (`patients`, `clinical_notes`, `case_histories`).
    *   Patients have Read-Only permissions on their own `patients` profile, and Read/Write access on their `mood_logs`, `wellness_lounge`, and `gamification_profiles`. They cannot access other patient directories.
+
+---
+
+## 4. PostgreSQL Database Schema Mappings (Sync Service Prisma Models)
+
+The central database in the Papyrus Ecosystem is PostgreSQL, accessed via Prisma ORM inside the **Papyrus Sync Service**. The database models mirror the client-side tables and enforce relational integrity and clinician ownership.
+
+### 4.1 Model: `User`
+Tracks authentication records and role assignment.
+*   `id` (String / Primary Key / `cuid()`): Internal user identifier.
+*   `firebaseUid` (String / Unique / mapped to `firebase_uid`): The Firebase Authentication UID.
+*   `email` (String / Unique / Optional)
+*   `phone` (String / Optional)
+*   `displayName` (String / Optional / mapped to `display_name`)
+*   `role` (Enum `UserRole` / Default: `PATIENT`): One of `CLINICIAN`, `PATIENT`, `ADMIN`.
+*   `createdAt` (DateTime / Default: `now()`)
+*   `updatedAt` (DateTime / Auto-updated)
+*   *Relationships*: Has many `Patient` records (`patients`) and `SyncEvent` records (`syncEvents`).
+
+### 4.2 Model: `Patient`
+Tracks patient chart records owned by a clinician.
+*   `id` (Int / Primary Key / Autoincrement)
+*   `firebaseOwnerId` (String / mapped to `firebase_owner_id`): Foreign key referencing `User.firebaseUid`.
+*   `name` (String)
+*   `age` (Int / Optional)
+*   `gender` (String / Optional)
+*   `email` (String / Optional)
+*   `phone` (String / Optional)
+*   `riskStatus` (String / Optional / Default: `"None"` / mapped to `risk_status`)
+*   `specialty` (String / Optional)
+*   `abhaNumber` (String / Optional / mapped to `abha_number`)
+*   `abhaAddress` (String / Optional / mapped to `abha_address`)
+*   `registrationDate` (DateTime / Default: `now()`)
+*   `lastModified` (DateTime / Default: `now()` / Auto-updated)
+*   `createdAt` (DateTime / Default: `now()`)
+*   *Relationships*: Belongs to `User` (`owner`). Has many `Appointment` (`appointments`), `ClinicalNote` (`clinicalNotes`), `Assessment` (`assessments`), `MoodLog` (`moodLogs`), `HomeworkTask` (`homeworkTasks`), and `Medication` (`medications`).
+
+### 4.3 Model: `ClinicalNote`
+Stores session notes and AI narratives.
+*   `id` (Int / Primary Key / Autoincrement)
+*   `patientId` (Int): Foreign key referencing `Patient.id`.
+*   `title` (String)
+*   `noteType` (String / Default: `"GENERAL"` / mapped to `note_type`)
+*   `bodyJson` (String / JSON string): Structured note content.
+*   `isRiskAlert` (Boolean / Default: `false`)
+*   `riskDisclaimer` (String / Optional)
+*   `timestamp` (DateTime / Default: `now()`)
+*   `lastModified` (DateTime / Default: `now()` / Auto-updated)
+*   *Relationships*: Belongs to `Patient` (`patient`) with cascade delete.
+
+### 4.4 Model: `MoodLog`
+Stores patient-logged mood entries and breathing metrics.
+*   `id` (Int / Primary Key / Autoincrement)
+*   `patientId` (Int): Foreign key referencing `Patient.id`.
+*   `moodScore` (Int / mapped to `mood_score`)
+*   `moodNote` (String / Optional / mapped to `mood_note`)
+*   `gratitude` (String / Optional)
+*   `breathingSeconds` (Int / Default: `0` / mapped to `breathing_seconds`)
+*   `date` (DateTime / Default: `now()`)
+*   `lastModified` (DateTime / Default: `now()` / Auto-updated)
+*   *Relationships*: Belongs to `Patient` (`patient`) with cascade delete.
+
+### 4.5 Model: `GamificationProfile`
+Tracks user experience, points, coins, and cosmetic unlocks.
+*   `id` (Int / Primary Key / Autoincrement)
+*   `firebaseUid` (String / Unique / mapped to `firebase_uid`): References the user's Firebase UID.
+*   `userRole` (String / Default: `"Patient"` / mapped to `user_role`): `"Professional"` or `"Patient"`.
+*   `xp` (Int / Default: `0`)
+*   `level` (Int / Default: `1`)
+*   `mindCoins` (Int / Default: `0` / mapped to `mind_coins`)
+*   `unlockedSkinsJson` (String / Default: `"[]"` / mapped to `unlocked_skins_json`)
+*   `lastModified` (DateTime / Default: `now()` / Auto-updated)
+
+### 4.6 Model: `SyncEvent`
+Logs client-to-cloud sync sessions and resolved conflicts.
+*   `id` (String / Primary Key / `cuid()`)
+*   `userId` (String / mapped to `user_id`): Foreign key referencing `User.firebaseUid`.
+*   `clientDevice` (String / Optional / mapped to `client_device`)
+*   `syncTimestamp` (DateTime / Default: `now()` / mapped to `sync_timestamp`)
+*   `deltasJson` (String / JSON string): Serialized delta payload.
+*   `conflictsJson` (String / Default: `"{}"` / mapped to `conflicts_json`): Serialized conflict audit details.
+*   `status` (String / Default: `"APPLIED"`)
+*   *Relationships*: Belongs to `User` (`user`).

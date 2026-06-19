@@ -13,11 +13,12 @@ In the monolithic configuration, all clinical functions (Electronic Health Recor
 
 ### Microservices Architecture
 The modernization plan splits the monolith into specialized containerized services:
-1.  **Auth/Identity Service (OIDC/Keycloak)**: Handles JWT generation and user authentication.
+1.  **Auth/Identity Service (Firebase Auth / Keycloak)**: Enforces clinician and patient identity verification.
 2.  **Patient EHR Service**: Manages patient rosters, history records, and diagnostics check states.
-3.  **AI Copilot Service**: Calls Large Language Models (e.g. Gemini 3.5 Flash) to generate SOAP notes and MSE narratives.
+3.  **AI Copilot Service**: Calls Large Language Models (e.g. Gemini 2.5 Flash) to generate SOAP notes and MSE narratives.
 4.  **Telehealth Socket Gateway**: Manages WebRTC handshakes and WebSocket sessions.
 5.  **Analytics Service**: Computes metrics and logs for practice billing and utilization.
+6.  **Sync Service (Papyrus Sync Service)**: Microservice (Node.js/Express, Prisma) acting as the central delta synchronization gateway, enforcing Firebase Auth and persisting records to PostgreSQL.
 
 ---
 
@@ -37,10 +38,11 @@ To execute the container mapping local ports:
 docker run -d -p 8080:80 --name psypyrus-web-container psypyrus/web-app:latest
 ```
 
-To spin up the entire cluster including Prometheus and Grafana for monitoring:
+To spin up the entire cluster (including the React web app, Papyrus Sync Service, PostgreSQL database, Prometheus, and Grafana for monitoring):
 ```bash
 docker-compose up -d
 ```
+This utilizes the main repository `docker-compose.yml` configuration, exposing the Web App on port 80, the Sync API on port 3001, Prometheus on port 9090, and Grafana on port 3000.
 
 ---
 

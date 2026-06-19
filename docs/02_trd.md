@@ -45,21 +45,21 @@ All clients share standard network gateways to perform remote AI analysis, diagn
             |                                     |
             v                                     v
   +------------------+                  +------------------+
-  |  External APIs   |                  |  Cloud Gateway   |
-  |  (Gemini 3.5,    |                  |  (Node/REST/     |
-  |   WHO ICDAPI,    |                  |   Postgres RLS)  |
-  |   ClinicalTrials)|                  +---------+--------+
-  +------------------+                            |
+  |  External APIs   |                  |Papyrus Sync Serv.|
+  |  (Gemini 2.5,    |                  | (Node.js/Express |
+  |   WHO ICDAPI,    |                  | Firebase Auth SDK|
+  |   ClinicalTrials)|                  |    Prisma ORM)   |
+  +------------------+                  +---------+--------+
+                                                  |
                                                   v
                                         +------------------+
-                                        | Cloud DB Sync    |
-                                        | (PostgreSQL /    |
-                                        |  WebSocket Sync) |
+                                        |    PostgreSQL    |
+                                        |     Database     |
                                         +------------------+
 ```
 
 ### 2.1 Google Gemini AI API
-*   **Model**: `gemini-3.5-flash`
+*   **Model**: `gemini-2.5-flash`
 *   **Protocol**: REST HTTPS POST with bearer token.
 *   **Integration**: Mobile clients use native OkHttp/Retrofit HTTP calls sending JSON payloads; Web/Electron uses browser Fetch requests.
 *   **De-identification**: Client-side filters anonymize patient names and DOBs before sending payloads to preserve privacy by design.
@@ -70,9 +70,12 @@ All clients share standard network gateways to perform remote AI analysis, diagn
 *   **Offline Fallback**: Standardized local lookup dictionary supporting 23 clinical classes of psychiatric conditions.
 
 ### 2.3 Cloud Sync Gateway API
-A standardized REST endpoint setup to replicate and sync local SQLite / IndexedDB records.
-*   `POST /api/v1/sync`: Submits a batch of local delta records (new edits/deletions) and returns cloud state updates.
-*   `GET /api/v1/sync/conflicts`: Fetches records flagged with edit collisions (resolved client-side using a "last-write-wins" or clinician-manual override scheme).
+The synchronization gateway is implemented by the **Papyrus Sync Service** (running on port `3001` in local dev). It is a Node.js/Express-based microservice that replicates and syncs local client records (Room, IndexedDB, SQLite) to PostgreSQL.
+*   `POST /sync`: Main synchronization endpoint that accepts delta payloads from the client. Resolves conflicts server-side using a Last-Write-Wins (LWW) strategy and persists records via Prisma ORM.
+*   `GET/POST/PATCH/DELETE /patients`: Full RESTful CRUD endpoints for patient records with ownership validation enforced via Firebase Auth.
+*   `GET /sync/events`: Returns a structured audit trail of all synchronization events (including delta payloads and conflict results).
+*   `GET /health`: Returns service health status and API version (`{ "status": "ok", "service": "papyrus-sync-service", "version": "1.0.0" }`).
+*   **Authentication**: Enforced via Firebase Admin SDK middleware (`Authorization: Bearer <firebase-id-token>`), featuring a development bypass mode.
 
 ---
 
@@ -105,6 +108,6 @@ A standardized REST endpoint setup to replicate and sync local SQLite / IndexedD
 2. **In-Transit Encryption**: All network traffic runs over TLS 1.3 (HTTPS/WSS).
 3. **Audit Log Database**: Persistent, read-only local structures writing every encounter view, diagnostic engine invocation, and security toggle.
 4. **Biometric Validation**: Successful FaceID/Fingerprint validation is mandatory on application launch or when unlocking from an idle timeout state.
-5. **Global Compliance Parity**:
-   *   **HIPAA & GDPR**: Strict compliance for data storage, de-identification filters, and security locks.
+5. **Global Compliance Posture**:
+   *   **HIPAA & GDPR-Aware**: The codebase implements security-aware principles (TLS 1.3, biometric locks, audit logging, de-identification filters) that align with HIPAA and GDPR guidelines. Formal certification requires an independent audit, signed Business Associate Agreements, and a covered hosting infrastructure — none of which this repository provides out-of-the-box.
    *   **DISHA & ABDM**: Supports India's Digital Information Security in Healthcare Act (DISHA) and Ayushman Bharat Digital Mission (ABDM) guidelines, incorporating SNOMED CT clinical terms, LOINC codes, and Aadhaar-verified ABHA health cards.

@@ -47,7 +47,7 @@ To resolve these challenges, the **PsyPyrus Suite** unifies practice management,
 ### 3.6 WHO ICD-11 Registry Integration
 * Integrated Search API to query international classifications with OAuth2 bearer tokens and an offline local search fallback of 23 clinical classes.
 
-### 3.7 AI Copilot Modules (Gemini 3.5 Flash)
+### 3.7 AI Copilot Modules (Gemini 2.5 Flash)
 * **SOAP Note Compiler**: Drafts professional subjective/objective/assessment/planning notes from session transcripts.
 * **MSE Narrative Compiler**: Translates checklist selections into clinical prose paragraphs.
 * **SMART Treatment Planner**: Formulates specific, measurable, and action-oriented goals.
@@ -59,10 +59,10 @@ To resolve these challenges, the **PsyPyrus Suite** unifies practice management,
 
 ### 3.9 Cryptographic Security & Biometric Locks
 * Real native biometric security utilizing `BiometricPrompt` (Android) and `LocalAuthentication` (iOS/macOS) alongside 4-digit PIN locks.
-* Comprehensive, HIPAA-compliant audit logs tracking every file view, data read, and AI transaction.
+* Comprehensive, HIPAA-aware audit logs tracking every file view, data read, and AI transaction. Clinical compliance certification requires a full legal and infrastructure assessment independent of this codebase.
 
 ### 3.10 Cloud Database Synchronization
-* Automatic background replication of local records (Room, IndexedDB, SQLite) to a central cloud container, featuring offline operational support and conflict-resolution routines.
+* Replicates local client records (Room, IndexedDB, SQLite) to the central **Papyrus Sync Service** (Node.js/Express, Prisma, PostgreSQL), featuring REST-based delta payloads, offline operational support, Firebase-authenticated ownership enforcement, Last-Write-Wins (LWW) conflict-resolution, and sync audit trails (`/sync/events`).
 
 ---
 
@@ -81,5 +81,5 @@ To resolve these challenges, the **PsyPyrus Suite** unifies practice management,
 ## 6. Success Metrics
 * **Documentation Time Reduction**: Average time spent drafting SOAP notes and MSE reports reduced from 20 minutes to under 5 minutes per session.
 * **Engagement Adherence**: Patient daily wellness lounge activity maintained at >70% active days over a 30-day treatment cycle.
-* **Compliance Verification**: 100% of diagnostic decisions and file accesses logged in the HIPAA audit stream.
+* **Compliance Verification**: 100% of diagnostic decisions and file accesses logged in the HIPAA-aware audit stream.
 * **Open-Source Participation**: Increase community-led translations, clinical rule contributions, and platform plugin integrations.

@@ -64,7 +64,7 @@ Enter Biometrics -> Patient Dashboard -> Check Daily Quests -> Open Wellness Lou
 6. The clinician progresses to the **Digital MSE** tab, checking options for speech, motor behavior, mood, thought, and cognition.
 7. Under the **Diagnostics Suite**, they check matching symptom profiles. The local engine evaluates all 13 conditions, generating candidate diagnoses and comorbidity weights on the SVG ontology graph.
 8. They query WHO ICD-11 fallback parameters or retrieve tokens via official APIs.
-9. They generate the SOAP notes using Gemini 3.5, formulate treatment plans, check compliance with telemedicine guidelines, and save the patient's record.
+9. They generate the SOAP notes using Gemini 2.5 Flash, formulate treatment plans, check compliance with telemedicine guidelines, and save the patient's record.
 10. If practicing in India, they utilize the ABDM Sandbox to verify Aadhaar and link the patient's ABHA Health Card, or export openEHR-compliant FHIR documents.
 
 ### 3.2 Patient Wellness & Gamification Rewards Journey

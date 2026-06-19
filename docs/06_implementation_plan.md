@@ -58,7 +58,7 @@ This document maps the implementation sequence of the **PsyPyrus Suite** from se
 
 ### Phase 6: AI Clinical Copilots
 *   **Tasks**:
-    *   Write Gemini 3.5 prompt templates for SOAP notes, MSE narrative prose, and crisis screening.
+    *   Write Gemini 2.5 Flash prompt templates for SOAP notes, MSE narrative prose, and crisis screening.
 *   **Verification**: Session transcripts compile into clinical summaries.
 
 ### Phase 7: Wellness Lounge & Gamification

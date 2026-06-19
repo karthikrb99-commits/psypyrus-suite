@@ -1,14 +1,14 @@
-# 🧠 Papyrus — Open Source Mental Health EHR & HIPAA-Compliant Psychiatric Operating System
+# 🧠 PsyPyrus Suite — Multi-Platform Client Workspace for the Papyrus Ecosystem
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Build Status - Android](https://img.shields.io/badge/Android-Target--SDK--36-green?logo=android)](file:///android)
-[![Build Status - iOS & macOS](https://img.shields.io/badge/Apple-iOS--17%20%7C%20macOS--14-blue?logo=apple)](file:///ios)
-[![Build Status - Web](https://img.shields.io/badge/Web-Vite%20%2B%20React%20%2B%20ES6-purple?logo=react)](file:///web)
-[![Build Status - Desktop](https://img.shields.io/badge/Desktop-Electron--Windows-cyan?logo=electron)](file:///desktop)
-[![Compliance](https://img.shields.io/badge/Compliance-HIPAA%20%2F%20GDPR%20%2F%20DISHA-teal?logo=shield)](file:///android/src/main/java/com/example/data/Entities.kt)
-[![AI Engine](https://img.shields.io/badge/AI%20Engine-Gemini--3.5--Flash-orange?logo=googlegemini)](https://ai.google.dev/)
+[![Build Status - Android](https://img.shields.io/badge/Android-Target--SDK--36-green?logo=android)](./android/README.md)
+[![Build Status - iOS & macOS](https://img.shields.io/badge/Apple-iOS--17%20%7C%20macOS--14-blue?logo=apple)](./ios/README.md)
+[![Build Status - Web](https://img.shields.io/badge/Web-Vite%20%2B%20React%20%2B%20ES6-purple?logo=react)](./web/README.md)
+[![Build Status - Desktop](https://img.shields.io/badge/Desktop-Electron--Windows-cyan?logo=electron)](./desktop/README.md)
+[![Compliance](https://img.shields.io/badge/Compliance-HIPAA--Aware%20%7C%20GDPR%20%7C%20DISHA-teal?logo=shield)](./android/app/src/main/java/com/example/data/Entities.kt)
+[![AI Engine](https://img.shields.io/badge/AI%20Engine-Gemini--2.5--Flash-orange?logo=googlegemini)](https://ai.google.dev/)
 
-Welcome to **Papyrus**, a premier open-source **Mental Health Operating System** and **EHR clinical platform**. It is designed to modernize psychiatric and psychological care through interoperable, secure, and privacy-focused digital tools. Papyrus operates as a comprehensive **Clinical Decision Support System (CDSS)**, an **AI SOAP Notes Scribe and Copilot**, and an **expert clinical advisor** that integrates medical science with patient-centered gamification.
+Welcome to the **PsyPyrus Suite**, the multi-platform client application workspace and secure clinical portal for the **Papyrus Ecosystem** (the open-source Mental Health Operating System). It is designed to modernize psychiatric and psychological care through interoperable, secure, and privacy-focused digital tools. Papyrus operates as a comprehensive **Clinical Decision Support System (CDSS)**, an **AI SOAP Notes Scribe and Copilot**, and an **expert clinical advisor** that integrates medical science with patient-centered gamification.
 
 Our mission is to democratize access to advanced mental health care technology, providing free therapy tools, digitized Mental Status Exams (MSE), research exploration tools (HiTOP/RDoC), and robust standards-based integrations (like ABDM for India) to practitioners and patients worldwide.
 
@@ -67,34 +67,43 @@ psypyrus/ (Repository Root)
 │   ├── PsyPyrus/             # SwiftUI Views, ViewModels, Models, & Services
 │   └── README.md             # Setup guide for Apple mobile platform
 │
-└── macos/                    # Native macOS client (SwiftUI)
-    ├── PsyPyrus.xcodeproj/   # Generated mac Xcode project target
-    └── README.md             # Guide for macOS Xcode project construction
+├── macos/                    # Native macOS client (SwiftUI)
+│   ├── PsyPyrus.xcodeproj/   # Generated mac Xcode project target
+│   └── README.md             # Guide for macOS Xcode project construction
+│
+└── sync-service/             # Central Synchronization Gateway (Node.js/Express, Prisma, PostgreSQL)
+    ├── src/                  # Express controllers, middlewares, routes, and index.js
+    ├── prisma/               # Prisma schema and PostgreSQL migrations
+    └── README.md             # Guide for setting up and running the sync-service
 ```
 
 ---
 
-## 📊 Platform Feature Support Matrix (Parity Sync)
+## 📊 Development Roadmap & Platform Status Matrix
 
-| Feature Module | Android (Kotlin) | Web (React) | Desktop (Electron) | iOS / macOS (SwiftUI) | Cloud / Sync |
+The matrix below outlines the development roadmap and implementation status across the various platform targets. The **React Web Client** serves as the **primary reference implementation**, containing the most fully realized features. Other platforms are in progress or exist as experimental stubs.
+
+| Feature Module | Web (React) [Reference] | Android (Kotlin) [In Progress] | iOS / macOS (SwiftUI) [Stub] | Desktop (Electron) [Wrapper] | Cloud / Sync [Experimental] |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Dual-Persona Workspace** (Clinician/Patient) | Yes | Yes | Yes | Yes | Yes |
-| **Expanded DSM-5-TR Database** (13 Disorders) | Yes | Yes | Yes | Yes | Yes |
-| **WHO ICD-11 Registry client** (OAuth2 Credentials) | Yes | Yes | Yes | Yes | Yes |
-| **Local Diagnostic Engine** (Checklist & Multi-Scores)| Yes | Yes | Yes | Yes | Yes |
-| **Interactive SVG Ontology Graph** | Yes | Yes | Yes | Yes | Yes |
-| **EHR Case History & Genogram Canvas** | Yes | Yes | Yes | Yes | Yes |
-| **Gamification & MindShop Rewards** | Yes | Yes | Yes | Yes | Yes |
-| **Global Quick-Search Command Palette** | Yes | Yes | Yes | Yes | Yes |
-| **AI SOAP Note Compiler** (Gemini 3.5 Flash) | Yes | Yes | Yes | Yes | Yes |
-| **AI MSE Narrative Compiler** (Checklist to Prose)| Yes | Yes | Yes | Yes | Yes |
-| **AI SMART Treatment Planner** | Yes | Yes | Yes | Yes | Yes |
-| **AI Suicide/Crisis Risk Screening** | Yes | Yes | Yes | Yes | Yes |
-| **ClinicalTrials.gov Integration** | Yes | Yes | Yes | Yes | Yes |
-| **Patient Wellness Lounge** (Breathing, Mood logs) | Yes | Yes | Yes | Yes | Yes |
-| **Local Secure Storage** | Room DB | IndexedDB | LocalStorage | SQLite & CoreData | Cloud DB |
-| **Security Biometrics** | BiometricPrompt | Mock Scanner | Mock Scanner | LocalAuthentication | OAuth2 / RLS |
-| **Cloud Synchronization** | REST Sync | REST Sync | REST Sync | REST Sync | WebSocket / REST |
+| **Dual-Persona Workspace** (Clinician/Patient) | **Yes** | Partial | Stub | Wrapper | **Yes (UserRole DB)** |
+| **Expanded DSM-5-TR Database** (13 Disorders) | **Yes** | Yes (Local) | Stub | Wrapper | N/A |
+| **WHO ICD-11 Registry client** (OAuth2 Credentials) | **Yes** (Fallback/API) | Mocked | Stub | Wrapper | N/A |
+| **Local Diagnostic Engine** (Checklist & Multi-Scores)| **Yes** | Yes (Local) | Stub | Wrapper | N/A |
+| **Interactive SVG Ontology Graph** | **Yes** | Mocked | Stub | Wrapper | N/A |
+| **EHR Case History & Genogram Canvas** | **Yes** | Mocked | Stub | Wrapper | **Yes (Patient DB)** |
+| **Gamification & MindShop Rewards** | **Yes** | Mocked | Stub | Wrapper | **Yes (Profile DB)** |
+| **Global Quick-Search Command Palette** | **Yes** | Mocked | Stub | Wrapper | N/A |
+| **AI SOAP Note Scribe & MSE Narrative Compiler** (Gemini 3.5 Flash) | **Yes** (REST) | Yes (REST) | Stub (REST) | Wrapper | **Yes (Notes DB)** |
+| **AI SMART Treatment Planner** | **Yes** | Mocked | Stub | Wrapper | N/A |
+| **AI Suicide/Crisis Risk Screening** | **Yes** | Yes (Local) | Stub | Wrapper | **Yes (Risk Status)** |
+| **Psychopharmacology Advisor & Medication safety audits** | **Yes** | Yes (Local) | Stub | Wrapper | **Yes (Medication DB)** |
+| **Disability Rights Compliance (RPwD Act 2016 / RCI CRR)** | **Yes** | Mocked | Stub | Wrapper | N/A |
+| **Therapeutic Consent Contracts & Collaborative Pricing** | **Yes** | Mocked | Stub | Wrapper | N/A |
+| **ClinicalTrials.gov Integration & Research Hub** | **Yes** | Mocked | Stub | Wrapper | N/A |
+| **Patient Wellness Lounge** (Breathing, Mood logs) | **Yes** | Mocked | Stub | Wrapper | **Yes (Logs DB)** |
+| **Local Secure Storage** | IndexedDB | Room DB | CoreData (Stub) | LocalStorage | **PostgreSQL (Prisma)** |
+| **Security Biometrics** | Mock Scanner | BiometricPrompt | LocalAuth (Stub) | Mock Scanner | **Firebase Auth / Logs** |
+| **Cloud Synchronization** | REST Sync | REST Sync | REST Sync | REST Sync | **Yes (Express /sync API)** |
 
 ---
 
@@ -144,7 +153,7 @@ The local database on all client engines supports **13 primary psychiatric condi
 
 ### 8. Native Biometrics & Cloud Sync Engine
 * **Biometrics Parity**: Integrates `BiometricPrompt` (Android) and `LocalAuthentication` (iOS/macOS) for cryptographically locked biometric sessions.
-* **REST/WebSocket Sync**: Syncs local database records to the cloud utilizing automated conflict-resolution handlers.
+* **REST-based Delta Sync**: Syncs local database records to the central **Papyrus Sync Service** utilizing delta payloads and automated Last-Write-Wins (LWW) conflict-resolution.
 
 ---
 
@@ -207,6 +216,9 @@ The local database on all client engines supports **13 primary psychiatric condi
 
 ## 🔒 HIPAA, GDPR & Clinical Disclaimer
 
+> [!WARNING]
+> **HIPAA & Regulatory Wording Notice**: Papyrus is built with **HIPAA-aware architectural principles** (e.g., local database envelope encryption with AES-GCM-256, biometric authentication integrations, and audit logging frameworks). However, **software alone cannot be HIPAA or DISHA compliant**. Achieving actual compliance requires organizational security policies, Business Associate Agreements (BAAs), security risk assessments, and secure hosting infrastructure. Developers deploying this software are responsible for obtaining their own independent compliance validations.
+
 The PsyPyrus application operates as a **Clinical Decision Support System (CDSS)** within the Papyrus Ecosystem. All AI-generated outputs, diagnostics, summaries, and treatment plans are intended for educational and clinical assistance only and must be reviewed, edited, and approved by a licensed clinical practitioner prior to integration into any active Electronic Health Record.
 
 ---
@@ -231,7 +243,7 @@ Papyrus is intentionally interdisciplinary. We invite contributors from every re
 
 
 
-- **Description**: `Papyrus: The open-source, secure, HIPAA & DISHA compliant mental health operating system. Features AI SOAP notes, digital MSE, genogram canvas, HiTOP/RDoC matrix explorers, and ABDM India sandbox.`
+- **Description**: `Papyrus: The open-source, secure, HIPAA-aware & DISHA-aligned mental health operating system. Features AI SOAP notes (Gemini 3.5 Flash), clinical psychopharmacology advisor, RCI CRR/RPwD Act 2016 disability compliance dashboard, and therapeutic consent manager.`
 - **Website URL**: `https://psypyrus.health/`
 - **Topics**: 
   - `mental-health`
@@ -239,7 +251,7 @@ Papyrus is intentionally interdisciplinary. We invite contributors from every re
   - `electronic-health-records`
   - `psychiatry`
   - `soap-notes`
-  - `hipaa-compliant`
+  - `hipaa-aware`
   - `abdm`
   - `disha-compliance`
   - `react`
@@ -247,6 +259,11 @@ Papyrus is intentionally interdisciplinary. We invite contributors from every re
   - `healthcare-it`
   - `dsm-5`
   - `ai-therapist`
+  - `psychopharmacology`
+  - `medication-safety`
+  - `rpwd-act-2016`
+  - `clinical-trials`
+  - `therapeutic-contracts`
 
 ## 📄 License
 
