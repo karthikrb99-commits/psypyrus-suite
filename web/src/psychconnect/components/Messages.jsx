@@ -4,9 +4,9 @@ import { createChatThreadInFirebase, addDirectChatMessageInFirebase } from "../s
 import { db } from "../services/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { 
-  Send, Search, ShieldCheck, CheckCheck, Check, MessageSquare, Lock, 
-  Award, Plus, Trash2, Smile, Sparkles, X, Activity, Info,
-  Mic, Square, Play, Pause, Bookmark, Pin
+  Send, Search, ShieldCheck, CheckCheck, Check, Lock, 
+  Plus, Trash2, Smile, X, Activity, Info,
+  Mic, Play, Pause, Pin
 } from "lucide-react";
 import { WebSocketConn } from "../../services/websocket";
 import { GeminiService } from "../../services/ai";
@@ -101,6 +101,27 @@ export default function Messages({ currentUser, allUsers }) {
   const [playingVoiceId, setPlayingVoiceId] = useState(null);
   const [voiceProgress, setVoiceProgress] = useState({});
   const playbackTimerRef = useRef(null);
+
+  const isPsychologistSelf = currentUser.role === "psychologist";
+  const activeThread = threads.find((t) => t.id === activeThreadId);
+
+  const getRecipientProfile = (thread) => {
+    const counterId = thread.participants.find((id) => id !== currentUser.id);
+    const counterUser = allUsers.find((u) => u.id === counterId);
+    if (counterUser) return counterUser;
+    
+    const nameIdx = thread.participants.indexOf(counterId || "");
+    const counterName = nameIdx !== -1 && thread.participantNames ? thread.participantNames[nameIdx] : "Anonymous Client";
+    return {
+      id: counterId || "unknown",
+      name: counterName,
+      role: isPsychologistSelf ? "patient" : "psychologist",
+      email: "",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+    };
+  };
+
+  const activeCounterUser = activeThread ? getRecipientProfile(activeThread) : null;
 
   // Persist channels, messages, and pins
   useEffect(() => {
@@ -311,6 +332,13 @@ export default function Messages({ currentUser, allUsers }) {
     }
   };
 
+  const handleSeekVoice = (msgId, progressPercent) => {
+    setVoiceProgress(prev => ({
+      ...prev,
+      [msgId]: progressPercent
+    }));
+  };
+
   // WhatsApp-style message ticks transitions (sent -> delivered -> read)
   const simulateTicksTransition = (msgId) => {
     // 0.8s: sent -> delivered
@@ -337,25 +365,7 @@ export default function Messages({ currentUser, allUsers }) {
     }
   };
 
-  const getRecipientProfile = (thread) => {
-    const counterId = thread.participants.find((id) => id !== currentUser.id);
-    const counterUser = allUsers.find((u) => u.id === counterId);
-    if (counterUser) return counterUser;
-    
-    const nameIdx = thread.participants.indexOf(counterId || "");
-    const counterName = nameIdx !== -1 && thread.participantNames ? thread.participantNames[nameIdx] : "Anonymous Client";
-    return {
-      id: counterId || "unknown",
-      name: counterName,
-      role: isPsychologistSelf ? "patient" : "psychologist",
-      email: "",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-    };
-  };
 
-  const isPsychologistSelf = currentUser.role === "psychologist";
-  const activeThread = threads.find((t) => t.id === activeThreadId);
-  const activeCounterUser = activeThread ? getRecipientProfile(activeThread) : null;
 
   // Establish DM Secure Chat
   const handleStartNewChat = async (recipient) => {
@@ -480,7 +490,7 @@ export default function Messages({ currentUser, allUsers }) {
         if (activeTab === "dms") {
           setMessages(prev => prev.map(m => m.senderId === currentUser.id ? { ...m, status: "read" } : m));
         }
-      } catch (err) {
+      } catch {
         setIsBotTyping(false);
         const errReply = {
           id: "bot_err_" + Date.now(),
@@ -678,6 +688,9 @@ export default function Messages({ currentUser, allUsers }) {
   };
 
   const eligibleContacts = allUsers.filter((u) => u.id !== currentUser.id && u.role !== currentUser.role);
+  const searchedContacts = eligibleContacts.filter(contact => 
+    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
   // Filtering Channels & DMs list based on folder tabs (Telegram style)
   const filteredChannelsList = channels.filter(c => {

@@ -64,6 +64,10 @@ import { HitopMatrixExplorer } from './components/screens/HitopMatrixExplorer';
 import { CareRequests } from './components/screens/CareRequests';
 import { PricingAgreements } from './components/screens/PricingAgreements';
 import { ResearchHub } from './components/screens/ResearchHub';
+import { TherapeuticContracts } from './components/screens/TherapeuticContracts';
+import ClinicalWorkspace from './components/screens/ClinicalWorkspace';
+import { DisabilityComplianceActs } from './components/screens/DisabilityComplianceActs';
+import LegalPoliciesModal from './components/LegalPoliciesModal';
 
 
 function MainAppContent() {
@@ -71,8 +75,22 @@ function MainAppContent() {
 
     const [showLanding, setShowLanding] = useState(true);
     const [isLocked, setIsLocked] = useState(true);
+    const [legalModalOpen, setLegalModalOpen] = useState(false);
+    const [legalInitialTab, setLegalInitialTab] = useState('privacy');
     const [activeRole, setActiveRole] = useState('Professional'); // 'Professional' or 'Patient'
-    const [activeScreen, setActiveScreen] = useState('Dashboard');
+    const [activeScreenState, setActiveScreenState] = useState('Dashboard');
+    const setActiveScreen = useCallback((screen) => {
+        const normalized = screen === 'messages' ? 'PsychConnect Messages'
+            : screen === 'consultations' ? 'PsychConnect Consultations'
+            : screen === 'directory' ? (activeRole === 'Patient' ? 'Match & Book' : 'PsychConnect Matches')
+            : screen === 'tracker' ? 'Progress Tracker'
+            : screen === 'feed' ? 'Social Feed'
+            : screen === 'board' ? 'Care Board'
+            : screen === 'resources' ? 'Resource Library'
+            : screen;
+        setActiveScreenState(normalized);
+    }, [activeRole]);
+    const activeScreen = activeScreenState;
     const [activePatientId, setActivePatientId] = useState(1);
     const [theme, setTheme] = useState(() => localStorage.getItem('psypyrus_theme') || 'dark-onyx');
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -140,7 +158,7 @@ function MainAppContent() {
                         name: user.displayName || "Google User",
                         email: user.email || "",
                         avatar: user.photoURL || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
-                        role: activeRole === 'Professional' ? 'psychologist' : 'patient',
+                        role: activeRole === 'Patient' ? 'patient' : activeRole.toLowerCase(),
                         bio: "Welcome to my clinical mental health dashboard on PsychConnect."
                     };
                     await saveUserProfile(defaultProf);
@@ -268,7 +286,7 @@ function MainAppContent() {
         bio: "Active client on PsyPyrus."
     };
 
-    const localCurrentUser = activeRole === 'Professional' ? clinicianProfile : patientProfile;
+    const localCurrentUser = activeRole !== 'Patient' ? clinicianProfile : patientProfile;
     const currentUser = pcCurrentUser || localCurrentUser;
 
     const allUsers = firebaseUser
@@ -350,13 +368,23 @@ function MainAppContent() {
 
     // Dynamic SEO Metadata Engine
     useEffect(() => {
-        const displayRole = activeRole === 'Professional' ? 'Clinician' : 'Patient';
+        const displayRole = activeRole !== 'Patient' ? activeRole : 'Patient';
         document.title = `PsyPyrus AI - ${activeScreen} (${displayRole} Mode)`;
 
         const metaDescription = document.querySelector('meta[name="description"]');
         if (metaDescription) {
             let desc = `PsyPyrus AI secure portal - ${activeScreen} screen. `;
-            if (activeRole === 'Professional') {
+            if (activeScreen === 'Clinical Workspace') {
+                desc += `Secure clinical workspace for patient clinical charts, SOAP notes, DSM-5 diagnostics, and medication safety audits.`;
+            } else if (activeScreen === 'Pricing Hub') {
+                desc += `Collaborative healthcare billing manager and patient-doctor pricing agreements tracker.`;
+            } else if (activeScreen === 'Therapeutic Contracts') {
+                desc += `Legal compliance portal for signing therapeutic consent forms, telehealth agreements, and contract logs.`;
+            } else if (activeScreen === 'Research Hub') {
+                desc += `Collaborative research portal with ClinicalTrials.gov search integrations and open research studies.`;
+            } else if (activeScreen === 'Disability Compliance & Acts') {
+                desc += `Disability rights compliance advisor containing RCI CRR registration lookups, RPwD Act 2016 guidelines, and National Trust Act support.`;
+            } else if (activeRole !== 'Patient') {
                 desc += `Clinician tools for DSM-5 diagnostics, SOAP notes copilot, and EHR patient records.`;
             } else {
                 desc += `Patient workspace for wellness lounge exercises, self-assessments, and gamification rewards.`;
@@ -440,7 +468,7 @@ function MainAppContent() {
     };
 
     const handleRoleToggle = () => {
-        const nextRole = activeRole === 'Professional' ? 'Patient' : 'Professional';
+        const nextRole = activeRole === 'Patient' ? 'Professional' : 'Patient';
         handleRoleChange(nextRole);
     };
 
@@ -461,8 +489,15 @@ function MainAppContent() {
 
     // Router for screens
     const renderScreen = () => {
-        if (activeRole === 'Professional') {
+        if (activeRole !== 'Patient') {
             switch (activeScreen) {
+                case 'Clinical Workspace':
+                    return (
+                        <ClinicalWorkspace 
+                            activePatientId={activePatientId}
+                            onSetActivePatientId={handleSelectPatient}
+                        />
+                    );
                 case 'Dashboard':
                     return (
                         <ClinicianDashboard 
@@ -591,6 +626,16 @@ function MainAppContent() {
                             currentUser={currentUser}
                         />
                     );
+                case 'Therapeutic Contracts':
+                    return (
+                        <TherapeuticContracts
+                            activeRole={activeRole}
+                            currentUser={currentUser}
+                            patients={patients}
+                            activePatientId={activePatientId}
+                            onSetActivePatientId={handleSelectPatient}
+                        />
+                    );
                 case 'Research Hub':
                     return (
                         <ResearchHub 
@@ -601,6 +646,10 @@ function MainAppContent() {
                 case 'HIPAA Shield':
                     return (
                         <HIPAASecurityShield />
+                    );
+                case 'Disability Compliance & Acts':
+                    return (
+                        <DisabilityComplianceActs />
                     );
                 case 'Social Feed':
                     return (
@@ -705,6 +754,16 @@ function MainAppContent() {
                             currentUser={currentUser}
                         />
                     );
+                case 'Therapeutic Contracts':
+                    return (
+                        <TherapeuticContracts
+                            activeRole={activeRole}
+                            currentUser={currentUser}
+                            patients={patients}
+                            activePatientId={activePatientId}
+                            onSetActivePatientId={handleSelectPatient}
+                        />
+                    );
                 case 'Research Hub':
                     return (
                         <ResearchHub 
@@ -772,6 +831,7 @@ function MainAppContent() {
                             setPosts={wrappedSetPosts} 
                         />
                     );
+                case 'Match & Book':
                 case 'PsychConnect Matches':
                     return (
                         <Directory
@@ -819,11 +879,39 @@ function MainAppContent() {
                             currentUser={currentUser}
                         />
                     );
+                case 'Therapeutic Contracts':
+                    return (
+                        <TherapeuticContracts
+                            activeRole={activeRole}
+                            currentUser={currentUser}
+                            patients={patients}
+                            activePatientId={activePatientId}
+                            onSetActivePatientId={handleSelectPatient}
+                        />
+                    );
                 case 'Research Hub':
                     return (
                         <ResearchHub 
                             activeRole={activeRole}
                             currentUser={currentUser}
+                        />
+                    );
+                case 'Disability Compliance & Acts':
+                    return (
+                        <DisabilityComplianceActs />
+                    );
+                case 'Progress Tracker':
+                    return (
+                        <ProgressTracker
+                            currentUser={currentUser}
+                            allUsers={allUsers}
+                        />
+                    );
+                case 'Resource Library':
+                    return (
+                        <ResourceLibrary
+                            currentUser={currentUser}
+                            allUsers={allUsers}
                         />
                     );
                 default:
@@ -833,10 +921,25 @@ function MainAppContent() {
     };
 
     if (showLanding) {
-        return <LandingPage onEnterPortal={() => {
-            setShowLanding(false);
-            showToast("Welcome to PsyPyrus Secure Portal", "success");
-        }} />;
+        return (
+            <>
+                <LandingPage 
+                    onEnterPortal={() => {
+                        setShowLanding(false);
+                        showToast("Welcome to PsyPyrus Secure Portal", "success");
+                    }} 
+                    onOpenLegal={(tab) => {
+                        setLegalInitialTab(tab);
+                        setLegalModalOpen(true);
+                    }}
+                />
+                <LegalPoliciesModal 
+                    isOpen={legalModalOpen} 
+                    onClose={() => setLegalModalOpen(false)} 
+                    initialTab={legalInitialTab} 
+                />
+            </>
+        );
     }
 
     if (isLocked) {
@@ -900,6 +1003,10 @@ function MainAppContent() {
                 }}
                 theme={theme}
                 setTheme={setTheme}
+                onOpenLegal={(tab) => {
+                    setLegalInitialTab(tab);
+                    setLegalModalOpen(true);
+                }}
             />
 
             <AddApptModal 
@@ -914,6 +1021,12 @@ function MainAppContent() {
                 onNavigate={setActiveScreen}
                 patients={patients}
                 onSelectPatient={handleSelectPatient}
+            />
+
+            <LegalPoliciesModal 
+                isOpen={legalModalOpen} 
+                onClose={() => setLegalModalOpen(false)} 
+                initialTab={legalInitialTab} 
             />
         </div>
         </>

@@ -18,6 +18,7 @@ export function CommandPalette({
 
     // List of screens to search
     const clinicianScreens = [
+        { id: 'clinicalworkspace', name: 'Clinical Workspace Suite', category: 'Navigation', screen: 'Clinical Workspace', icon: 'fa-layer-group' },
         { id: 'dashboard', name: 'Clinician Dashboard', category: 'Navigation', screen: 'Dashboard', icon: 'fa-chart-pie' },
         { id: 'copilot', name: 'AI SOAP Notes Copilot', category: 'Navigation', screen: 'AI Copilot', icon: 'fa-wand-magic-sparkles' },
         { id: 'mse', name: 'Digital Mental Status Exam (MSE)', category: 'Navigation', screen: 'Digital MSE', icon: 'fa-clipboard-list' },
@@ -30,6 +31,12 @@ export function CommandPalette({
         { id: 'marketplace', name: 'PsyPyrus Marketplace', category: 'Navigation', screen: 'Marketplace', icon: 'fa-shop' },
         { id: 'rdoc', name: 'NIMH RDoC Matrix Explorer & Biosignature Workspace', category: 'Navigation', screen: 'RDoC Matrix', icon: 'fa-dna' },
         { id: 'hipaa', name: 'HIPAA Security & Audit Shield', category: 'Navigation', screen: 'HIPAA Shield', icon: 'fa-user-shield' },
+        { id: 'feed', name: 'Social Community Feed', category: 'Navigation', screen: 'Social Feed', icon: 'fa-users-line' },
+        { id: 'directory', name: 'Connect Directory (PsychConnect Matches)', category: 'Navigation', screen: 'PsychConnect Matches', icon: 'fa-magnifying-glass-location' },
+        { id: 'consultations', name: 'Consultations & Video Clinics', category: 'Navigation', screen: 'PsychConnect Consultations', icon: 'fa-handshake-angle' },
+        { id: 'messages', name: 'Secure Chat Inbox', category: 'Navigation', screen: 'PsychConnect Messages', icon: 'fa-comments' },
+        { id: 'board', name: 'Clinical Care Board', category: 'Navigation', screen: 'Care Board', icon: 'fa-clipboard-check' },
+        { id: 'intakepool', name: 'Patient Intake Pool', category: 'Navigation', screen: 'Patient Intake Pool', icon: 'fa-hand-holding-heart' }
     ];
 
     const patientScreens = [
@@ -39,14 +46,21 @@ export function CommandPalette({
         { id: 'p-intake', name: 'Intake Forms & Permissions', category: 'Navigation', screen: 'Intake Forms', icon: 'fa-file-signature' },
         { id: 'p-telehealth', name: 'Telehealth Session', category: 'Navigation', screen: 'Teletherapy', icon: 'fa-video' },
         { id: 'p-marketplace', name: 'Wellness Store', category: 'Navigation', screen: 'Marketplace', icon: 'fa-shop' },
-        { id: 'p-hipaa', name: 'Security & Consent Logs', category: 'Navigation', screen: 'HIPAA Shield', icon: 'fa-shield-halved' }
+        { id: 'p-library', name: 'Therapeutic Resource Library', category: 'Navigation', screen: 'Resource Library', icon: 'fa-book-open' },
+        { id: 'p-hipaa', name: 'Security & Consent Logs', category: 'Navigation', screen: 'HIPAA Shield', icon: 'fa-shield-halved' },
+        { id: 'p-feed', name: 'Social Community Feed', category: 'Navigation', screen: 'Social Feed', icon: 'fa-users-line' },
+        { id: 'p-directory', name: 'Connect Directory (Match & Book)', category: 'Navigation', screen: 'Match & Book', icon: 'fa-magnifying-glass-location' },
+        { id: 'p-consultations', name: 'Consultations & Video Clinics', category: 'Navigation', screen: 'PsychConnect Consultations', icon: 'fa-handshake-angle' },
+        { id: 'p-messages', name: 'Secure Chat Inbox', category: 'Navigation', screen: 'PsychConnect Messages', icon: 'fa-comments' },
+        { id: 'p-board', name: 'Clinical Care Board', category: 'Navigation', screen: 'Care Board', icon: 'fa-clipboard-check' },
+        { id: 'p-tracker', name: 'Somatic Progress Tracker', category: 'Navigation', screen: 'Progress Tracker', icon: 'fa-chart-simple' }
     ];
 
     // Build items
-    const navigationItems = activeRole === 'Professional' ? clinicianScreens : patientScreens;
+    const navigationItems = activeRole !== 'Patient' ? clinicianScreens : patientScreens;
     
     // Add patients to search if Professional
-    const patientItems = activeRole === 'Professional' 
+    const patientItems = activeRole !== 'Patient' 
         ? patients.map(p => ({
             id: `patient-${p.id}`,
             name: `Patient: ${p.name} (${p.condition || 'General'})`,

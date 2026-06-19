@@ -269,7 +269,7 @@ export function ClinicianDashboard({
             <div className="dashboard-hero-banner">
                 <div className="hero-subtitle">Clinical Suite Dashboard</div>
                 <h2 className="hero-title" id="clinician-welcome-name">Dr. Katherine Brewster</h2>
-                <p className="hero-description">Secure HIPAA-compliant environment. Encrypted local EHR charts workspace.</p>
+                <p className="hero-description">Secure HIPAA-aware architecture. Encrypted local EHR charts workspace.</p>
             </div>
 
             {/* Urgent Alerts Widget */}

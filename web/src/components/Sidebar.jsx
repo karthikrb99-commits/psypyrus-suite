@@ -18,15 +18,15 @@ export function Sidebar({
     const sidebarRef = useRef(null);
 
     // Gamification state
-    const [profile, setProfile] = useState(() => GamificationService.getProfile(activeRole));
+    const [profile, setProfile] = useState(() => GamificationService.getProfile(activeRole === 'Patient' ? 'Patient' : 'Professional'));
 
     useEffect(() => {
-        setProfile(GamificationService.getProfile(activeRole));
+        setProfile(GamificationService.getProfile(activeRole === 'Patient' ? 'Patient' : 'Professional'));
     }, [activeRole]);
 
     useEffect(() => {
         const handleGamificationChange = (e) => {
-            if (e.detail && e.detail.role === activeRole) {
+            if (e.detail && e.detail.role === (activeRole === 'Patient' ? 'Patient' : 'Professional')) {
                 setProfile(e.detail.profile);
             }
         };
@@ -36,6 +36,7 @@ export function Sidebar({
 
     // Nav configurations
     const clinicianNavItems = useMemo(() => [
+        { name: 'Clinical Workspace', icon: 'fa-layer-group', badge: 'Suite' },
         { name: 'Dashboard', icon: 'fa-chart-pie' },
         { name: 'AI Copilot', icon: 'fa-wand-magic-sparkles', badge: 'New' },
         { name: 'CH+MSE Workstation', icon: 'fa-book-medical', badge: 'Core' },
@@ -47,11 +48,13 @@ export function Sidebar({
         { name: 'Intake Forms', icon: 'fa-file-signature', badge: 'New' },
         { name: 'Analytics', icon: 'fa-chart-line' },
         { name: 'Marketplace', icon: 'fa-shop' },
-        { name: 'Pricing Hub', icon: 'fa-file-invoice-dollar', badge: 'Pricing' },
+        { name: 'Pricing Hub', icon: 'fa-file-invoice-dollar', label: 'Business & Pricing Hub', badge: 'Business' },
+        { name: 'Therapeutic Contracts', icon: 'fa-file-contract', badge: 'Negotiable' },
         { name: 'Research Hub', icon: 'fa-flask', badge: 'Research' },
         { name: 'Integration Hub', icon: 'fa-circle-nodes', badge: 'Hub' },
         { name: 'RDoC Matrix', icon: 'fa-dna', badge: 'Research' },
         { name: 'HiTOP Matrix', icon: 'fa-sitemap', badge: 'Research' },
+        { name: 'Disability Compliance & Acts', icon: 'fa-gavel', badge: 'Gov' },
         { name: 'HIPAA Shield', icon: 'fa-user-shield' },
         { name: 'Social Feed', icon: 'fa-users-line', badge: 'Connect' },
         { name: 'PsychConnect Matches', icon: 'fa-magnifying-glass-location', label: 'Directory', badge: 'Connect' },
@@ -68,8 +71,10 @@ export function Sidebar({
         { name: 'Intake Forms', icon: 'fa-file-signature', label: 'Intake & Consent', badge: 'New' },
         { name: 'Teletherapy', icon: 'fa-video', label: 'Telehealth' },
         { name: 'Marketplace', icon: 'fa-shop', label: 'Wellness Store' },
-        { name: 'Pricing Hub', icon: 'fa-file-invoice-dollar', label: 'Pricing Hub', badge: 'Pricing' },
+        { name: 'Pricing Hub', icon: 'fa-file-invoice-dollar', label: 'Business & Pricing Hub', badge: 'Business' },
+        { name: 'Therapeutic Contracts', icon: 'fa-file-contract', label: 'Therapeutic Contract', badge: 'Negotiable' },
         { name: 'Research Hub', icon: 'fa-flask', label: 'Research Hub', badge: 'Research' },
+        { name: 'Disability Compliance & Acts', icon: 'fa-gavel', label: 'Disability Compliance', badge: 'Gov' },
         { name: 'HIPAA Shield', icon: 'fa-shield-halved', label: 'Security logs' },
         { name: 'Social Feed', icon: 'fa-users-line', badge: 'Connect' },
         { name: 'Match & Book', icon: 'fa-magnifying-glass-location', label: 'Directory', badge: 'Connect' },
@@ -82,7 +87,7 @@ export function Sidebar({
     ], []);
 
     const navItems = useMemo(
-        () => activeRole === 'Professional' ? clinicianNavItems : patientNavItems,
+        () => activeRole !== 'Patient' ? clinicianNavItems : patientNavItems,
         [activeRole, clinicianNavItems, patientNavItems]
     );
 
@@ -148,20 +153,17 @@ export function Sidebar({
 
                 {/* Clinician / User Profile Info */}
                 <div className="user-profile-widget flex items-center gap-3 border-b border-white/5" style={{ padding: isCollapsed ? '12px 10px' : '14px 20px', flexDirection: isCollapsed ? 'column' : 'row' }}>
-                    <div className="profile-avatar-circle w-10 h-10 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center font-bold text-teal-400 text-sm" title={activeRole === 'Professional' ? 'Dr. Liam Carter' : 'Patient Liam Carter'} style={{ position: 'relative', flexShrink: 0 }}>
-                        {activeRole === 'Professional' ? 'LC' : 'PC'}
-                        {/* Level Badge Overlay */}
-                        <span className="profile-level-badge absolute -bottom-1 -right-1 bg-teal-500 text-slate-950 rounded-full w-4.5 h-4.5 text-[9px] font-bold flex items-center justify-center border border-slate-950 shadow-md">
-                            {profile?.level || 1}
-                        </span>
+                    <div className="profile-avatar-circle w-10 h-10 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center font-bold text-teal-400 text-sm" title={activeRole !== 'Patient' ? 'Dr. Liam Carter' : 'Patient Liam Carter'} style={{ position: 'relative', flexShrink: 0 }}>
+                        {activeRole !== 'Patient' ? 'LC' : 'PC'}
+                        <span className="online-badge-dot"></span>
                     </div>
                     {!isCollapsed && (
-                        <div className="profile-details-text flex-grow min-w-0 flex flex-col gap-0.5">
+                        <div className="profile-details-text flex-grow min-w-0 flex flex-col gap-0.5" style={{ flex: 1, minWidth: 0 }}>
                             <span className="profile-username text-xs font-semibold text-slate-200 truncate">
-                                {activeRole === 'Professional' ? 'Dr. Liam Carter' : 'Liam Carter'}
+                                {activeRole !== 'Patient' ? 'Dr. Liam Carter' : 'Liam Carter'}
                             </span>
                             <span className="profile-role-sub text-[10px] text-slate-500 truncate">
-                                {activeRole === 'Professional' ? 'Lead Psychiatrist' : 'Patient Persona'}
+                                {activeRole !== 'Patient' ? activeRole : 'Patient Persona'}
                             </span>
                             
                             {/* XP Progress Bar */}
@@ -191,9 +193,9 @@ export function Sidebar({
                 {/* Navigation Menu */}
                 <div className="nav-menu-wrapper flex-grow overflow-y-auto py-4">
                     {!isCollapsed && (
-                        <div className="nav-group-title px-5 py-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
-                            {activeRole === 'Professional' ? 'Clinical Workspace' : 'Wellness Hub'}
-                        </div>
+                        <span className="app-branding-text tracking-widest text-[11px] font-black uppercase text-teal-400">
+                            {activeRole !== 'Patient' ? 'Clinical Workspace' : 'Wellness Hub'}
+                        </span>
                     )}
                     
                     <ul className="nav-items-list flex flex-col gap-1 px-3">
@@ -250,7 +252,7 @@ export function Sidebar({
 
                 {/* Footer / Active EHR / Action Controls */}
                 <div className="rail-footer-controls p-4 border-t border-white/5 flex flex-col gap-3">
-                    {activeRole === 'Professional' && !isCollapsed && (
+                    {activeRole !== 'Patient' && !isCollapsed && (
                         <div className="active-patient-badge p-2.5 bg-slate-900/60 border border-white/5 rounded-lg text-[11px] text-slate-400 flex flex-col gap-0.5">
                             <span className="text-[10px] text-slate-500 font-semibold uppercase">Active EHR Target:</span>
                             <strong id="active-patient-display" className="text-teal-400 truncate">{activePatientName}</strong>

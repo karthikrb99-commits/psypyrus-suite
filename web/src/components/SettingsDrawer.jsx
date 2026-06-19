@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Database } from '../services/db';
 import { GamificationService } from '../services/gamification';
 
-export function SettingsDrawer({ isOpen, onClose, onSave, theme, setTheme }) {
+export function SettingsDrawer({ isOpen, onClose, onSave, theme, setTheme, onOpenLegal }) {
     const [activeSection, setActiveSection] = useState('api'); // 'api', 'display', 'data', 'notifications'
 
     // API state
@@ -386,6 +386,24 @@ export function SettingsDrawer({ isOpen, onClose, onSave, theme, setTheme }) {
                                                         <span>System Diagnostics & Audit logs</span>
                                                     </label>
                                                 </Tabs.Content>
+                                            </div>
+
+                                            <div className="settings-drawer-footer border-t border-white/5 pt-4 mt-4 mb-4 flex flex-col gap-2">
+                                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Legal Agreements & Policies</span>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <button onClick={() => onOpenLegal && onOpenLegal('privacy')} className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-white/5 rounded text-[10px] text-slate-300 font-semibold transition-all text-left flex items-center gap-1.5 cursor-pointer">
+                                                        <i className="fa-solid fa-shield-halved text-teal-400"></i> Privacy Policy
+                                                    </button>
+                                                    <button onClick={() => onOpenLegal && onOpenLegal('terms')} className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-white/5 rounded text-[10px] text-slate-300 font-semibold transition-all text-left flex items-center gap-1.5 cursor-pointer">
+                                                        <i className="fa-solid fa-file-contract text-teal-400"></i> Terms of Use
+                                                    </button>
+                                                    <button onClick={() => onOpenLegal && onOpenLegal('guidelines')} className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-white/5 rounded text-[10px] text-slate-300 font-semibold transition-all text-left flex items-center gap-1.5 cursor-pointer">
+                                                        <i className="fa-solid fa-users text-teal-400"></i> Guidelines
+                                                    </button>
+                                                    <button onClick={() => onOpenLegal && onOpenLegal('copyright')} className="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 border border-white/5 rounded text-[10px] text-slate-300 font-semibold transition-all text-left flex items-center gap-1.5 cursor-pointer">
+                                                        <i className="fa-solid fa-copyright text-teal-400"></i> Copyright Policy
+                                                    </button>
+                                                </div>
                                             </div>
                                         </Tabs.Root>
 

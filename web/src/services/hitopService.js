@@ -136,7 +136,7 @@ export class HitopService {
         const assessments = Database.getAssessments(patientId);
         const hitopAssessment = assessments.find(a => a.type === 'B-HiTOP');
         
-        let answers = null;
+        let answers;
         let isDefaultSeed = false;
 
         if (hitopAssessment && hitopAssessment.answers) {

@@ -428,7 +428,7 @@ export default function SocialFeed({ posts, currentUser, setPosts }) {
               AI Coping Companion
             </h2>
             <span className="text-[9px] bg-indigo-500/20 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider border border-indigo-500/35">
-              Gemini 3.5
+              Gemini 2.5 Flash
             </span>
           </div>
           <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">

@@ -202,7 +202,7 @@ export function CareRequests({ activeRole, currentUser }) {
                         }
                     </p>
                 </div>
-                {activeRole === 'Professional' && (
+                {activeRole !== 'Patient' && (
                     <div className="flex items-center gap-2 bg-slate-900/60 border border-white/5 px-3 py-1.5 rounded-lg text-xs">
                         <i className="fa-solid fa-user-shield text-teal-400"></i>
                         <span className="text-slate-300 font-semibold">HIPAA Protected Clinical Access Only</span>

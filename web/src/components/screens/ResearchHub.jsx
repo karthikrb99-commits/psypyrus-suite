@@ -168,8 +168,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                         <form onSubmit={handleCreateInvite} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-3.5">
                                 <div>
-                                    <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Study Title</label>
+                                    <label htmlFor="post-study-title" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Study Title</label>
                                     <input 
+                                        id="post-study-title"
                                         type="text" 
                                         placeholder="e.g. Cognitive Efficacy of Somatic Breathing Pacing"
                                         value={title}
@@ -178,8 +179,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Sponsoring Institution</label>
+                                    <label htmlFor="post-study-institution" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Sponsoring Institution</label>
                                     <input 
+                                        id="post-study-institution"
                                         type="text" 
                                         placeholder="e.g. Stanford University School of Medicine"
                                         value={institution}
@@ -189,8 +191,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Principal Investigator</label>
+                                        <label htmlFor="post-study-pi" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Principal Investigator</label>
                                         <input 
+                                            id="post-study-pi"
                                             type="text" 
                                             value={pi}
                                             onChange={(e) => setPi(e.target.value)}
@@ -198,8 +201,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Study Category</label>
+                                        <label htmlFor="post-study-category" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Study Category</label>
                                         <select 
+                                            id="post-study-category"
                                             value={category}
                                             onChange={(e) => setCategory(e.target.value)}
                                             className="w-full bg-slate-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
@@ -212,8 +216,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Posting Persona</label>
+                                        <label htmlFor="post-study-persona" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Posting Persona</label>
                                         <select 
+                                            id="post-study-persona"
                                             value={postingAs}
                                             onChange={(e) => setPostingAs(e.target.value)}
                                             className="w-full bg-slate-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
@@ -224,8 +229,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Initial Status</label>
+                                        <label htmlFor="post-study-status" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Initial Status</label>
                                         <select 
+                                            id="post-study-status"
                                             value={pipelineStatus}
                                             onChange={(e) => setPipelineStatus(e.target.value)}
                                             className="w-full bg-slate-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
@@ -240,8 +246,9 @@ export function ResearchHub({ activeRole, currentUser }) {
 
                             <div className="space-y-3.5 flex flex-col justify-between">
                                 <div>
-                                    <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Compensation / Stipend</label>
+                                    <label htmlFor="post-study-compensation" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Compensation / Stipend</label>
                                     <input 
+                                        id="post-study-compensation"
                                         type="text" 
                                         placeholder="e.g. $50 Stipend + Travel Expense Reimbursement"
                                         value={compensation}
@@ -250,8 +257,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Participant Eligibility Criteria</label>
+                                    <label htmlFor="post-study-eligibility" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Participant Eligibility Criteria</label>
                                     <input 
+                                        id="post-study-eligibility"
                                         type="text" 
                                         placeholder="e.g. Ages 18-50, diagnosed with Generalized Anxiety Disorder"
                                         value={eligibility}
@@ -260,8 +268,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Detailed Description</label>
+                                    <label htmlFor="post-study-description" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Detailed Description</label>
                                     <textarea 
+                                        id="post-study-description"
                                         rows="3"
                                         placeholder="Objective, procedures, requirements, privacy/HIPAA guardrails..."
                                         value={description}
@@ -336,6 +345,7 @@ export function ResearchHub({ activeRole, currentUser }) {
                                             </div>
                                             <button 
                                                 onClick={() => handleUpvote(study.id)}
+                                                aria-label="Upvote study"
                                                 className="flex flex-col items-center justify-center p-2 bg-slate-950/40 border border-white/5 hover:border-indigo-500/30 rounded text-slate-400 hover:text-indigo-400 transition-all"
                                             >
                                                 <i className="fa-solid fa-chevron-up text-[10px]"></i>
@@ -424,8 +434,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                     {/* Filters bar */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-900/40 border border-white/5 p-4 rounded-xl">
                         <div>
-                            <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Search Study Directory</label>
+                            <label htmlFor="search-directory-input" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Search Study Directory</label>
                             <input 
+                                id="search-directory-input"
                                 type="text"
                                 placeholder="Search by title, investigator, institution..."
                                 value={searchQuery}
@@ -434,8 +445,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                             />
                         </div>
                         <div>
-                            <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Category Filter</label>
+                            <label htmlFor="category-filter-select" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Category Filter</label>
                             <select 
+                                id="category-filter-select"
                                 value={filterCategory}
                                 onChange={(e) => setFilterCategory(e.target.value)}
                                 className="w-full bg-slate-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
@@ -447,8 +459,9 @@ export function ResearchHub({ activeRole, currentUser }) {
                             </select>
                         </div>
                         <div>
-                            <label className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Pipeline Status</label>
+                            <label htmlFor="status-filter-select" className="text-[10px] uppercase text-slate-500 font-bold block mb-1">Pipeline Status</label>
                             <select 
+                                id="status-filter-select"
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
                                 className="w-full bg-slate-950 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white"
@@ -545,12 +558,13 @@ export function ResearchHub({ activeRole, currentUser }) {
                                             <div className="text-[9px] text-emerald-400 font-medium">Stipend: {s.compensation}</div>
 
                                             {/* Advance study state selector */}
-                                            {activeRole === 'Professional' && (
+                                            {activeRole !== 'Patient' && (
                                                 <div className="pt-2 border-t border-white/5 flex justify-between items-center">
                                                     <span className="text-[8px] text-slate-500 uppercase font-bold">Move Pipeline</span>
                                                     <select 
                                                         value={s.status}
                                                         onChange={(e) => handleStatusChange(s.id, e.target.value)}
+                                                        aria-label="Status"
                                                         className="bg-slate-950 border border-white/10 rounded px-1.5 py-0.5 text-[9px] text-slate-300"
                                                     >
                                                         {PIPELINE_STATUSES.map(st => (

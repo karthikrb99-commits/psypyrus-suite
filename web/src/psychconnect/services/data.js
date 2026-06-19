@@ -315,5 +315,28 @@ export const PREDEFINED_RESOURCES = [
             "What is one micro-action (taking less than 10 minutes) you could schedule tomorrow to support this value?",
             "What primary barrier or fear might arise when trying to prioritize this, and how can you allow that feeling to exist while still taking action?"
         ]
+    },
+    {
+        id: "res_rpwd_rights_article",
+        title: "Patient Rights & Self-Advocacy under RPwD Act 2016",
+        type: "article",
+        topic: "Disability Rights & Advocacy",
+        description: "A comprehensive guide explaining patient rights, equality protections, non-discrimination clauses, and the legal process of obtaining a UDID card in India.",
+        content: "Under the Rights of Persons with Disabilities (RPwD) Act, 2016, individuals with disabilities are guaranteed fundamental rights of equality, non-discrimination, and community life. Section 3 prohibits discrimination on the grounds of disability unless it is a proportionate means of achieving a legitimate aim. The law also establishes a simplified legal guardianship system under Section 14 (via the National Trust Act/Local Level Committees) to protect individual autonomy. To avail of these statutory protections, reservations (4-5% in government jobs/education), and concessions, individuals must obtain a Unique Disability ID (UDID) card. This card is issued by designated medical boards after evaluating the severity threshold (minimum 40% impairment). Self-advocacy involves knowing these sections and referencing them when requesting adjustments from educational institutions, employers, or public spaces. In mental health care contexts, patients are also guaranteed the Right to Access Medical Records under Section 25 of the Indian Mental Healthcare Act (MHCA), 2017. This grants patients access to basic medical records, clinical progress notes, and treatment plans. However, a therapist's private psychotherapy process notes (recording conversational sessions) are protected and kept separate from general records to safeguard the therapeutic alliance."
+    },
+    {
+        id: "res_rpwd_accommodations_ws",
+        title: "Accommodations Request & Self-Advocacy Planner",
+        type: "worksheet",
+        topic: "Disability Rights & Advocacy",
+        description: "An interactive worksheet designed to help patients structure formal requests for reasonable accommodations at work or school, referencing statutory sections of the RPwD Act.",
+        content: "Under Section 20 of the RPwD Act, 2016, employers (both government and private) are mandated to provide reasonable accommodations and a barrier-free environment for employees with disabilities. Section 16 mandates the same for educational institutions. Use this planner to identify your specific structural or academic needs and draft a request referencing these statutory provisions.",
+        questions: [
+            "What specific challenges are you currently facing in your workplace or educational environment due to your condition?",
+            "Based on the RPwD Act, what reasonable accommodations or adjustments would help alleviate these barriers? (e.g., screen reader software, flexible hours, private quiet space, ergonomic furniture, scribe/extra time for tests)",
+            "Draft a formal sentence requesting these adjustments that references the RPwD Act 2016 (e.g., 'Pursuant to Section 20 of the Rights of Persons with Disabilities Act, 2016, I would like to request...')",
+            "Who is the designated Grievance Redressal Officer or authority at your institution/employer to whom this request will be submitted?",
+            "Under Section 25 of the MHCA 2017, you have the right to access your basic medical records and progress notes. Do you require a copy of your clinical reports or SOAP notes to support your request? If so, draft a simple request to your health service provider."
+        ]
     }
 ];

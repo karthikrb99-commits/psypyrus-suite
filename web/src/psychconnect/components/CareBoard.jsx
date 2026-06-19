@@ -6,7 +6,7 @@ import { collection, onSnapshot, query, orderBy, doc, updateDoc } from "firebase
 import { ClipboardList, Plus, AlertCircle, User, Check, X, MessageSquare, HeartHandshake, ShieldAlert, BadgeInfo, CheckCircle, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { encryptMessageText } from "../services/crypto";
-export default function CareBoard({ currentUser, allUsers, setActiveTab, setActiveThreadId }) {
+export default function CareBoard({ currentUser, setActiveTab, setActiveThreadId }) {
     const [problems, setProblems] = useState([]);
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
     const [activeProblemDetail, setActiveProblemDetail] = useState(null);
@@ -24,6 +24,18 @@ export default function CareBoard({ currentUser, allUsers, setActiveTab, setActi
     const [proposalMessage, setProposalMessage] = useState("");
     const [approachError, setApproachError] = useState("");
     const [approachSuccess, setApproachSuccess] = useState(false);
+    const seedInitialGroundingProblems = async () => {
+        try {
+            for (const p of GROUNDING_PROBLEMS) {
+                await createPatientProblemInFirebase(p);
+            }
+        }
+        catch (e) {
+            console.warn("Failed optional seeding:", e);
+            setProblems(GROUNDING_PROBLEMS);
+        }
+    };
+
     // Subscribed live problems from Firestore
     useEffect(() => {
         const q = query(collection(db, "problems"), orderBy("postedAt", "desc"));
@@ -39,23 +51,13 @@ export default function CareBoard({ currentUser, allUsers, setActiveTab, setActi
             else {
                 setProblems(list);
             }
-        }, (err) => {
+        }, () => {
             console.warn("Problems fetch failed or collection uninitialized. Displaying grounding set.");
             setProblems(GROUNDING_PROBLEMS);
         });
         return () => unsubscribe();
     }, []);
-    const seedInitialGroundingProblems = async () => {
-        try {
-            for (const p of GROUNDING_PROBLEMS) {
-                await createPatientProblemInFirebase(p);
-            }
-        }
-        catch (e) {
-            console.warn("Failed optional seeding:", e);
-            setProblems(GROUNDING_PROBLEMS);
-        }
-    };
+
     // Categories helper
     const categories = ["All", "Stress & Burnout", "Anxiety & OCD", "Depression & Mood", "ADHD & Executive", "Relationships & Family", "Grief & Loss", "General Counsel"];
     // Handle problem post submission
@@ -93,7 +95,7 @@ export default function CareBoard({ currentUser, allUsers, setActiveTab, setActi
                 setIsSubmitModalOpen(false);
             }, 1500);
         }
-        catch (err) {
+        catch {
             setFormError("Failed to store care request on server. Please try again.");
         }
     };
@@ -136,7 +138,7 @@ export default function CareBoard({ currentUser, allUsers, setActiveTab, setActi
                 setIsApproachModalOpen(false);
             }, 1500);
         }
-        catch (err) {
+        catch {
             setApproachError("Failed to lock approach on cloud database.");
         }
     };
@@ -235,7 +237,6 @@ export default function CareBoard({ currentUser, allUsers, setActiveTab, setActi
                                                         setApproachError("");
                                                         setIsApproachModalOpen(true);
                                                     }, className: "w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-505 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer shadow-md", children: [_jsx(HeartHandshake, { className: "w-4 h-4" }), _jsx("span", { children: "Approach This Patient" })] })) })), activeProblemDetail.approaches && activeProblemDetail.approaches.length > 0 ? (_jsx("div", { className: "space-y-3 max-h-[220px] overflow-y-auto pr-1", children: activeProblemDetail.approaches.map((app) => {
-                                                    const isDoctorSelf = app.psychologistId === currentUser.id;
                                                     const isProblemOwner = activeProblemDetail.patientId === currentUser.id;
                                                     const isConnected = app.status === "connected";
                                                     return (_jsxs("div", { className: `bg-white/[0.01] border rounded-xl p-3 space-y-2.5 text-xs text-left ${isConnected ? "border-emerald-500/30 bg-emerald-950/5" : "border-white/5"}`, children: [_jsxs("div", { className: "flex justify-between items-start", children: [_jsxs("div", { className: "flex items-center space-x-2", children: [_jsx("img", { src: app.psychologistAvatar, alt: app.psychologistName, className: "w-7 h-7 rounded-full object-cover ring-1 ring-indigo-500/20", referrerPolicy: "no-referrer" }), _jsxs("div", { children: [_jsx("p", { className: "font-semibold text-slate-200 leading-tight", children: app.psychologistName.split(",")[0] }), _jsx("span", { className: "text-[9px] text-slate-500", children: "Therapist" })] })] }), _jsx("span", { className: `px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${isConnected

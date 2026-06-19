@@ -33,15 +33,15 @@ export function Header({
     };
 
     // Gamification header state
-    const [profile, setProfile] = useState(() => GamificationService.getProfile(activeRole));
+    const [profile, setProfile] = useState(() => GamificationService.getProfile(activeRole === 'Patient' ? 'Patient' : 'Professional'));
 
     useEffect(() => {
-        setProfile(GamificationService.getProfile(activeRole));
+        setProfile(GamificationService.getProfile(activeRole === 'Patient' ? 'Patient' : 'Professional'));
     }, [activeRole]);
 
     useEffect(() => {
         const handleGamificationChange = (e) => {
-            if (e.detail && e.detail.role === activeRole) {
+            if (e.detail && e.detail.role === (activeRole === 'Patient' ? 'Patient' : 'Professional')) {
                 setProfile(e.detail.profile);
             }
         };
@@ -131,19 +131,22 @@ export function Header({
                     </div>
 
                     {/* Dynamic Switcher Pill */}
-                    <div className="persona-switcher-pill flex bg-slate-900/80 p-0.5 rounded-lg border border-white/5">
-                        <button 
-                            className={`persona-pill-btn px-3 py-1 rounded-md text-[11px] font-medium transition-all flex items-center gap-1.5 ${activeRole === 'Professional' ? 'active bg-teal-500 text-slate-950 shadow-sm font-semibold' : 'text-slate-400 hover:text-slate-200'}`}
-                            onClick={() => onRoleChange('Professional')}
-                        >
-                            <i className="fa-solid fa-user-doctor"></i> <span>Professional</span>
-                        </button>
-                        <button 
-                            className={`persona-pill-btn px-3 py-1 rounded-md text-[11px] font-medium transition-all flex items-center gap-1.5 ${activeRole === 'Patient' ? 'active bg-teal-500 text-slate-950 shadow-sm font-semibold' : 'text-slate-400 hover:text-slate-200'}`}
-                            onClick={() => onRoleChange('Patient')}
-                        >
-                            <i className="fa-solid fa-user"></i> <span>Patient</span>
-                        </button>
+                    <div className="persona-switcher-pill flex flex-wrap bg-slate-900/80 p-0.5 rounded-lg border border-white/5 gap-1 max-w-full">
+                        {[
+                            { name: 'Professional', icon: 'fa-user-doctor' },
+                            { name: 'Patient', icon: 'fa-user' },
+                            { name: 'Psychiatrist', icon: 'fa-brain' },
+                            { name: 'Psychologist', icon: 'fa-clipboard-user' },
+                            { name: 'Administrator', icon: 'fa-user-shield' }
+                        ].map((r) => (
+                            <button 
+                                key={r.name}
+                                className={`persona-pill-btn px-2.5 py-1 rounded-md text-[11px] font-medium transition-all flex items-center gap-1.5 ${activeRole === r.name ? 'active bg-teal-500 text-slate-950 shadow-sm font-semibold' : 'text-slate-400 hover:text-slate-200'}`}
+                                onClick={() => onRoleChange(r.name)}
+                            >
+                                <i className={`fa-solid ${r.icon}`}></i> <span>{r.name}</span>
+                            </button>
+                        ))}
                     </div>
 
                     {/* Notifications Bell */}

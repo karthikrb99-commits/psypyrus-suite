@@ -200,14 +200,12 @@ export class GamificationService {
         }
 
         // Update active quests
-        let questCompleted = false;
         profile.quests = profile.quests.map(quest => {
             if (quest.type === actionType && !quest.completed) {
                 quest.current += count;
                 if (quest.current >= quest.target) {
                     quest.current = quest.target;
                     quest.completed = true;
-                    questCompleted = true;
 
                     // Delay awarding so notifications don't overlap too much
                     setTimeout(() => {

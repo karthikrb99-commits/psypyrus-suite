@@ -164,7 +164,6 @@ export async function createChatThreadInFirebase(thread) {
 }
 export async function addDirectChatMessageInFirebase(threadId, msg, encryptedLatestMessage, latestMessageTime) {
     const msgPath = `chats/${threadId}/messages/${msg.id}`;
-    const threadPath = `chats/${threadId}`;
     try {
         // 1. Write the message into subcollection
         const msgRef = doc(db, "chats", threadId, "messages", msg.id);

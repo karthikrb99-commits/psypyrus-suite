@@ -48,7 +48,7 @@ const CLINICIAN_APPS = [
         id: "zoom-telehealth-e2ee",
         title: "Zoom Health Telehealth Integration",
         category: "Integrations",
-        description: "Secure, end-to-end encrypted video sessions with HIPAA-compliant virtual background capability.",
+        description: "Secure, end-to-end encrypted video sessions with HIPAA-aware virtual background capability.",
         price: "$9.99/mo",
         icon: "fa-video",
         rating: 4.5,
@@ -142,7 +142,7 @@ export function Marketplace({ activeRole }) {
 
     const { showToast } = useToast();
 
-    const isProfessional = activeRole === 'Professional';
+    const isProfessional = activeRole !== 'Patient';
     const catalog = isProfessional ? CLINICIAN_APPS : PATIENT_APPS;
 
     // Categories available
@@ -248,7 +248,7 @@ export function Marketplace({ activeRole }) {
                 <h2 className="hero-title">{isProfessional ? "Extend Your Clinical Workflow" : "Power Up Your Recovery Journey"}</h2>
                 <p className="hero-description">
                     {isProfessional 
-                        ? "Install clinical assessment packs, specialized AI copilot engines, or telemetry integrations directly into your HIPAA-compliant practitioner desktop workspace." 
+                        ? "Install clinical assessment packs, specialized AI copilot engines, or telemetry integrations directly into your HIPAA-aware practitioner desktop workspace." 
                         : "Discover audio relaxation packs, CBT mood logs, and wearable sync integrations to complete your homework plans and track wellness metrics."}
                 </p>
                 <div style={{ marginTop: '14px', fontSize: '11px', color: 'var(--color-text-secondary)', display: 'flex', gap: '16px', alignItems: 'center' }}>

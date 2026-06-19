@@ -583,7 +583,7 @@ export function IntakeFormsWorkspace({
                             <button className="action-button-btn secondary-btn" onClick={handlePrintForm}>
                                 <i className="fa-solid fa-print"></i> Print Document
                             </button>
-                            {activeRole === 'Professional' && (
+                            {activeRole !== 'Patient' && (
                                 <button className="action-button-btn danger-btn" onClick={() => handleDeleteCompletedForm(selectedCompletedForm.id)}>
                                     <i className="fa-solid fa-trash-can"></i> Void Document
                                 </button>
@@ -691,7 +691,7 @@ export function IntakeFormsWorkspace({
                             <span>Completed Files</span>
                         </button>
 
-                        {activeRole === 'Professional' && (
+                        {activeRole !== 'Patient' && (
                             <div style={{ marginTop: '16px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
                                 <label className="form-label" style={{ fontSize: '10px', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>EHR Patient Target</label>
                                 <select 

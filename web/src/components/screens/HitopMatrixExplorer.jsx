@@ -355,6 +355,11 @@ WHERE {
         };
     }, [activePatient, liveReport]);
 
+    // Check if general p-factor is elevated
+    const isPFactorElevated = useMemo(() => {
+        return liveReport?.secondary?.find(s => s.id === 'p_factor')?.score >= 2.5;
+    }, [liveReport]);
+
     // Build the dynamic SVG Graph nodes and connectors based on patient state
     const svgContent = useMemo(() => {
         if (!liveReport) return null;
@@ -376,7 +381,6 @@ WHERE {
         const paths = [];
 
         // Patient -> p-Factor link
-        const isPFactorElevated = liveReport.secondary.find(s => s.id === 'p_factor')?.score >= 2.5;
         paths.push(
             <path
                 key="p-patient"
@@ -442,7 +446,7 @@ WHERE {
             subNodes,
             paths
         };
-    }, [liveReport, selectedNodeId, activePatient]);
+    }, [liveReport, selectedNodeId, activePatient, isPFactorElevated]);
 
     const activeNodeDetails = useMemo(() => {
         return nodeDetailsInfo[selectedNodeId] || {

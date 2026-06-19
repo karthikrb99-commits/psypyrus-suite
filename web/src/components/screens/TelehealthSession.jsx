@@ -96,7 +96,7 @@ export function TelehealthSession({
         const val = chatInput.trim();
         if (!val) return;
 
-        const prefix = activeRole === "Professional" ? "Dr. Brewster" : patientName.split(' ')[0];
+        const prefix = activeRole !== "Patient" ? "Dr. Brewster" : patientName.split(' ')[0];
         const newLogs = [...chatLogs, `${prefix}: ${val}`];
         setChatLogs(newLogs);
         setChatInput('');
@@ -380,7 +380,7 @@ export function TelehealthSession({
                         </div>
 
                         {/* Quick Assessment Triggers */}
-                        {activeRole === 'Professional' && (
+                        {activeRole !== 'Patient' && (
                             <div className="workspace-card">
                                 <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-light)' }}>
                                     Quick launch assessments

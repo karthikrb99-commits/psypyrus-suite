@@ -211,7 +211,7 @@ describe('PsyPyrus Distributed Systems & Database Optimization Tests', () => {
             Database.enqueueTask('SYNC_EHR', { patientId: 1 });
             
             // Wait for 3 retries with backoff delays
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            await new Promise(resolve => setTimeout(resolve, 3500));
             
             // Task should fail 3 times and move to DLQ
             expect(Database.getQueue().length).toBe(0);

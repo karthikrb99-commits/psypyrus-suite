@@ -106,7 +106,7 @@ export default function ProgressTracker({ currentUser, allUsers }) {
                     ymd = parsedD.toISOString().split("T")[0];
                 }
             }
-            catch { }
+            catch { /* ignore */ }
             const journalToday = journals.find(j => j.date === ymd);
             if (journalToday) {
                 scoreFound = journalToday.moodScore;
@@ -116,7 +116,7 @@ export default function ProgressTracker({ currentUser, allUsers }) {
                 const d = new Date(dateStr);
                 shortLabel = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
             }
-            catch { }
+            catch { /* ignore */ }
             return {
                 dateStr,
                 date: shortLabel,
@@ -160,7 +160,7 @@ export default function ProgressTracker({ currentUser, allUsers }) {
                     label = d.toLocaleDateString([], { month: "short", day: "numeric" });
                 }
             }
-            catch { }
+            catch { /* ignore */ }
             return {
                 date: label,
                 "Mood Score": getQuantifiedMoodScore(l.mood),
@@ -431,7 +431,6 @@ export default function ProgressTracker({ currentUser, allUsers }) {
                 ? patientsList.find((p) => p.id === selectedPatientId)
                 : currentUser;
             const patientName = activePatient ? activePatient.name : "Active Sandbox Patient";
-            const patientEmail = activePatient ? activePatient.email : "karthik.rb99@gmail.com";
             // Cohesively aligned Colors Matching the Vagus Link Branding
             const primaryColor = [79, 70, 229]; // Indigo
             const darkSlate = [15, 23, 42]; // Slate 900
@@ -689,7 +688,7 @@ export default function ProgressTracker({ currentUser, allUsers }) {
                     setIsListening(false);
                 };
                 recognition.start();
-                window.progressSpeechRecognizer = recognition;
+                Reflect.set(window, 'progressSpeechRecognizer', recognition);
             }
             catch (err) {
                 console.error("Could not activate Speech Recognition engine:", err);
@@ -1071,9 +1070,9 @@ export default function ProgressTracker({ currentUser, allUsers }) {
                                                             /* Chronological list on vertical connector line */
                                                             _jsx("div", { className: "relative border-l-2 border-white/5 ml-3 pl-6 space-y-6 text-left", id: "jamun-timeline-thread", children: journals.slice().sort((a, b) => b.timestamp.localeCompare(a.timestamp)).map((j) => {
                                                                     const score = j.moodScore;
-                                                                    let timelineDotColor = "bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]";
-                                                                    let moodBadgeColor = "bg-indigo-500/10 border-indigo-500/20 text-indigo-300";
-                                                                    let emojiSym = "🧘";
+                                                                    let timelineDotColor;
+                                                                    let moodBadgeColor;
+                                                                    let emojiSym;
                                                                     if (score >= 9) {
                                                                         timelineDotColor = "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]";
                                                                         moodBadgeColor = "bg-emerald-500/10 border-emerald-500/20 text-emerald-400";
@@ -1111,7 +1110,7 @@ export default function ProgressTracker({ currentUser, allUsers }) {
                                                                             formattedTimestamp = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + " at " + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
                                                                         }
                                                                     }
-                                                                    catch { }
+                                                                    catch { /* ignore */ }
                                                                     return (_jsxs("div", { className: "relative group transition-all duration-300", id: `timeline-node-${j.id}`, children: [_jsx("span", { className: `absolute -left-[31px] top-1.5 w-4.5 h-4.5 rounded-full border-2 border-[#070708] ${timelineDotColor} transition-transform duration-300 group-hover:scale-125 z-15` }), _jsxs("div", { className: "bg-[#0C0C0F]/90 border border-white/5 hover:border-indigo-500/20 p-4 rounded-xl space-y-3 transition-colors", children: [_jsxs("div", { className: "flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-white/5 pb-2", children: [_jsx("span", { className: "text-[11px] font-mono text-slate-400 font-semibold", children: formattedTimestamp }), _jsx("div", { className: "flex items-center space-x-2", children: _jsxs("span", { className: `text-[9px] font-bold px-2 py-0.5 rounded border uppercase font-mono tracking-wider ${moodBadgeColor}`, children: [emojiSym, " ", j.moodText, " (", j.moodScore, "/10)"] }) })] }), _jsx("div", { className: "space-y-1.5 select-text", children: _jsx("p", { className: "text-slate-300 font-sans text-xs whitespace-pre-wrap leading-relaxed", children: j.gratitudeText }) })] })] }, j.id));
                                                                 }) }))] })] })] }))] }), _jsxs("div", { className: "bg-[#0D0D0F] rounded-2xl border border-white/5 p-5 shadow-lg text-left space-y-4", id: "goals-dashboard-container", children: [_jsxs("div", { children: [_jsxs("h3", { className: "text-sm font-semibold text-slate-100 uppercase tracking-widest flex items-center", style: { fontFamily: "Georgia, serif" }, children: [_jsx(Target, { className: "w-4.5 h-4.5 text-indigo-400 mr-2 shrink-0" }), "Active Therapeutic Goals Board"] }), _jsx("p", { className: "text-[11px] text-slate-400 mt-1", children: "Interactive roadmap mapping clinical milestones with real-time state tracking." })] }), goals.length === 0 ? (_jsxs("div", { className: "py-12 bg-[#070708]/50 border border-dashed border-white/5 rounded-2xl text-center", id: "emptygoalslist", children: [_jsx(Target, { className: "w-8 h-8 text-slate-700 mx-auto mb-2" }), _jsx("p", { className: "text-xs text-slate-500", children: "No therapeutic co-goals mapped for this clinic cycle yet." }), _jsx("p", { className: "text-[10px] text-slate-655 mt-1", children: "Co-construct targeted safety limits using the form on the left pane." })] })) : (_jsx("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", id: "goals-grid-deck", children: goals.map((goal) => {
                                             const statusColors = goal.status === "completed" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :

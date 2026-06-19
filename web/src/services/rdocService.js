@@ -453,9 +453,7 @@ export class RdocService {
         // 4. Generate Clinical Recommendations based on elevations
         activeConstructs.forEach(ac => {
             if (ac.score >= 50) {
-                const constructDetail = RDOC_MATRIX.domains
-                    .flatMap(d => d.constructs)
-                    .find(c => c.id === ac.id);
+
                 
                 if (ac.id === 'loss') {
                     recommendations.push({
@@ -525,7 +523,7 @@ export class RdocService {
      */
     static getRdocOntologyTriples(mappingReport) {
         if (!mappingReport) return '';
-        const cleanName = mappingReport.patientName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
         
         let triples = `@prefix rdoc: <http://nimh.nih.gov/rdoc/ontology#> .
 @prefix psypyrus: <http://psypyrus.ai/ontology#> .

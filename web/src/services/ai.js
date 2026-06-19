@@ -1,10 +1,10 @@
 /**
  * PsyPyrus AI - Gemini Copilot Service Connection
- * Handles direct browser-side REST requests to Google Gemini 3.5 Flash,
+ * Handles direct browser-side REST requests to Google Gemini 2.5 Flash,
  * Custom LLMs, and maintains conversation histories, caching, and token counts.
  */
 
-const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent";
+const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 // Simple local cache for identical prompts
 const responseCache = new Map();
@@ -21,7 +21,11 @@ export class GeminiService {
             return key.trim().length > 0;
         }
         const key = localStorage.getItem('psypyrus_gemini_api_key') || '';
-        return key.trim().length > 0 && key !== 'AIzaSy...your_gemini_api_key_here...';
+        const isValidKey = key.trim().length > 0 && key !== 'AIzaSy...your_gemini_api_key_here...';
+        if (isValidKey) return true;
+
+        const envKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+        return envKey.trim().length > 0 && envKey !== 'your_gemini_api_key';
     }
 
     /**
@@ -134,7 +138,11 @@ export class GeminiService {
             await new Promise(resolve => setTimeout(resolve, 800));
             resultText = this.getMockResponse(prompt);
         } else {
-            const apiKey = localStorage.getItem('psypyrus_gemini_api_key').trim();
+            let apiKey = localStorage.getItem('psypyrus_gemini_api_key') || '';
+            apiKey = apiKey.trim();
+            if (apiKey === '' || apiKey === 'AIzaSy...your_gemini_api_key_here...') {
+                apiKey = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
+            }
             const url = `${BASE_URL}?key=${apiKey}`;
 
             // Build history in Gemini format

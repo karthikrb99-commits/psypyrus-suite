@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Database } from '../../services/db';
+import { Logger } from '../../services/logger';
+import { Tracer } from '../../services/tracer';
 import { useToast } from '../ToastProvider';
 import { HitopService } from '../../services/hitopService';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,7 +20,7 @@ export function IntegrationHub({ patients, activePatientId, onSetActivePatientId
     const [dbQueue, setDbQueue] = useState([]);
     const [dbDLQ, setDbDLQ] = useState([]);
     const [dbForceSyncFail, setDbForceSyncFail] = useState(localStorage.getItem('psypyrus_force_sync_fail') === 'true');
-    const [activeArchitectureSubTab, setActiveArchitectureSubTab] = useState('db-ops'); // 'db-ops', 'acid', 'messaging'
+    const [activeArchitectureSubTab, setActiveArchitectureSubTab] = useState('db-ops'); // 'db-ops', 'acid', 'messaging', 'resilience', 'observability'
     const [idempotencyKeyInput, setIdempotencyKeyInput] = useState('pay-consultation-' + Math.random().toString(36).substr(2, 9));
     const [isSimulatingPool, setIsSimulatingPool] = useState(false);
     const [activeConnections, setActiveConnections] = useState(0);
@@ -28,6 +30,27 @@ export function IntegrationHub({ patients, activePatientId, onSetActivePatientId
         p2: 100
     });
 
+    // --- Phase 2: Advanced Resilience & Observability State ---
+    const [cbState, setCbState] = useState('CLOSED');
+    const [cbHistory, setCbHistory] = useState([]);
+    const [cbFailureCount, setCbFailureCount] = useState(0);
+    const [sagaLogs, setSagaLogs] = useState([]);
+    const [distributedLocks, setDistributedLocks] = useState({});
+    const [lockLogs, setLockLogs] = useState([]);
+    const [bulkheadStats, setBulkheadStats] = useState({ reads: { active: 0, queued: 0, max: 5 }, writes: { active: 0, queued: 0, max: 2 } });
+    const [liveLogs, setLiveLogs] = useState([]);
+    const [logLevelFilter, setLogLevelFilter] = useState({ INFO: true, WARN: true, ERROR: true, DEBUG: true });
+    const [liveTraces, setLiveTraces] = useState([]);
+    const logConsoleRef = useRef(null);
+
+    // Resilience & Observability UI Form Inputs
+    const [lockResourceInput, setLockResourceInput] = useState('patient_chart_45');
+    const [lockOwnerInput, setLockOwnerInput] = useState('clinician_john');
+    const [hashKeyInput, setHashKeyInput] = useState('patient_104');
+    const [sagaBillingFail, setSagaBillingFail] = useState(false);
+    const [selectedTrace, setSelectedTrace] = useState(null);
+    const [logSearchQuery, setLogSearchQuery] = useState('');
+
     const syncDbMetrics = useCallback(() => {
         setDbCacheStats({ ...Database.cacheStats });
         setDbQueryPlan({ ...Database.lastQueryPlan });
@@ -35,25 +58,51 @@ export function IntegrationHub({ patients, activePatientId, onSetActivePatientId
         setDbTxLogs([...Database.transactionLogs]);
         setDbQueue(Database.getQueue());
         setDbDLQ(Database.getDLQ());
+        // Phase 2 sync
+        setCbState(Database.circuitBreaker.state);
+        setCbHistory([...Database.circuitBreaker.history]);
+        setCbFailureCount(Database.circuitBreaker.failureCount);
+        setSagaLogs([...Database.sagaLogs]);
+        setDistributedLocks({ ...Database.getDistributedLocks() });
+        setLockLogs([...Database.distributedLockLogs]);
+        setBulkheadStats(Database.bulkhead.getStats());
+        setLiveLogs([...Logger.getLogs()].reverse());
+        setLiveTraces([...Tracer.getCompletedTraces()].reverse());
     }, []);
 
     useEffect(() => {
         syncDbMetrics();
         window.addEventListener('psypyrus_db_change', syncDbMetrics);
         window.addEventListener('psypyrus_mq_change', syncDbMetrics);
-        
+        window.addEventListener('psypyrus_cb_change', syncDbMetrics);
+        window.addEventListener('psypyrus_lock_change', syncDbMetrics);
+        window.addEventListener('psypyrus_saga_change', syncDbMetrics);
+        window.addEventListener('psypyrus_log', syncDbMetrics);
+        window.addEventListener('psypyrus_trace', syncDbMetrics);
+        window.addEventListener('psypyrus_log_clear', syncDbMetrics);
+        window.addEventListener('psypyrus_trace_clear', syncDbMetrics);
+
         const interval = setInterval(() => {
             setDbRateLimitTokens(Math.floor(Database.rateLimit.tokens));
             setActiveConnections(Database.connectionPool.activeConnections);
             setQueuedPoolQueries(Database.connectionPool.waitingQueue.map((_, i) => `Query ${i + 1}`));
+            setBulkheadStats(Database.bulkhead.getStats());
         }, 150);
 
         return () => {
             window.removeEventListener('psypyrus_db_change', syncDbMetrics);
             window.removeEventListener('psypyrus_mq_change', syncDbMetrics);
+            window.removeEventListener('psypyrus_cb_change', syncDbMetrics);
+            window.removeEventListener('psypyrus_lock_change', syncDbMetrics);
+            window.removeEventListener('psypyrus_saga_change', syncDbMetrics);
+            window.removeEventListener('psypyrus_log', syncDbMetrics);
+            window.removeEventListener('psypyrus_trace', syncDbMetrics);
+            window.removeEventListener('psypyrus_log_clear', syncDbMetrics);
+            window.removeEventListener('psypyrus_trace_clear', syncDbMetrics);
             clearInterval(interval);
         };
     }, [syncDbMetrics]);
+
 
     // Helper to simulate connection pool query queue
     const simulateParallelQueries = async () => {
@@ -135,6 +184,101 @@ export function IntegrationHub({ patients, activePatientId, onSetActivePatientId
             showToast("Payment successful! Charged $150.", "success");
         } catch (e) {
             showToast("Payment error: " + e.message, "error");
+        }
+    };
+
+    // --- Phase 2: Advanced System Design Pattern Simulation Helpers ---
+    const triggerMockCbFailure = async () => {
+        try {
+            await Database.circuitCall(() => {
+                throw new Error("EHR API Timeout: connection reset");
+            });
+        } catch (err) {
+            showToast(`Cb Call Failed: ${err.message}`, "error");
+        } finally {
+            syncDbMetrics();
+        }
+    };
+
+    const triggerMockCbSuccess = async () => {
+        try {
+            const res = await Database.circuitCall(() => {
+                return "Patient data fetched successfully";
+            });
+            showToast(`Cb Call Succeeded: ${res}`, "success");
+        } catch (err) {
+            showToast(`Cb Call Failed: ${err.message}`, "error");
+        } finally {
+            syncDbMetrics();
+        }
+    };
+
+    const triggerBulkheadSaturation = async () => {
+        showToast("Saturating bulkhead read pool with 10 concurrent requests...", "info");
+        const promises = Array.from({ length: 10 }).map(async (_, idx) => {
+            try {
+                await Database.bulkhead.acquire('readPool');
+                // simulate async work
+                await new Promise(r => setTimeout(r, 2000));
+            } catch (err) {
+                Logger.error('bulkhead-ui', 'BULKHEAD_REJECT', `Request ${idx + 1} rejected: ${err.message}`);
+            } finally {
+                Database.bulkhead.release('readPool');
+                syncDbMetrics();
+            }
+        });
+        // Tick immediately to show active/queued count
+        syncDbMetrics();
+    };
+
+    const triggerSagaSimulation = async () => {
+        const steps = [
+            {
+                name: "Create Clinician Profile",
+                execute: async () => {
+                    Database._writeRaw('psypyrus_temp_clinician', { id: 999, name: "Dr. Saga Expert" });
+                    Logger.info('saga-ui', 'SAGA_CREATE_CLINICIAN', "Created temporary clinician profile.");
+                },
+                compensate: async () => {
+                    Database._writeRaw('psypyrus_temp_clinician', []);
+                    Logger.warn('saga-ui', 'SAGA_ROLLBACK_CLINICIAN', "Compensated: Removed clinician profile.");
+                }
+            },
+            {
+                name: "Provision Practice Workspace",
+                execute: async () => {
+                    Database._writeRaw('psypyrus_temp_workspace', { id: 888, theme: "blue" });
+                    Logger.info('saga-ui', 'SAGA_PROVISION_WORKSPACE', "Provisioned default practice workspace.");
+                },
+                compensate: async () => {
+                    Database._writeRaw('psypyrus_temp_workspace', []);
+                    Logger.warn('saga-ui', 'SAGA_ROLLBACK_WORKSPACE', "Compensated: Deprovisioned practice workspace.");
+                }
+            },
+            {
+                name: "Initialize Stripe Billing Account",
+                execute: async () => {
+                    if (sagaBillingFail) {
+                        throw new Error("Stripe API Connection Timeout (Simulated)");
+                    }
+                    Database._writeRaw('psypyrus_temp_billing', { id: 777, stripeId: "cus_123" });
+                    Logger.info('saga-ui', 'SAGA_BILLING_SETUP', "Stripe billing client initialized.");
+                },
+                compensate: async () => {
+                    Database._writeRaw('psypyrus_temp_billing', []);
+                    Logger.warn('saga-ui', 'SAGA_ROLLBACK_BILLING', "Compensated: Deleted billing link.");
+                }
+            }
+        ];
+
+        try {
+            showToast("Starting onboarding saga...", "info");
+            await Database.runSaga(steps, "Clinician Onboarding Saga");
+            showToast("Clinician Onboarding Saga completed and committed!", "success");
+        } catch (err) {
+            showToast(`Saga Aborted: ${err.message}`, "error");
+        } finally {
+            syncDbMetrics();
         }
     };
 
@@ -3073,6 +3217,12 @@ export function Stepper({ steps, activeStep }) {
                                 <button className={`arch-sub-btn ${activeArchitectureSubTab === 'messaging' ? 'active' : ''}`} onClick={() => setActiveArchitectureSubTab('messaging')}>
                                     <i className="fa-solid fa-envelope-open-text" style={{ marginRight: '6px' }}></i> Message Queue & DLQ
                                 </button>
+                                <button className={`arch-sub-btn ${activeArchitectureSubTab === 'resilience' ? 'active' : ''}`} onClick={() => setActiveArchitectureSubTab('resilience')}>
+                                    <i className="fa-solid fa-shield-halved" style={{ marginRight: '6px' }}></i> Resilience Patterns
+                                </button>
+                                <button className={`arch-sub-btn ${activeArchitectureSubTab === 'observability' ? 'active' : ''}`} onClick={() => setActiveArchitectureSubTab('observability')}>
+                                    <i className="fa-solid fa-binoculars" style={{ marginRight: '6px' }}></i> Observability
+                                </button>
                             </div>
                         </div>
 
@@ -3467,6 +3617,479 @@ export function Stepper({ steps, activeStep }) {
                                         />
                                         <span style={{ fontSize: '11px', color: '#fff' }}>Simulate Network Outage</span>
                                     </label>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SUB-TAB: RESILIENCE PATTERNS */}
+                        {activeArchitectureSubTab === 'resilience' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr', gap: '20px' }}>
+                                    
+                                    {/* Circuit Breaker Card */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '12px', color: '#fff' }}>Circuit Breaker (EHR API Wrapper)</h4>
+                                            <span style={{
+                                                fontSize: '10px',
+                                                padding: '2px 8px',
+                                                borderRadius: '4px',
+                                                fontWeight: 'bold',
+                                                background: cbState === 'CLOSED' ? 'rgba(16, 185, 129, 0.15)' : cbState === 'OPEN' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                                                color: cbState === 'CLOSED' ? '#10b981' : cbState === 'OPEN' ? '#ef4444' : '#f59e0b',
+                                                border: `1px solid ${cbState === 'CLOSED' ? '#10b981' : cbState === 'OPEN' ? '#ef4444' : '#f59e0b'}`
+                                            }}>
+                                                {cbState}
+                                            </span>
+                                        </div>
+                                        
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
+                                                <div className="metric-val" style={{ color: '#fff', fontSize: '16px' }}>{cbFailureCount} / 5</div>
+                                                <div className="metric-label">Failure Count</div>
+                                            </div>
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '6px', textAlign: 'center' }}>
+                                                <div className="metric-val" style={{ color: '#fff', fontSize: '16px' }}>30s</div>
+                                                <div className="metric-label">Cooldown TTL</div>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+                                            <button className="action-button-btn secondary mini-action-btn" style={{ flex: 1, fontSize: '10px' }} onClick={triggerMockCbSuccess}>
+                                                Mock Success
+                                            </button>
+                                            <button className="action-button-btn secondary mini-action-btn" style={{ flex: 1, fontSize: '10px', borderColor: 'var(--color-error)', color: 'var(--color-error)' }} onClick={triggerMockCbFailure}>
+                                                Mock Failure
+                                            </button>
+                                            <button className="action-button-btn secondary mini-action-btn" style={{ flex: 1, fontSize: '10px' }} onClick={() => { Database.circuitBreaker.reset(); syncDbMetrics(); showToast("Circuit breaker states reset.", "info"); }}>
+                                                Reset
+                                            </button>
+                                        </div>
+
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Transition Logs:</div>
+                                        <div className="log-console-box" style={{ height: '90px', background: '#09090b', fontSize: '10px', color: '#10b981' }}>
+                                            {cbHistory.length === 0 ? (
+                                                <span style={{ color: 'var(--text-muted)' }}>No state transitions recorded.</span>
+                                            ) : (
+                                                cbHistory.map((h, i) => (
+                                                    <div key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '2px', marginBottom: '2px' }}>
+                                                        [{new Date(h.at).toLocaleTimeString()}] TRANSITION: {h.from} ➔ {h.to}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Bulkhead Isolation Card */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '12px', color: '#fff' }}>Bulkhead Pool Isolation</h4>
+                                            <button className="action-button-btn secondary mini-action-btn" style={{ padding: '2px 8px', fontSize: '9px' }} onClick={triggerBulkheadSaturation}>
+                                                Saturate Reads
+                                            </button>
+                                        </div>
+                                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+                                            Prevents thread starvation by partitioning the connection pools into isolated read & write queues.
+                                        </p>
+                                        
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                            {/* Reads pool */}
+                                            <div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                                                    <span><strong>Read Bulkhead Pool</strong> ({bulkheadStats.reads.active}/{bulkheadStats.reads.max} Slots)</span>
+                                                    <span style={{ color: bulkheadStats.reads.queued > 0 ? 'var(--color-warning)' : 'var(--text-muted)' }}>
+                                                        {bulkheadStats.reads.queued} queued
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+                                                    {Array.from({ length: bulkheadStats.reads.max }).map((_, i) => (
+                                                        <div key={i} style={{
+                                                            flex: 1,
+                                                            height: '6px',
+                                                            borderRadius: '3px',
+                                                            background: i < bulkheadStats.reads.active ? '#10b981' : 'rgba(255,255,255,0.06)',
+                                                            boxShadow: i < bulkheadStats.reads.active ? '0 0 8px rgba(16, 185, 129, 0.4)' : 'none'
+                                                        }} />
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Writes pool */}
+                                            <div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                                                    <span><strong>Write Bulkhead Pool</strong> ({bulkheadStats.writes.active}/{bulkheadStats.writes.max} Slots)</span>
+                                                    <span style={{ color: bulkheadStats.writes.queued > 0 ? 'var(--color-warning)' : 'var(--text-muted)' }}>
+                                                        {bulkheadStats.writes.queued} queued
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '4px' }}>
+                                                    {Array.from({ length: bulkheadStats.writes.max }).map((_, i) => (
+                                                        <div key={i} style={{
+                                                            flex: 1,
+                                                            height: '6px',
+                                                            borderRadius: '3px',
+                                                            background: i < bulkheadStats.writes.active ? '#a855f7' : 'rgba(255,255,255,0.06)',
+                                                            boxShadow: i < bulkheadStats.writes.active ? '0 0 8px rgba(168, 85, 247, 0.4)' : 'none'
+                                                        }} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.6fr', gap: '20px' }}>
+                                    {/* Distributed Lock Manager */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#fff' }}>Distributed Locks Manager</h4>
+                                        
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                                            <div style={{ flex: 1 }}>
+                                                <label style={{ display: 'block', fontSize: '9px', color: 'var(--text-muted)', marginBottom: '4px' }}>Resource Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={lockResourceInput} 
+                                                    onChange={e => setLockResourceInput(e.target.value)}
+                                                    style={{ width: '100%', padding: '4px 8px', fontSize: '11px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff' }}
+                                                />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <label style={{ display: 'block', fontSize: '9px', color: 'var(--text-muted)', marginBottom: '4px' }}>Owner ID</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={lockOwnerInput} 
+                                                    onChange={e => setLockOwnerInput(e.target.value)}
+                                                    style={{ width: '100%', padding: '4px 8px', fontSize: '11px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff' }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                                            <button className="action-button-btn secondary mini-action-btn" style={{ flex: 1, fontSize: '10px' }} onClick={() => {
+                                                try {
+                                                    Database.acquireDistributedLock(lockResourceInput, lockOwnerInput);
+                                                    showToast(`Acquired lock on '${lockResourceInput}' for '${lockOwnerInput}'`, "success");
+                                                } catch (err) {
+                                                    showToast(err.message, "error");
+                                                } finally {
+                                                    syncDbMetrics();
+                                                }
+                                            }}>
+                                                Acquire Lock
+                                            </button>
+                                            <button className="action-button-btn secondary mini-action-btn" style={{ flex: 1, fontSize: '10px' }} onClick={() => {
+                                                const released = Database.releaseDistributedLock(lockResourceInput, lockOwnerInput);
+                                                if (released) {
+                                                    showToast(`Released lock on '${lockResourceInput}'`, "success");
+                                                } else {
+                                                    showToast(`Failed to release lock on '${lockResourceInput}' (non-owner or not locked)`, "error");
+                                                }
+                                                syncDbMetrics();
+                                            }}>
+                                                Release Lock
+                                            </button>
+                                        </div>
+
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Active Locks:</div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '70px', overflowY: 'auto', background: 'rgba(255,255,255,0.02)', padding: '6px', borderRadius: '4px', marginBottom: '10px', fontSize: '10px' }}>
+                                            {Object.keys(distributedLocks).length === 0 ? (
+                                                <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No active distributed locks.</span>
+                                            ) : (
+                                                Object.entries(distributedLocks).map(([res, info]) => (
+                                                    <div key={res} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.02)', paddingBottom: '2px' }}>
+                                                        <span style={{ color: 'var(--color-primary)' }}>{res}</span>
+                                                        <span style={{ color: 'var(--text-muted)' }}>Owned by: <strong style={{ color: '#fff' }}>{info.owner}</strong></span>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Lock History Logs:</div>
+                                        <div className="log-console-box" style={{ height: '70px', background: '#09090b', color: '#fb7185', fontSize: '9px' }}>
+                                            {lockLogs.length === 0 ? (
+                                                <span style={{ color: 'var(--text-muted)' }}>No lock logs recorded.</span>
+                                            ) : (
+                                                lockLogs.map((log, idx) => <div key={idx}>{log}</div>)
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Saga Transactions Card */}
+                                    <div className="metric-card" style={{ padding: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '12px', color: '#fff' }}>Saga Orchestration Engine</h4>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '10px' }}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={sagaBillingFail} 
+                                                    onChange={e => setSagaBillingFail(e.target.checked)} 
+                                                    style={{ accentColor: 'var(--color-primary)' }}
+                                                />
+                                                <span style={{ color: 'var(--text-muted)' }}>Fail Stripe Billing Step</span>
+                                            </label>
+                                        </div>
+                                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                                            Rolls back completed stages using reverse compensation actions if a downstream step fails.
+                                        </p>
+
+                                        <button className="action-button-btn" style={{ width: '100%', fontSize: '11px', marginBottom: '12px' }} onClick={triggerSagaSimulation}>
+                                            Execute Clinician Onboarding Saga Flow
+                                        </button>
+
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Saga History Log:</div>
+                                        <div className="log-console-box" style={{ height: '160px', background: '#09090b', fontSize: '10px' }}>
+                                            {sagaLogs.length === 0 ? (
+                                                <span style={{ color: 'var(--text-muted)' }}>No Sagas run yet. Click above to trigger.</span>
+                                            ) : (
+                                                sagaLogs.map((s, idx) => (
+                                                    <div key={s.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '6px', marginBottom: '6px' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
+                                                            <span style={{ color: '#fff' }}>{s.name}</span>
+                                                            <span style={{ color: s.status === 'committed' ? '#10b981' : '#ef4444' }}>
+                                                                {s.status.toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                        <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Started at: {new Date(s.startedAt).toLocaleTimeString()}</div>
+                                                        <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '8px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                                                            {s.steps.map((st, i) => (
+                                                                <div key={i} style={{ color: st.status === 'done' ? '#10b981' : st.status === 'failed' ? '#ef4444' : st.status === 'compensated' ? '#f59e0b' : '#38bdf8' }}>
+                                                                    ➔ {st.name} ({st.status}) {st.error ? `- Err: ${st.error}` : ''}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Consistent Hashing ring section */}
+                                <div className="metric-card" style={{ padding: '16px' }}>
+                                    <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#fff' }}>Consistent Hashing Partitioning Ring</h4>
+                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                        <div style={{ flex: 1.2 }}>
+                                            <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                                                Deterministic ring maps records uniformly across servers. Enter key to find node mapping.
+                                            </p>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <input 
+                                                    type="text" 
+                                                    value={hashKeyInput}
+                                                    onChange={e => setHashKeyInput(e.target.value)}
+                                                    placeholder="Enter key (e.g. patient_123)"
+                                                    style={{ flex: 1, padding: '6px 12px', fontSize: '11px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff' }}
+                                                />
+                                                <div style={{
+                                                    padding: '6px 12px',
+                                                    fontSize: '11px',
+                                                    background: 'var(--color-primary-dark)',
+                                                    border: '1px solid var(--color-primary)',
+                                                    borderRadius: '4px',
+                                                    color: '#fff',
+                                                    fontWeight: 'bold'
+                                                }}>
+                                                    Maps to: {Database.hashRing.getNode(hashKeyInput)}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ flex: 1.8, display: 'flex', gap: '10px', justifyContent: 'space-around' }}>
+                                            {['Node-A', 'Node-B', 'Node-C', 'Node-D'].map(node => {
+                                                const isActiveNode = Database.hashRing.getNode(hashKeyInput) === node;
+                                                return (
+                                                    <div key={node} style={{
+                                                        padding: '10px 14px',
+                                                        borderRadius: '8px',
+                                                        background: isActiveNode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255,255,255,0.02)',
+                                                        border: `1px solid ${isActiveNode ? 'var(--color-primary)' : 'rgba(255,255,255,0.06)'}`,
+                                                        textAlign: 'center',
+                                                        flex: 1,
+                                                        transition: 'all 0.2s ease',
+                                                        transform: isActiveNode ? 'scale(1.05)' : 'scale(1)',
+                                                        boxShadow: isActiveNode ? '0 0 12px rgba(59, 130, 246, 0.3)' : 'none'
+                                                    }}>
+                                                        <i className={`fa-solid fa-server`} style={{ color: isActiveNode ? 'var(--color-primary)' : 'var(--text-muted)', fontSize: '16px', marginBottom: '4px' }}></i>
+                                                        <div style={{ fontSize: '10px', fontWeight: 'bold', color: isActiveNode ? '#fff' : 'var(--text-muted)' }}>{node}</div>
+                                                        <div style={{ fontSize: '8px', color: 'var(--text-muted)', marginTop: '2px' }}>3 vnodes</div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SUB-TAB: OBSERVABILITY */}
+                        {activeArchitectureSubTab === 'observability' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr', gap: '20px' }}>
+                                    
+                                    {/* Structured Logging Panel */}
+                                    <div className="metric-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '420px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '12px', color: '#fff' }}>Structured JSON Logging Engine</h4>
+                                            <button className="action-button-btn secondary mini-action-btn" style={{ padding: '2px 8px', fontSize: '9px' }} onClick={() => { Logger.clearLogs(); syncDbMetrics(); }}>
+                                                Clear Logs
+                                            </button>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                            <input 
+                                                type="text" 
+                                                value={logSearchQuery}
+                                                onChange={e => setLogSearchQuery(e.target.value)}
+                                                placeholder="Filter messages..."
+                                                style={{ flex: 1, padding: '4px 8px', fontSize: '11px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff' }}
+                                            />
+                                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                {Object.keys(logLevelFilter).map(lvl => (
+                                                    <label key={lvl} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: '#fff', cursor: 'pointer' }}>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={logLevelFilter[lvl]}
+                                                            onChange={e => setLogLevelFilter({ ...logLevelFilter, [lvl]: e.target.checked })}
+                                                            style={{ accentColor: 'var(--color-primary)' }}
+                                                        />
+                                                        {lvl}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="log-console-box" style={{ flex: 1, background: '#09090b', color: '#e4e4e7', fontSize: '9px', fontFamily: 'monospace', overflowY: 'auto' }}>
+                                            {liveLogs
+                                                .filter(l => logLevelFilter[l.level])
+                                                .filter(l => l.message.toLowerCase().includes(logSearchQuery.toLowerCase()) || l.service.toLowerCase().includes(logSearchQuery.toLowerCase()) || l.event.toLowerCase().includes(logSearchQuery.toLowerCase()))
+                                                .map((l, idx) => {
+                                                    let lvlColor = '#38bdf8'; // INFO
+                                                    if (l.level === 'WARN') lvlColor = '#fbbf24';
+                                                    if (l.level === 'ERROR') lvlColor = '#f87171';
+                                                    if (l.level === 'DEBUG') lvlColor = '#a78bfa';
+
+                                                    return (
+                                                        <div key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '3px', marginBottom: '3px', lineHeight: 1.3 }}>
+                                                            <span style={{ color: 'var(--text-muted)' }}>[{l.timestamp.substr(11, 8)}]</span>{' '}
+                                                            <span style={{ color: lvlColor, fontWeight: 'bold' }}>[{l.level}]</span>{' '}
+                                                            <span style={{ color: '#818cf8' }}>[{l.service}]</span>{' '}
+                                                            <span style={{ color: '#34d399' }}>{l.event}</span> - {l.message}
+                                                            {Object.keys(l.metadata).length > 0 && (
+                                                                <span style={{ color: '#a1a1aa', fontStyle: 'italic' }}> - meta: {JSON.stringify(l.metadata)}</span>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            {liveLogs.length === 0 && <span style={{ color: 'var(--text-muted)' }}>No logs emitted yet.</span>}
+                                        </div>
+                                    </div>
+
+                                    {/* Distributed Tracing waterfall explorer */}
+                                    <div className="metric-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '420px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '12px', color: '#fff' }}>Distributed Trace Timeline Explorer</h4>
+                                            <button className="action-button-btn secondary mini-action-btn" style={{ padding: '2px 8px', fontSize: '9px' }} onClick={() => { Tracer.clearTraces(); setSelectedTrace(null); syncDbMetrics(); }}>
+                                                Clear Traces
+                                            </button>
+                                        </div>
+                                        
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '15px', flex: 1, overflow: 'hidden' }}>
+                                            {/* Left List */}
+                                            <div style={{ borderRight: '1px solid rgba(255,255,255,0.06)', paddingRight: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                {liveTraces.length === 0 ? (
+                                                    <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>No completed traces. Run queries, transactions, or sagas to trigger tracing.</span>
+                                                ) : (
+                                                    liveTraces.map(t => {
+                                                        const isSelected = selectedTrace?.traceId === t.traceId;
+                                                        return (
+                                                            <div 
+                                                                key={t.traceId}
+                                                                onClick={() => setSelectedTrace(t)}
+                                                                style={{
+                                                                    padding: '8px',
+                                                                    borderRadius: '6px',
+                                                                    background: isSelected ? 'rgba(59, 130, 246, 0.12)' : 'rgba(255,255,255,0.02)',
+                                                                    border: `1px solid ${isSelected ? 'var(--color-primary)' : 'rgba(255,255,255,0.04)'}`,
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.2s ease',
+                                                                    fontSize: '10px'
+                                                                }}
+                                                            >
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
+                                                                    <span style={{ color: '#fff' }}>{t.name}</span>
+                                                                    <span style={{ color: 'var(--color-primary)' }}>{t.durationMs}ms</span>
+                                                                </div>
+                                                                <div style={{ color: 'var(--text-muted)', fontSize: '8px', marginTop: '2px' }}>
+                                                                    id: {t.traceId.substr(0, 8)}... | {t.spans.length} spans
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+
+                                            {/* Right Timeline Detail */}
+                                            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                                                {selectedTrace ? (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                                        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '6px', marginBottom: '8px' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <strong style={{ fontSize: '11px', color: '#fff' }}>{selectedTrace.name}</strong>
+                                                                <span style={{ fontSize: '10px', color: 'var(--color-primary)' }}>Total: {selectedTrace.durationMs}ms</span>
+                                                            </div>
+                                                            <div style={{ fontSize: '8px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                                                Trace ID: {selectedTrace.traceId}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Waterfall visual */}
+                                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                            {selectedTrace.spans.sort((a,b) => a.startTime - b.startTime).map(span => {
+                                                                const startOffsetMs = span.startTime - selectedTrace.startTime;
+                                                                const startPct = selectedTrace.durationMs > 0 ? (startOffsetMs / selectedTrace.durationMs) * 100 : 0;
+                                                                const widthPct = selectedTrace.durationMs > 0 ? (span.durationMs / selectedTrace.durationMs) * 100 : 100;
+                                                                const indent = span.parentSpanId ? 14 : 0;
+
+                                                                return (
+                                                                    <div key={span.spanId} style={{ display: 'flex', flexDirection: 'column', fontSize: '9px', paddingLeft: `${indent}px` }}>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e4e4e7', marginBottom: '2px' }}>
+                                                                            <span>
+                                                                                {span.parentSpanId ? '↳ ' : ''}
+                                                                                <strong>{span.name}</strong>
+                                                                                {span.tags.error && <span style={{ color: 'var(--color-error)', marginLeft: '4px' }}>[Error]</span>}
+                                                                            </span>
+                                                                            <span style={{ color: 'var(--text-muted)' }}>{span.durationMs}ms</span>
+                                                                        </div>
+                                                                        
+                                                                        {/* Progress bar container */}
+                                                                        <div style={{ height: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
+                                                                            <div style={{
+                                                                                position: 'absolute',
+                                                                                left: `${startPct}%`,
+                                                                                width: `${Math.max(2, widthPct)}%`,
+                                                                                height: '100%',
+                                                                                background: span.tags.error ? 'var(--color-error)' : 'linear-gradient(90deg, var(--color-primary), #3b82f6)',
+                                                                                borderRadius: '4px'
+                                                                            }} />
+                                                                        </div>
+                                                                        {span.tags.errorMessage && (
+                                                                            <div style={{ color: 'var(--color-error)', fontSize: '8px', fontStyle: 'italic', marginTop: '2px' }}>
+                                                                                Error: {span.tags.errorMessage}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '10px', fontStyle: 'italic' }}>
+                                                        Select a trace from the list to view the waterfall timeline.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
