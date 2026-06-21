@@ -1,10 +1,10 @@
 /**
  * PsyPyrus AI - Gemini Copilot Service Connection
- * Handles direct browser-side REST requests to Google Gemini 3.5 Flash,
+ * Handles direct browser-side REST requests to Google Gemini 2.5 Flash,
  * with structured fallback responses when the API key is not configured.
  */
 
-const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent";
+const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 export class GeminiService {
     /**

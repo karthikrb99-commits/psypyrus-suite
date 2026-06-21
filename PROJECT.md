@@ -13,8 +13,8 @@ PsyPyrus is a multi-platform app containing:
 |---|------|-------|--------------|--------|
 | 1 | Exploration & Diagnostic Analysis | Analyze directories, files, and syntax errors in Android | None | DONE |
 | 2 | Android Code Debugging & Fixing | Fix `PsyPyrusUi.kt` compilation errors and verify compilation | M1 | DONE |
-| 3 | Multi-Platform Build & Test Verification | Run builds and test suites across Web, Desktop, iOS/macOS | M1, M2 | IN_PROGRESS |
-| 4 | Git Committing & Pushing | Logically group changes in conventional commits and push | M1, M2, M3 | PLANNED |
+| 3 | Multi-Platform Build & Test Verification | Run builds and test suites across Web, Desktop, iOS/macOS | M1, M2 | DONE |
+| 4 | Git Committing & Pushing | Logically group changes in conventional commits and push | M1, M2, M3 | IN_PROGRESS |
 | 5 | Validation & Sentinel Notification | Run forensic audit and notify Sentinel (ID: cae8610d-aad7-495f-9814-b155691cfa54) | M4 | PLANNED |
 
 ## Code Layout

@@ -1,6 +1,6 @@
-# PsyPyrus Sync Service
+# Papyrus Sync Service — Experimental Cloud Sync Gateway
 
-Node.js + Express microservice for the PsyPyrus offline-first sync architecture.
+Node.js + Express microservice for the Papyrus offline-first sync architecture. This service is currently in an **experimental/early development stage**. It is functional in local development environments, but is not yet production-hardened.
 
 ## Features
 
@@ -84,7 +84,7 @@ Services:
 
 ### `GET /health`
 ```json
-{ "status": "ok", "service": "psypyrus-sync-service", "version": "1.0.0" }
+{ "status": "ok", "service": "papyrus-sync-service", "version": "1.0.0" }
 ```
 
 ### `POST /sync`
@@ -131,3 +131,31 @@ If no Firebase credentials are configured (`.env` has no `GOOGLE_APPLICATION_CRE
 This lets you develop locally without a Firebase project.
 
 > ⚠️ **Never deploy to production without Firebase credentials configured.**
+
+---
+
+## 🚦 Development Status & Milestones
+
+> [!IMPORTANT]
+> This sync service is experimental. It is functional as a dev-mode local backend but is not yet production-hardened for a deployed clinical environment.
+
+### 1. What is Implemented:
+- PostgreSQL-backed patient and mood log tables via Prisma ORM.
+- Last-Write-Wins delta sync endpoint (`POST /sync`).
+- Firebase Admin SDK authentication middleware with dev-bypass mode.
+- Railway.app deployment configuration with auto-migration.
+- Full audit log for sync events (`GET /sync/events`).
+
+### 2. What is Mocked / Not Yet Production-Ready:
+- **Conflict resolution**: Uses simple Last-Write-Wins, which can cause data loss in multi-device concurrent writes. Operational Transform or CRDT approaches are needed for clinical safety.
+- **End-to-end encryption**: Patient data is transmitted over HTTPS but stored as plaintext in the PostgreSQL database. Field-level encryption is planned.
+- **Rate limiting and DDoS protection**: Basic Express configuration — no production-grade rate limiting or WAF layer.
+
+### 3. Compliance Note:
+> Storing patient health information in a PostgreSQL database accessible via the internet requires your own independent HIPAA/DISHA compliance assessment, signed BAAs with your cloud provider, encryption at rest, and breach notification procedures. This codebase demonstrates a **HIPAA-aware architectural pattern** — not a certified solution.
+
+### 4. Next Milestones:
+- Implement field-level AES-256 encryption for PHI columns.
+- Add CRDT-based merge strategy for conflict resolution.
+- Add rate limiting middleware (`express-rate-limit`).
+- Add comprehensive audit trail with immutable log storage.
