@@ -209,10 +209,33 @@ export default function ClinicalWorkspace({
   const [currentRole, setCurrentRole] = useState("Psychiatrist");
   const [practitionerName, setPractitionerName] = useState("Dr. Arishta Singh");
 
-  // Patients database
   const [patients, setPatients] = useState([]);
   const [activePatientId, setActivePatientId] = useState(propActivePatientId || 7);
-  const activePatient = patients.find((p) => p.id === activePatientId) || patients[0];
+  const activePatientRaw = patients.find((p) => p.id === activePatientId) || patients[0];
+  const activePatient = activePatientRaw ? {
+    ...activePatientRaw,
+    riskAssessment: activePatientRaw.riskAssessment || {
+      level: "LOW",
+      suicideRisk: "None reported.",
+      selfHarmRisk: "None reported.",
+      violenceRisk: "None reported.",
+      lastAssessmentDate: "N/A",
+      clinicalFlags: []
+    },
+    psychiatricHistory: activePatientRaw.psychiatricHistory || [],
+    allergies: activePatientRaw.allergies || [],
+    currentMedications: activePatientRaw.currentMedications || [],
+    medicalHistory: activePatientRaw.medicalHistory || [],
+    familyHistory: activePatientRaw.familyHistory || [],
+    demographics: activePatientRaw.demographics || {
+      dob: "N/A",
+      occupation: "N/A",
+      contact: "N/A",
+      emergencyContact: "N/A",
+      insurance: "N/A"
+    }
+  } : null;
+
 
   // Sync active patient from prop
   useEffect(() => {
