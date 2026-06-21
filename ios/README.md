@@ -1,8 +1,8 @@
-# 🍎 PsyPyrus iOS Client — Developer Guide
+# 🍎 PsyPyrus iOS Client — Experimental Stub (Planned Platform)
 
-This directory contains the native iOS client for the **PsyPyrus Suite**, operating as part of the **Papyrus Open Mental Health Intelligence Ecosystem**.
+This directory contains the native iOS client for the **PsyPyrus Suite**. This platform is currently an **experimental stub** — the source structure and service wrappers have been scaffolded, but full UI workflows and data connectivity are pending. All feature development for new clinical workflows should be landed on the [Web React client](../web/README.md) first.
 
-It is compiled using **SwiftUI**, **Combine**, and native SQLite database connections. It implements an offline-first diagnostic rules engine matching 13 DSM-5 disorders, local security auditing, native biometric locks (Face ID / Touch ID), and a connection to Google's Gemini 3.5 API.
+When implementation-ready, this client will be compiled using **SwiftUI**, **Combine**, and native SQLite database connections, targeting an offline-first diagnostic engine matching 13 DSM-5 disorders, native biometric locks (Face ID / Touch ID), and a connection to Google's Gemini 2.5 Flash API.
 
 ---
 
@@ -45,8 +45,8 @@ ios/PsyPyrus/
 ---
 
 ## 🧠 Diagnostic Engine & DsmDatabase
-*   The iOS engine references the central [DsmDatabase.swift](file:///ios/PsyPyrus/Services/DsmDatabase.swift), containing structured criteria lists, comorbidity weights, and severity specifications for 13 disorders.
-*   [DiagnosticEngine.swift](file:///ios/PsyPyrus/Services/DiagnosticEngine.swift) runs dynamic evaluation loops matching symptoms against thresholds, duration limits, and clinical exclusions.
+*   The iOS engine references the central [DsmDatabase.swift](./PsyPyrus/Services/DsmDatabase.swift), containing structured criteria lists, comorbidity weights, and severity specifications for 13 disorders.
+*   [DiagnosticEngine.swift](./PsyPyrus/Services/DiagnosticEngine.swift) runs dynamic evaluation loops matching symptoms against thresholds, duration limits, and clinical exclusions.
 
 ---
 
@@ -60,6 +60,31 @@ python generate_xcodeproj.py
 ```
 
 1. Open the generated `PsyPyrus.xcodeproj` in **Xcode**.
-2. Add your **Gemini API Key** in the Xcode settings panel sheet (accessed via the gear icon in the navigation bar).
-3. Select an iOS Simulator or connected physical device target.
-4. Click **Run** (`Cmd + R`) to compile and launch.
+2. Add your **Gemini 2.5 Flash API Key** in the Xcode settings panel sheet (accessed via the gear icon in the navigation bar).
+3. Configure the **Cloud Sync Server URL** pointing to the **Papyrus Sync Service** (default local test endpoint: `http://localhost:3001`) inside your build environment configurations.
+4. Select an iOS Simulator or connected physical device target.
+5. Click **Run** (`Cmd + R`) to compile and launch.
+
+For comprehensive backend configuration, API details, and hosting instructions, refer to the [Ecosystem Deployment Guide](../DEPLOYMENT.md).
+
+---
+
+## 🚦 Development Status, Mocks, & Milestones
+
+> [!NOTE]
+> This platform is an experimental stub. Core feature workflows are being built into the Web React reference implementation first.
+
+### 1. What is Scaffolded:
+- Swift service layer structure (`GeminiService.swift`, `DiagnosticEngine.swift`, `DsmDatabase.swift`) and ViewModel architecture.
+- SwiftUI view file structure (`MainLayoutView.swift`, `BiometricLockView.swift`, Professional/Patient directories).
+- Data model entities (`Entities.swift`) mirroring the Room DB schemas from the Android client.
+
+### 2. What is Not Yet Implemented:
+- Full interactive clinical UI screens (Genogram Canvas, Diagnostics Graph, HiTOP/RDoC explorers).
+- Live REST sync with the sync-service backend.
+- Fully tested real biometric `LocalAuthentication` flows (requires device testing).
+
+### 3. Next Milestones:
+- Complete the SOAP Notes Copilot and Genogram Canvas views.
+- Synchronize persistent state with the cross-platform sync service.
+- Submit to TestFlight for early clinical beta testing.

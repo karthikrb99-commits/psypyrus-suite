@@ -21,6 +21,7 @@ files_and_groups = {
     "Services/ClinicalTrialsService.swift": "Services",
     "Services/SecurityLogger.swift": "Services",
     "Services/IcdService.swift": "Services",
+    "Services/MedicationService.swift": "Services",
     "ViewModels/PsyPyrusViewModel.swift": "ViewModels",
     "Views/CommonComponents.swift": "Views",
     "Views/BiometricLockView.swift": "Views",

@@ -10,8 +10,10 @@ public struct Patient: Identifiable, Codable {
     public var riskStatus: String // "None", "Low", "Moderate", "Severe"
     public var specialty: String // e.g., "Depression", "Anxiety", "PTSD", "ADHD"
     public var registrationDate: Date
+    public var abhaNumber: String?
+    public var abhaAddress: String?
     
-    public init(id: Int64 = 0, name: String, age: Int, gender: String, email: String, phone: String, riskStatus: String, specialty: String, registrationDate: Date = Date()) {
+    public init(id: Int64 = 0, name: String, age: Int, gender: String, email: String, phone: String, riskStatus: String, specialty: String, registrationDate: Date = Date(), abhaNumber: String? = nil, abhaAddress: String? = nil) {
         self.id = id
         self.name = name
         self.age = age
@@ -21,6 +23,8 @@ public struct Patient: Identifiable, Codable {
         self.riskStatus = riskStatus
         self.specialty = specialty
         self.registrationDate = registrationDate
+        self.abhaNumber = abhaNumber
+        self.abhaAddress = abhaAddress
     }
 }
 

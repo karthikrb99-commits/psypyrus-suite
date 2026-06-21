@@ -4,7 +4,7 @@ public class GeminiService {
     public static let shared = GeminiService()
     private init() {}
     
-    private let baseURLString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent"
+    private let baseURLString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     
     // Checks if the key is a valid non-placeholder key
     public func isApiKeyConfigured(key: String) -> Bool {

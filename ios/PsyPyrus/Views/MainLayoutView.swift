@@ -296,7 +296,7 @@ public struct MainLayoutView: View {
                 
                 Form {
                     Section(header: Text("Google Gemini Configuration")) {
-                        SecureField("Gemini 3.5 API Key", text: Binding(
+                        SecureField("Gemini 2.5 Flash API Key", text: Binding(
                             get: { viewModel.geminiApiKey },
                             set: { viewModel.saveApiKey($0) }
                         ))

@@ -85,9 +85,11 @@ public class PsyPyrusViewModel: ObservableObject {
         let liam = Patient(id: 1, name: "Liam Carter", age: 29, gender: "Male", email: "liam.carter@health.me", phone: "555-0192", riskStatus: "Severe", specialty: "Major Depres. (Single Ep.)")
         let sarah = Patient(id: 2, name: "Sarah Jenkins", age: 34, gender: "Female", email: "sarah.j@outlook.com", phone: "555-2311", riskStatus: "Moderate", specialty: "Generalized Anxiety Disorder")
         let john = Patient(id: 3, name: "John Doe", age: 42, gender: "Male", email: "j.doe@company.com", phone: "555-8833", riskStatus: "None", specialty: "ADHD Clinical Consultation")
-        let sophia = Patient(id: 4, name: "Sophia Patel", age: 23, gender: "Female", email: "sophia.patel@edu.org", phone: "555-4422", riskStatus: "Low", specialty: "PTSD Trauma Therapy")
+        let sophia = Patient(id: 4, name: "Sophia Patel", age: 23, gender: "Female", email: "sophia.patel@edu.org", phone: "555-4422", riskStatus: "Low", specialty: "PTSD Trauma Therapy", abhaNumber: "91-2345-6789-0123", abhaAddress: "sophia.patel@abdm")
+        let aarav = Patient(id: 5, name: "Aarav Sharma", age: 10, gender: "Male", email: "aarav.sharma@health.in", phone: "91-98765-43210", riskStatus: "Low", specialty: "ADHD Clinical Consultation", abhaNumber: "91-4455-6677-8899", abhaAddress: "aarav@abdm")
+        let leela = Patient(id: 6, name: "Leela Devi", age: 72, gender: "Female", email: "leela.devi@care.in", phone: "91-87654-32109", riskStatus: "Moderate", specialty: "Major Depres. (Single Ep.)", abhaNumber: "91-1122-3344-5566", abhaAddress: "leela@abdm")
         
-        self.patients = [liam, sarah, john, sophia]
+        self.patients = [liam, sarah, john, sophia, aarav, leela]
         self.selectedPatientId = liam.id
         
         // Seed appointments

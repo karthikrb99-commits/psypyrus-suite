@@ -15,6 +15,7 @@
 		63B09D04A8C956E8A7BBF1ED /* ClinicalTrialsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5F556DC11E252EBBB9367A1 /* ClinicalTrialsService.swift */; };
 		A3A4F201D55B56E5AD86FCDA /* SecurityLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F12E7C8D958584688FBD67A /* SecurityLogger.swift */; };
 		3555D8C6EE5051968D3A2018 /* IcdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C0E5B94BE4597A849E82D8 /* IcdService.swift */; };
+		A508203FB845573995ABE8F3 /* MedicationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6314DF4532BB570FBCE6722B /* MedicationService.swift */; };
 		B760220DC9225ACE9E9A8879 /* PsyPyrusViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE5235A2E445F85ADB5BBE5 /* PsyPyrusViewModel.swift */; };
 		9DCFF415FA265D84ACA72AC9 /* CommonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D97C0C67E485F88B3766C1F /* CommonComponents.swift */; };
 		321007465FD4529BBE026FD8 /* BiometricLockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A531134C112052998527CAAA /* BiometricLockView.swift */; };
@@ -49,6 +50,7 @@
 		F5F556DC11E252EBBB9367A1 /* ClinicalTrialsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClinicalTrialsService.swift; path = ../ios/PsyPyrus/Services/ClinicalTrialsService.swift; sourceTree = SOURCE_ROOT; };
 		8F12E7C8D958584688FBD67A /* SecurityLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SecurityLogger.swift; path = ../ios/PsyPyrus/Services/SecurityLogger.swift; sourceTree = SOURCE_ROOT; };
 		F1C0E5B94BE4597A849E82D8 /* IcdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IcdService.swift; path = ../ios/PsyPyrus/Services/IcdService.swift; sourceTree = SOURCE_ROOT; };
+		6314DF4532BB570FBCE6722B /* MedicationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MedicationService.swift; path = ../ios/PsyPyrus/Services/MedicationService.swift; sourceTree = SOURCE_ROOT; };
 		6EE5235A2E445F85ADB5BBE5 /* PsyPyrusViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PsyPyrusViewModel.swift; path = ../ios/PsyPyrus/ViewModels/PsyPyrusViewModel.swift; sourceTree = SOURCE_ROOT; };
 		4D97C0C67E485F88B3766C1F /* CommonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommonComponents.swift; path = ../ios/PsyPyrus/Views/CommonComponents.swift; sourceTree = SOURCE_ROOT; };
 		A531134C112052998527CAAA /* BiometricLockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BiometricLockView.swift; path = ../ios/PsyPyrus/Views/BiometricLockView.swift; sourceTree = SOURCE_ROOT; };
@@ -117,6 +119,7 @@
 				F5F556DC11E252EBBB9367A1 /* ClinicalTrialsService.swift */,
 				8F12E7C8D958584688FBD67A /* SecurityLogger.swift */,
 				F1C0E5B94BE4597A849E82D8 /* IcdService.swift */,
+				6314DF4532BB570FBCE6722B /* MedicationService.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -238,6 +241,7 @@
 				63B09D04A8C956E8A7BBF1ED /* ClinicalTrialsService.swift in Sources */,
 				A3A4F201D55B56E5AD86FCDA /* SecurityLogger.swift in Sources */,
 				3555D8C6EE5051968D3A2018 /* IcdService.swift in Sources */,
+				A508203FB845573995ABE8F3 /* MedicationService.swift in Sources */,
 				B760220DC9225ACE9E9A8879 /* PsyPyrusViewModel.swift in Sources */,
 				9DCFF415FA265D84ACA72AC9 /* CommonComponents.swift in Sources */,
 				321007465FD4529BBE026FD8 /* BiometricLockView.swift in Sources */,
