@@ -153,7 +153,7 @@ function setupMenu() {
                             type: 'info',
                             title: 'About PsyPyrus AI',
                             message: 'PsyPyrus Suite — Windows Client v1.0.0',
-                            detail: 'A secure, HIPAA-compliant Mental Health Operating System & Wellness Hub.\n\nRunning on Electron ' + process.versions.electron,
+                            detail: 'A secure, HIPAA-aware Mental Health Operating System & Wellness Hub.\n\nRunning on Electron ' + process.versions.electron,
                             buttons: ['OK']
                         });
                     }
