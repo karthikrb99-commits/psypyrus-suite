@@ -112,7 +112,7 @@ fun LoginSignupScreen(
                 textAlign = TextAlign.Center
             )
             Text(
-                text = "Next-Generation HIPAA Compliant Clinical Platform",
+                text = "Next-Generation HIPAA-Aware Clinical Platform",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),

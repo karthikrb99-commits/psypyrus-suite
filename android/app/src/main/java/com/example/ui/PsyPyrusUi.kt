@@ -213,6 +213,9 @@ fun ActiveScreenContent(screen: String, viewModel: PsyPyrusViewModel) {
             "HIPAA Shield" -> SecurityScreen(viewModel)
             "Homework" -> HomeworkTrackerScreen(viewModel)
             "Medications" -> MedicationsScreen(viewModel)
+            "HiTOP" -> HitopMatrixExplorerScreen(viewModel)
+            "RDoC" -> RdocMatrixExplorerScreen(viewModel)
+            "MindShop" -> MindShopScreen(viewModel)
             else -> DashboardScreen(viewModel)
         }
     }
@@ -342,6 +345,8 @@ private fun getNavItems(role: String): List<NavItem> {
             NavItem("AI Copilot", Icons.Default.AutoAwesome),
             NavItem("Digital MSE", Icons.Default.Assignment),
             NavItem("Diagnostics", Icons.Default.Troubleshoot),
+            NavItem("HiTOP", Icons.Default.Hub),
+            NavItem("RDoC", Icons.Default.Science),
             NavItem("Peer Support", Icons.Default.Groups),
             NavItem("Teletherapy", Icons.Default.Videocam),
             NavItem("Planner", Icons.Default.CalendarMonth),
@@ -356,6 +361,7 @@ private fun getNavItems(role: String): List<NavItem> {
             NavItem("Dashboard", Icons.Default.Mood),
             NavItem("Match & Book", Icons.Default.SupervisorAccount),
             NavItem("Wellness", Icons.Default.SelfImprovement),
+            NavItem("MindShop", Icons.Default.ShoppingCart),
             NavItem("Peer Support", Icons.Default.Groups),
             NavItem("Homework", Icons.Default.DoneAll),
             NavItem("Medications", Icons.Default.Healing),
@@ -6823,9 +6829,28 @@ fun SecurityScreen(viewModel: PsyPyrusViewModel) {
     val activeProvider by viewModel.activeProvider.collectAsStateWithLifecycle()
     val customIcdClientId by viewModel.customIcdClientId.collectAsStateWithLifecycle()
     val customIcdClientSecret by viewModel.customIcdClientSecret.collectAsStateWithLifecycle()
+    val activeTheme by viewModel.activeTheme.collectAsStateWithLifecycle()
+    val activePatients by viewModel.patients.collectAsStateWithLifecycle()
+    val activePatientId by viewModel.selectedPatientId.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    var activeSubTab by remember { mutableStateOf(0) } // 0: Audits, 1: Backups, 2: AI Settings
+    var activeSubTab by remember { mutableStateOf(0) } // 0: Audits, 1: Backups, 2: AI Settings, 3: ABDM Sandbox
+
+    var abdmClientIdEdit by remember { mutableStateOf("SBX_002934") }
+    var abdmClientSecretEdit by remember { mutableStateOf("••••••••••••••••••••••••••••••••") }
+    var abdmGatewayUrlEdit by remember { mutableStateOf("https://dev.abdm.gov.in/gway/v0.5") }
+    var abdmCmUrlEdit by remember { mutableStateOf("https://sbx.abdm.gov.in/cm") }
+
+    val abdmLogs = remember { mutableStateListOf("ABDM Sandbox Simulator initialized.", "Ready to authenticate with National Health Authority gateway.") }
+    var isAbdmTesting by remember { mutableStateOf(false) }
+
+    var abdmPurpose by remember { mutableStateOf("CAREMGT") }
+    val consentRequests = remember { mutableStateListOf(
+        ConsentRequestItem("REQ-101", "Sophia Patel", "sophia.patel@abdm", "CAREMGT", listOf("DiagnosticReport", "Prescription"), "GRANTED", "14 Jun 2026"),
+        ConsentRequestItem("REQ-102", "Liam Carter", "liam.carter@abdm", "CAREMGT", listOf("Prescription"), "PENDING", "14 Jun 2026")
+    ) }
+    
+    val patient = activePatients.find { it.id == activePatientId }
 
     var geminiKeyEdit by remember(customGeminiKey) { mutableStateOf(customGeminiKey) }
     var openAiKeyEdit by remember(customOpenAiKey) { mutableStateOf(customOpenAiKey) }
@@ -6898,6 +6923,12 @@ fun SecurityScreen(viewModel: PsyPyrusViewModel) {
                     onClick = { activeSubTab = 2 },
                     text = { Text("AI Models Integration", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                )
+                Tab(
+                    selected = activeSubTab == 3,
+                    onClick = { activeSubTab = 3 },
+                    text = { Text("ABDM Sandbox", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                    icon = { Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 )
             }
         }
@@ -7276,6 +7307,254 @@ fun SecurityScreen(viewModel: PsyPyrusViewModel) {
                             Icon(Icons.Default.Save, contentDescription = null)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Save ICD-11 Credentials")
+                        }
+                    }
+                }
+            }
+        } else if (activeSubTab == 3) {
+            // Tab 3: ABDM Sandbox Simulator Settings
+            val isLight = activeTheme == "light"
+            item {
+                Text("Ayushman Bharat Digital Mission (ABDM) Sandbox Gateway", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = if (isLight) Color.White else DarkCharcoalSurf),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("1. Sandbox Credentials Settings", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        OutlinedTextField(
+                            value = abdmClientIdEdit,
+                            onValueChange = { abdmClientIdEdit = it },
+                            label = { Text("ABDM Client ID") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().testTag("settings_abdm_client_id_input")
+                        )
+                        OutlinedTextField(
+                            value = abdmClientSecretEdit,
+                            onValueChange = { abdmClientSecretEdit = it },
+                            label = { Text("ABDM Client Secret") },
+                            singleLine = true,
+                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth().testTag("settings_abdm_client_secret_input")
+                        )
+                        OutlinedTextField(
+                            value = abdmGatewayUrlEdit,
+                            onValueChange = { abdmGatewayUrlEdit = it },
+                            label = { Text("Gateway Endpoint URL") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = abdmCmUrlEdit,
+                            onValueChange = { abdmCmUrlEdit = it },
+                            label = { Text("Consent Manager URL") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Button(
+                            onClick = {
+                                isAbdmTesting = true
+                                val logTime = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
+                                abdmLogs.add("[$logTime] POST /v0.5/sessions client_id=$abdmClientIdEdit...")
+                                isAbdmTesting = false
+                                abdmLogs.add("[$logTime] NHA Gateway accepted credentials. Commencing JWKS signature validation...")
+                                abdmLogs.add("[$logTime] Signed JWT assertion token using clinical private key.")
+                                abdmLogs.add("[$logTime] Handshake successful. Status: Connected. Sandbox latency: 38ms.")
+                                viewModel.logAudit("ABDM Gateway Authenticated", "Connected to NHA gateway sandbox using ID $abdmClientIdEdit.")
+                                Toast.makeText(context, "ABDM Sandbox Gateway authenticated successfully!", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth().height(42.dp).testTag("test_abdm_gateway_button")
+                        ) {
+                            Text("Test ABDM Sandbox Connection")
+                        }
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.Black),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Gateway Diagnostics Console Output:", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        abdmLogs.forEach { logLine ->
+                            Text(logLine, color = Color.Green, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                        }
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = if (isLight) Color.White else DarkCharcoalSurf),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("2. Raise Consent Request (HIU Mode)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(
+                            "Raise a digital health locker consent request for the active patient using their linked ABHA ID/Address.",
+                            fontSize = 11.sp,
+                            color = Color.Gray
+                        )
+
+                        if (patient == null) {
+                            Text("No active patient selected. Navigate to Dashboard to select a patient.", fontSize = 11.sp, fontStyle = FontStyle.Italic, color = Color.Red)
+                        } else {
+                            val hasAbha = !patient.abhaNumber.isNullOrBlank()
+                            Text("Patient Name: ${patient.name}", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("ABHA ID: ${patient.abhaNumber ?: "NOT LINKED"}", fontSize = 12.sp, color = if (hasAbha) MaterialTheme.colorScheme.primary else Color.Red)
+                            Text("ABHA Address: ${patient.abhaAddress ?: "NOT LINKED"}", fontSize = 12.sp, color = if (hasAbha) MaterialTheme.colorScheme.primary else Color.Red)
+
+                            OutlinedTextField(
+                                value = abdmPurpose,
+                                onValueChange = { abdmPurpose = it },
+                                label = { Text("Consent Purpose Code") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Button(
+                                onClick = {
+                                    if (!hasAbha) {
+                                        Toast.makeText(context, "Active patient does not have a linked ABHA ID. Link ABHA first.", Toast.LENGTH_SHORT).show()
+                                        return@Button
+                                    }
+                                    val logTime = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
+                                    val newId = "REQ-${(100..999).random()}"
+                                    val newReq = ConsentRequestItem(
+                                        id = newId,
+                                        patientName = patient.name,
+                                        abhaAddress = patient.abhaAddress ?: "",
+                                        purpose = abdmPurpose,
+                                        dataTypes = listOf("DiagnosticReport", "Prescription"),
+                                        status = "PENDING",
+                                        date = SimpleDateFormat("dd MMM yyyy", Locale.US).format(Date())
+                                    )
+                                    consentRequests.add(0, newReq)
+                                    abdmLogs.add("[$logTime] POST /v0.5/consent-requests/initiate for patient ${patient.name} (${patient.abhaAddress})...")
+                                    abdmLogs.add("[$logTime] Consent request raised with ID $newId. Waiting for patient approval in locker.")
+                                    Toast.makeText(context, "Raised ABDM consent request $newId successfully.", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.fillMaxWidth().height(42.dp),
+                                enabled = hasAbha
+                            ) {
+                                Text("Raise Consent Request")
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Text("Active Consent Requests & Gateway Callbacks", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+
+            if (consentRequests.isEmpty()) {
+                item {
+                    Text("No consent requests raised in this session.", fontSize = 11.sp, fontStyle = FontStyle.Italic, color = Color.Gray)
+                }
+            } else {
+                items(consentRequests) { req ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = if (isLight) Color.White else DarkCharcoalSurf),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(req.id, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                                Badge(
+                                    containerColor = when (req.status) {
+                                        "GRANTED" -> Color(0xFFE8F5E9)
+                                        "PENDING" -> Color(0xFFFFF3E0)
+                                        else -> Color(0xFFFFEBEE)
+                                    }
+                                ) {
+                                    Text(
+                                        req.status,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = when (req.status) {
+                                            "GRANTED" -> Color(0xFF2E7D32)
+                                            "PENDING" -> Color(0xFFEF6C00)
+                                            else -> Color(0xFFC62828)
+                                        },
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                            Text("Patient: ${req.patientName} (${req.abhaAddress})", fontSize = 12.sp)
+                            Text("Purpose: ${req.purpose} | Types: ${req.dataTypes.joinToString()}", fontSize = 11.sp, color = Color.Gray)
+                            Text("Date Raised: ${req.date}", fontSize = 11.sp, color = Color.Gray)
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (req.status == "PENDING") {
+                                    Button(
+                                        onClick = {
+                                            val logTime = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
+                                            abdmLogs.add("[$logTime] Callback received from Consent Manager for Request ${req.id}.")
+                                            abdmLogs.add("[$logTime] Status updated: GRANTED (Token: tok_consent_${req.id})")
+                                            Toast.makeText(context, "Consent request approved by patient simulator.", Toast.LENGTH_SHORT).show()
+                                            val index = consentRequests.indexOf(req)
+                                            if (index != -1) {
+                                                consentRequests[index] = req.copy(status = "GRANTED")
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f).height(36.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text("Simulate Approve", fontSize = 11.sp)
+                                    }
+                                    Button(
+                                        onClick = {
+                                            val logTime = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
+                                            abdmLogs.add("[$logTime] Callback received from Consent Manager for Request ${req.id}.")
+                                            abdmLogs.add("[$logTime] Status updated: DENIED")
+                                            Toast.makeText(context, "Consent request denied by patient simulator.", Toast.LENGTH_SHORT).show()
+                                            val index = consentRequests.indexOf(req)
+                                            if (index != -1) {
+                                                consentRequests[index] = req.copy(status = "DENIED")
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f).height(36.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text("Simulate Deny", fontSize = 11.sp)
+                                    }
+                                } else if (req.status == "GRANTED") {
+                                    Button(
+                                        onClick = {
+                                            val logTime = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
+                                            abdmLogs.add("[$logTime] Fetching health information from HIP registry using token tok_consent_${req.id}...")
+                                            abdmLogs.add("[$logTime] Pulling encrypted HL7 FHIR Bundle from gateway...")
+                                            abdmLogs.add("[$logTime] Encrypted data block received. Size: 45.2 KB.")
+                                            abdmLogs.add("[$logTime] Diffie-Hellman key exchange successful. Decrypted 3 resources.")
+                                            viewModel.logAudit("ABDM FHIR Sync", "Decrypted FHIR health records for ${req.patientName} under consent token.")
+                                            Toast.makeText(context, "Fetched & decrypted health records from national locker!", Toast.LENGTH_LONG).show()
+                                        },
+                                        modifier = Modifier.fillMaxWidth().height(36.dp)
+                                    ) {
+                                        Text("Fetch & Decrypt Health Records", fontSize = 11.sp)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -9787,6 +10066,133 @@ fun PatientDiscoverySection(
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HitopMatrixExplorerScreen(viewModel: PsyPyrusViewModel) {
+    val activeTheme by viewModel.activeTheme.collectAsStateWithLifecycle()
+    val isLight = activeTheme == "light"
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            SectionHeader("HiTOP Hierarchical Taxonomy Explorer", Icons.Default.Hub)
+        }
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = if (isLight) Color.White else DarkCharcoalSurf),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Hierarchical Taxonomy of Psychopathology (HiTOP)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "An alternative to traditional categorical classification (like DSM-5). HiTOP structures psychopathology dimensionally to reflect clinical reality.",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Main Dimensions (Spectra):", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    val spectra = listOf(
+                        "Internalizing (Anxiety, Depression, Phobias)",
+                        "Thought Disorder (Schizotypy, Mania, Hallucinations)",
+                        "Disinhibited Externalizing (ADHD, Antisocial Behavior)",
+                        "Antagonistic Externalizing (Hostility, Narcissism)",
+                        "Detachment (Avoidant, Schizoid traits)",
+                        "Somatoform (Somatization)"
+                    )
+                    spectra.forEach { spectrum ->
+                        Text("• $spectrum", fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RdocMatrixExplorerScreen(viewModel: PsyPyrusViewModel) {
+    val activeTheme by viewModel.activeTheme.collectAsStateWithLifecycle()
+    val isLight = activeTheme == "light"
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            SectionHeader("RDoC Matrix Framework", Icons.Default.Science)
+        }
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = if (isLight) Color.White else DarkCharcoalSurf),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("NIMH Research Domain Criteria (RDoC)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "A research framework for studying mental disorders. It integrates many levels of information (from genomics to self-report) to explore basic dimensions of functioning.",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Domains of Functioning:", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    val domains = listOf(
+                        "Negative Valence Systems (Fear, Anxiety, Loss)",
+                        "Positive Valence Systems (Reward Learning, Habit)",
+                        "Cognitive Systems (Attention, Perception, Memory)",
+                        "Systems for Social Processes (Affiliation, Communication)",
+                        "Arousal and Regulatory Systems (Sleep, Circadian rhythms)",
+                        "Sensorimotor Systems (Motor Action, Coordination)"
+                    )
+                    domains.forEach { domain ->
+                        Text("• $domain", fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MindShopScreen(viewModel: PsyPyrusViewModel) {
+    val activeTheme by viewModel.activeTheme.collectAsStateWithLifecycle()
+    val isLight = activeTheme == "light"
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            SectionHeader("MindShop - Patient Wellness & Resource Store", Icons.Default.ShoppingCart)
+        }
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = if (isLight) Color.White else DarkCharcoalSurf),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Premium Wellness Shop", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Unlock evidence-based digital therapeutics, CBT journals, and clinical guides tailored to your wellness journey.",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Featured Programs:", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    val items = listOf(
+                        "CBT Sleep Mastery Course ($29.99)",
+                        "Mindfulness Meditation Audio Pack ($12.49)",
+                        "Anxiety Relief Guided Journal ($9.99)",
+                        "Clinical ADHD Focus Planner ($14.99)"
+                    )
+                    items.forEach { item ->
+                        Text("• $item", fontSize = 12.sp)
                     }
                 }
             }

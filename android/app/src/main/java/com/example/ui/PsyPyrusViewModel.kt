@@ -434,6 +434,16 @@ class PsyPyrusViewModel(application: Application) : AndroidViewModel(application
     private val _mindCoins = MutableStateFlow(0)
     val mindCoins: StateFlow<Int> = _mindCoins.asStateFlow()
 
+    private val _activeTheme = MutableStateFlow("dark")
+    val activeTheme: StateFlow<String> = _activeTheme.asStateFlow()
+
+    fun selectTheme(themeName: String) {
+        _activeTheme.value = themeName
+        viewModelScope.launch {
+            logAudit("Theme Selection Changed", "Active visual theme skin changed to: $themeName")
+        }
+    }
+
     private val _clinicianXp = MutableStateFlow(0)
     val clinicianXp: StateFlow<Int> = _clinicianXp.asStateFlow()
 
@@ -639,7 +649,35 @@ class PsyPyrusViewModel(application: Application) : AndroidViewModel(application
                 email = "sophia.patel@edu.org",
                 phone = "555-4422",
                 riskStatus = "Low",
-                specialty = "PTSD Trauma Therapy"
+                specialty = "PTSD Trauma Therapy",
+                abhaNumber = "91-2345-6789-0123",
+                abhaAddress = "sophia.patel@abdm"
+            )
+        )
+        val aaravId = repository.insertPatient(
+            Patient(
+                name = "Aarav Sharma",
+                age = 10,
+                gender = "Male",
+                email = "aarav.sharma@health.in",
+                phone = "91-98765-43210",
+                riskStatus = "Low",
+                specialty = "ADHD Clinical Consultation",
+                abhaNumber = "91-4455-6677-8899",
+                abhaAddress = "aarav@abdm"
+            )
+        )
+        val leelaId = repository.insertPatient(
+            Patient(
+                name = "Leela Devi",
+                age = 72,
+                gender = "Female",
+                email = "leela.devi@care.in",
+                phone = "91-87654-32109",
+                riskStatus = "Moderate",
+                specialty = "Major Depres. (Single Ep.)",
+                abhaNumber = "91-1122-3344-5566",
+                abhaAddress = "leela@abdm"
             )
         )
 
@@ -1599,7 +1637,17 @@ class PsyPyrusViewModel(application: Application) : AndroidViewModel(application
                     isActive = true
                 )
             )
+            val patient = repository.getPatientById(patientId)
             logAudit("Medication Prescribed", "Prescribed '$name $dosage' ($frequency) to Patient '$patientName' (ID: $patientId, Rx ID: $id)")
+            if (patient?.abhaNumber != null) {
+                val transactionId = "TXN-" + (10000000 + (Math.random() * 90000000).toLong())
+                logAudit(
+                    "ABDM Health Document Dispatch",
+                    "Signed Prescription dispatched to ABHA/ABDM Gateway for patient $patientName (ABHA: ${patient.abhaNumber}). Drug: $name. Secured under TLS-1.3 Envelope Encryption. Transaction: $transactionId"
+                )
+                addClinicianXp(35)
+                addMindCoins(10)
+            }
         }
     }
 

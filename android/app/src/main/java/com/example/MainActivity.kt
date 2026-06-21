@@ -13,6 +13,9 @@ import com.example.ui.PsyPyrusMainLayout
 import com.example.ui.PsyPyrusViewModel
 import com.example.ui.theme.MyApplicationTheme
 
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 class MainActivity : ComponentActivity() {
     private val viewModel: PsyPyrusViewModel by viewModels()
 
@@ -20,7 +23,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
+            val activeTheme by viewModel.activeTheme.collectAsStateWithLifecycle()
+            MyApplicationTheme(themeName = activeTheme) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     PsyPyrusMainLayout(
                         viewModel = viewModel,

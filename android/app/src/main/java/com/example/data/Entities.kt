@@ -13,7 +13,9 @@ data class Patient(
     val phone: String,
     val riskStatus: String, // "None", "Low", "Moderate", "Severe"
     val specialty: String, // e.g., "Depression", "Anxiety", "PTSD", "ADHD"
-    val registrationDate: Long = System.currentTimeMillis()
+    val registrationDate: Long = System.currentTimeMillis(),
+    val abhaNumber: String? = null,
+    val abhaAddress: String? = null
 )
 
 @Entity(tableName = "appointments")
@@ -177,5 +179,16 @@ data class PeerMessage(
     val likesCount: Int = 0,
     val timestamp: Long = System.currentTimeMillis()
 )
+
+data class ConsentRequestItem(
+    val id: String,
+    val patientName: String,
+    val abhaAddress: String,
+    val purpose: String,
+    val dataTypes: List<String>,
+    var status: String,
+    val date: String
+)
+
 
 
