@@ -16,7 +16,7 @@ Papyrus is intentionally interdisciplinary. We believe that building the future 
 
 ### 🔬 Researchers & Academics
 * **Roles**: Clinical researchers, neuroscientists, cognitive scientists, epidemiologists, public health researchers, computational psychiatrists.
-* **How to help**: Improve the **HiTOP Matrix Explorer** and **RDoC Matrix Explorer** domains, design validation studies, benchmark clinical algorithms, and contribute de-identified datasets.
+* **How to help**: Improve the **HiTOP Matrix Explorer** and **RDoC Matrix Explorer** domains, design validation studies, benchmark clinical algorithms, and contribute to de-identified datasets.
 
 ### 💻 Computer Science & AI Engineers
 * **Roles**: Frontend, backend, mobile (Kotlin/SwiftUI), desktop (Electron) developers, ML/NLP researchers, knowledge graph engineers, cybersecurity experts.
@@ -28,7 +28,7 @@ Papyrus is intentionally interdisciplinary. We believe that building the future 
 
 ### 📊 Health Informatics Specialists
 * **Roles**: HL7/FHIR experts, medical informatics strategists.
-* **How to help**: Maintain CDAC/NRCeS compliance, improve SNOMED CT and LOINC concept mappings, and implement integrations with open EHR standard models (such as openEHR archetypes).
+* **How to help**: Maintain C-DAC/NRCeS compliance, improve SNOMED CT and LOINC concept mappings, and implement integrations with open EHR standard models (such as openEHR archetypes).
 
 ### ⚖️ Ethics, Policy & Law
 * **Roles**: Bioethicists, privacy scholars, AI governance researchers.
@@ -54,6 +54,19 @@ The PsyPyrus client suite is managed as a unified monorepo. Here is the layout o
 *   `/android` — Native Android client built with Jetpack Compose, Kotlin Coroutines, and Room.
 *   `/ios` & `/macos` — SwiftUI targets sharing view logic, SQLite, and CoreData layers.
 *   `/desktop` — Electron-based desktop shell wrapping the web companion app.
+
+---
+
+## INMWM / CareerOS Policy Layer
+
+The repository also includes documentation under `docs/INMWM/` for the Indian National Mental Wellness Mission blueprint and its bridge to the CareerOS framework.
+
+When contributing to these docs:
+
+1. Preserve the policy-first structure.
+2. Keep clinical safety, regulatory alignment, and workforce planning distinct but connected.
+3. Treat CareerOS as the career, pathway, and workforce-intelligence layer that complements Papyrus/PsyPyrus.
+4. Keep implementation notes separate from normative policy language unless a file explicitly blends both.
 
 ---
 
