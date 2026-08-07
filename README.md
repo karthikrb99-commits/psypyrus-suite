@@ -79,6 +79,20 @@ psypyrus/ (Repository Root)
 
 ---
 
+## 📚 Strategic Reference Documents
+
+The repository now includes a policy and standards layer under `docs/INMWM/`:
+
+- `docs/INMWM/README.md` — index for the Indian National Mental Wellness Mission materials
+- `docs/INMWM/blueprint.md` — master national reform blueprint
+- `docs/INMWM/implementation-manual.md` — operational annex stubs for workflows, SOPs, and governance
+- `docs/INMWM/references.md` — citation and source-map scaffold
+- `docs/INMWM/careeros-bridge.md` — alignment note connecting INMWM to the CareerOS framework
+
+These documents are the policy-level companion to the clinical and product architecture already present in PsyPyrus. CareerOS should be treated as the workforce, pathway, and career-planning layer that complements the mental-health operating system.
+
+---
+
 ## 📊 Development Roadmap & Platform Status Matrix
 
 The matrix below outlines the development roadmap and implementation status across the various platform targets. The **React Web Client** serves as the **primary reference implementation**, containing the most fully realized features. Other platforms are in progress or exist as experimental stubs.
@@ -225,46 +239,8 @@ The PsyPyrus application operates as a **Clinical Decision Support System (CDSS)
 
 ## 🤝 Open Source & Contributing
 
-We welcome contributions to the Papyrus Ecosystem! Please read our [Contributing Guidelines](CONTRIBUTING.md) to get started. By participating, you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+We welcome contributions to the Papyrus Ecosystem! Please read our [Contributing Guidelines](CONTRIBUTING.md) to get started. By participating in this repository, you agree to follow the project’s code of conduct, security expectations, and clinical safety standards.
 
-For clinical safety or security vulnerabilities, please refer to our [Security Policy](SECURITY.md).
+For policy and standards work, start with `docs/INMWM/README.md`.
 
-### A Call for Contributors
-Papyrus is intentionally interdisciplinary. We invite contributors from every relevant field:
-* **Mental Health Professionals**: Psychologists, Psychiatrists, Psychotherapists, Counselors, Social Workers, Occupational Therapists, Psychiatric Nurses.
-* **Researchers & Academics**: Clinical Researchers, Neuroscientists, Cognitive Scientists, Behavioral Scientists, Epidemiologists, Computational Psychiatrists.
-* **Computer Science & AI**: Software Engineers, Frontend/Backend/Mobile Developers, Machine Learning & NLP Researchers, Data Scientists, Security Specialists.
-* **Design & Human Factors**: UX Researchers, UI Designers, Accessibility Experts, Service Designers.
-* **Health Informatics**: HL7/FHIR Specialists, Medical Informatics Experts, Healthcare Administrators.
-* **Ethics, Policy & Law**: Bioethicists, Privacy Experts, AI Governance Researchers, Health Policy Specialists.
-* **Community Contributors**: Patients and Lived-Experience Advocates, Translators, Documentation Writers, Educators.
-
-## 🔍 GitHub Repository SEO Recommendations
-
-
-
-- **Description**: `Papyrus: The open-source, secure, HIPAA-aware & DISHA-aligned mental health operating system. Features AI SOAP notes (Gemini 3.5 Flash), clinical psychopharmacology advisor, RCI CRR/RPwD Act 2016 disability compliance dashboard, and therapeutic consent manager.`
-- **Website URL**: `https://psypyrus.health/`
-- **Topics**: 
-  - `mental-health`
-  - `ehr`
-  - `electronic-health-records`
-  - `psychiatry`
-  - `soap-notes`
-  - `hipaa-aware`
-  - `abdm`
-  - `disha-compliance`
-  - `react`
-  - `open-source`
-  - `healthcare-it`
-  - `dsm-5`
-  - `ai-therapist`
-  - `psychopharmacology`
-  - `medication-safety`
-  - `rpwd-act-2016`
-  - `clinical-trials`
-  - `therapeutic-contracts`
-
-## 📄 License
-
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+For product and workforce planning, see the CareerOS bridge note at `docs/INMWM/careeros-bridge.md`.
